@@ -1,0 +1,29 @@
+# Claude rules file (local only)
+CLAUDE.md
+.claude
+
+# Architecture documents (local only)
+Aegis_v4_Architecture_ETHConf2026.pdf
+
+# Environment — never commit real secrets
+.env
+
+# AXL private keys — never commit
+axl-configs/*.pem
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+build/
+**/build/
+
+# Go binaries
+axl/
+
+# OS
+.DS_Store
+Thumbs.db
