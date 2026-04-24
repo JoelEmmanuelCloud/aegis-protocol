@@ -7,11 +7,6 @@ export default [
   ...tseslint.configs.recommended,
   prettierConfig,
   {
-    ignores: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/build/**',
-      'contracts/**',
-    ],
+    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', 'contracts/**'],
   },
 ];
