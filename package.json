@@ -1,0 +1,23 @@
+{
+  "name": "aegis-protocol",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "contracts"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "lint:sol": "solhint 'contracts/**/*.sol'"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.0",
+    "solhint": "^5.0.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
