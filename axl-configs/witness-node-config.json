@@ -1,0 +1,7 @@
+{
+  "node_name": "aegis-witness",
+  "listen_addr": "0.0.0.0:9002",
+  "http_port": 9002,
+  "private_key_path": "./axl-configs/witness.pem",
+  "peers": []
+}
