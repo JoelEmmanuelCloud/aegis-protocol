@@ -1,6 +1,8 @@
 services:
   axl-witness:
-    build: ./apps/witness-node
+    build:
+      context: .
+      dockerfile: apps/witness-node/Dockerfile
     ports:
       - "${AXL_WITNESS_PORT}:${AXL_WITNESS_PORT}"
     env_file: .env
@@ -8,7 +10,9 @@ services:
       - ./axl-configs:/axl-configs:ro
 
   axl-verifier:
-    build: ./apps/verifier-node
+    build:
+      context: .
+      dockerfile: apps/verifier-node/Dockerfile
     ports:
       - "${AXL_VERIFIER_PORT}:${AXL_VERIFIER_PORT}"
     env_file: .env
@@ -16,7 +20,9 @@ services:
       - ./axl-configs:/axl-configs:ro
 
   axl-propagator:
-    build: ./apps/propagator-node
+    build:
+      context: .
+      dockerfile: apps/propagator-node/Dockerfile
     ports:
       - "${AXL_PROPAGATOR_PORT}:${AXL_PROPAGATOR_PORT}"
     env_file: .env
@@ -24,7 +30,9 @@ services:
       - ./axl-configs:/axl-configs:ro
 
   axl-memory:
-    build: ./apps/memory-node
+    build:
+      context: .
+      dockerfile: apps/memory-node/Dockerfile
     ports:
       - "${AXL_MEMORY_PORT}:${AXL_MEMORY_PORT}"
     env_file: .env
@@ -32,7 +40,9 @@ services:
       - ./axl-configs:/axl-configs:ro
 
   orchestrator:
-    build: ./apps/orchestrator
+    build:
+      context: .
+      dockerfile: apps/orchestrator/Dockerfile
     ports:
       - "3000:3000"
     env_file: .env
@@ -43,7 +53,9 @@ services:
       - axl-memory
 
   dashboard:
-    build: ./apps/dashboard
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
     ports:
       - "4000:4000"
     env_file: .env
