@@ -4,6 +4,7 @@ CLAUDE.md
 
 # Architecture documents (local only)
 Aegis_v4_Architecture_ETHConf2026.pdf
+Aegis_v4_Architecture_ETHConf2026.md
 
 # Environment — never commit real secrets
 .env
@@ -20,6 +21,11 @@ dist/
 **/dist/
 build/
 **/build/
+
+# Hardhat build outputs
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
 
 # Go binaries
 axl/
