@@ -3,7 +3,7 @@ CLAUDE.md
 .claude
 
 # Architecture documents (local only)
-Aegis_v4_Architecture_ETHConf2026.pdf
+Aegis_v4_Architecture_ETHConf2026.md
 
 # Environment — never commit real secrets
 .env
