@@ -1,0 +1,14 @@
+{
+  "name": "@aegis/0g-compute",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aegis/types": "*",
+    "openai": "^4.0.0"
+  }
+}
