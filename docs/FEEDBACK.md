@@ -13,8 +13,8 @@ _/plugin marketplace add KeeperHub/claude-plugins → install → login → list
 ### MCP Tools Discovered
 
 | Tool Name | Parameters | Notes |
-|---|---|---|
-| | | |
+| --------- | ---------- | ----- |
+|           |            |       |
 
 ### Workflow Creation
 
