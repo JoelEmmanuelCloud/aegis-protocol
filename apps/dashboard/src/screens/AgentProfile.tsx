@@ -4,8 +4,6 @@ import { namehash } from 'viem';
 import { useAgent } from '../hooks/useAgent';
 import { useDemoMode } from '../hooks/useDemoMode';
 import { demoAgents, demoReputation, demoEnsRecords } from '../lib/demoData';
-import AgentSearch from '../components/AgentSearch';
-import ReputationScore from '../components/ReputationScore';
 
 const PUBLIC_RESOLVER_ABI = [
   {
@@ -32,23 +30,94 @@ const ENS_TEXT_KEYS = [
 
 const resolverAddress = import.meta.env.VITE_PUBLIC_RESOLVER_ADDRESS as `0x${string}`;
 
-function Row({ label, value }: { label: string; value?: string }) {
+function ScoreRing({ score }: { score: number }) {
+  const r = 40;
+  const circ = 2 * Math.PI * r;
+  const dash = (score / 100) * circ;
+  const color = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
   return (
-    <div className="flex justify-between items-center py-2.5 border-b border-aegis-border gap-4">
-      <span className="text-[13px] text-aegis-muted shrink-0">{label}</span>
-      <span className="text-[13px] text-aegis-text font-mono truncate">{value ?? '—'}</span>
+    <div style={{ position: 'relative', width: 100, height: 100 }}>
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--border)" strokeWidth="8" />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="8"
+          strokeDasharray={`${dash} ${circ - dash}`}
+          strokeDashoffset={circ * 0.25}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dasharray 0.6s ease' }}
+        />
+      </svg>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1 }}>{score}</div>
+        <div style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>score</div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value?: string }) {
+  const isEnsip25 = label.startsWith('agent.');
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '10px 0',
+        borderBottom: '1px solid var(--border)',
+        gap: 12,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          color: isEnsip25 ? '#a78bfa' : 'var(--text-muted)',
+          fontFamily: 'monospace',
+          flexShrink: 0,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: 12,
+          color: 'var(--text-secondary)',
+          fontFamily: 'monospace',
+          textAlign: 'right',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {value ?? '—'}
+      </span>
     </div>
   );
 }
 
 export default function AgentProfile() {
   const [label, setLabel] = useState<string | null>(null);
+  const [input, setInput] = useState('');
   const { enabled: demo } = useDemoMode();
 
   const ensName = label ?? (demo ? demoAgents[0].ensName : null);
   const agentLabel = ensName ? ensName.replace('.aegis.eth', '') : null;
 
-  const { data: agent, isLoading: agentLoading } = useAgent(agentLabel);
+  const { data: agent, isLoading } = useAgent(agentLabel);
   const displayAgent = demo ? demoAgents[0] : agent;
 
   const { data: ensData } = useReadContracts({
@@ -75,90 +144,172 @@ export default function AgentProfile() {
 
   const score = parseInt(ensRecords['aegis.reputation'] ?? '0', 10);
 
-  const handleSearch = (name: string) => {
-    setLabel(name.replace('.aegis.eth', ''));
+  const handleSearch = () => {
+    const cleaned = input.replace('.aegis.eth', '').trim();
+    if (cleaned) setLabel(cleaned);
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <div className="text-xl font-bold mb-1">Agent Profile</div>
-        <div className="text-[13px] text-aegis-muted">
-          ENS identity and reputation for any registered agent
-        </div>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
+          Agent Profile
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          ENS identity and live reputation for any registered agent
+        </p>
       </div>
 
-      <AgentSearch onSearch={handleSearch} />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          className="input"
+          style={{ flex: 1 }}
+          placeholder="trading-bot or trading-bot.aegis.eth"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        />
+        <button className="btn-primary" onClick={handleSearch} style={{ flexShrink: 0, padding: '10px 20px' }}>
+          Lookup
+        </button>
+      </div>
 
-      {agentLoading && !demo && <div className="text-aegis-muted text-[13px]">Loading…</div>}
+      {isLoading && !demo && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[1, 2].map((i) => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />)}
+        </div>
+      )}
 
       {(displayAgent || demo) && (
-        <div className="grid grid-cols-[280px_1fr] gap-4">
-          <div className="flex flex-col gap-4">
-            <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5 flex flex-col items-center gap-3">
-              <ReputationScore score={demo ? demoReputation.score : score} />
-              <div className="text-center">
-                <div className="font-semibold text-sm">{displayAgent?.ensName ?? ensName}</div>
-                <div className="text-xs text-aegis-muted mt-0.5">
+        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+              <ScoreRing score={demo ? demoReputation.score : score} />
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+                  {displayAgent?.ensName ?? ensName}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                   Token #{displayAgent?.tokenId ?? '—'}
                 </div>
               </div>
               <span
-                className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                  displayAgent?.active
-                    ? 'bg-aegis-green-dim text-aegis-green'
-                    : 'bg-aegis-red-dim text-aegis-red'
-                }`}
+                className={displayAgent?.active ? 'badge-cleared' : 'badge-flagged'}
               >
                 {displayAgent?.active ? 'Active' : 'Suspended'}
               </span>
             </div>
 
-            <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-              <div className="text-[13px] font-semibold mb-3">Split</div>
-              <div className="flex justify-between text-[13px] mb-1.5">
-                <span className="text-aegis-muted">User</span>
-                <span className="text-aegis-purple-light font-semibold">
+            <div className="card" style={{ padding: '18px' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>
+                Accountability Split
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>User</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#a78bfa' }}>
                   {displayAgent?.userPercent ?? '—'}%
                 </span>
               </div>
-              <div className="flex justify-between text-[13px]">
-                <span className="text-aegis-muted">Builder</span>
-                <span className="text-aegis-text font-semibold">
+              <div
+                style={{
+                  height: 4,
+                  background: 'var(--bg-overlay)',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  marginBottom: 6,
+                }}
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${displayAgent?.userPercent ?? 0}%`,
+                    background: 'var(--accent)',
+                    borderRadius: 2,
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Builder</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
                   {displayAgent?.builderPercent ?? '—'}%
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-              <div className="text-[13px] font-semibold mb-1">Agent Record</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="card" style={{ padding: '18px' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                Agent Record
+              </div>
               <Row label="Builder" value={displayAgent?.builderAddress} />
-              <Row label="Storage Root" value={displayAgent?.storageRoot} />
+              <Row label="Storage Root" value={displayAgent?.storageRoot || '—'} />
               <Row
                 label="Registered"
                 value={
                   displayAgent?.mintedAt
-                    ? new Date(displayAgent.mintedAt).toLocaleDateString()
+                    ? new Date(displayAgent.mintedAt * 1000).toLocaleDateString()
                     : undefined
                 }
               />
             </div>
 
-            <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-              <div className="text-[13px] font-semibold mb-1">ENS Text Records</div>
+            <div className="card" style={{ padding: '18px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 4,
+                }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  ENS Text Records
+                </div>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: '#a78bfa',
+                    background: 'var(--accent-dim)',
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                  }}
+                >
+                  ENSIP-25
+                </span>
+              </div>
               {ENS_TEXT_KEYS.map((key) => (
                 <Row key={key} label={key} value={ensRecords[key]} />
               ))}
+              <div style={{ paddingTop: 10 }}>
+                <a
+                  href={`https://app.ens.domains/${ensName ?? ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: 12, color: 'var(--accent)' }}
+                >
+                  View on ENS App
+                </a>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {!displayAgent && !agentLoading && !demo && (
-        <div className="bg-aegis-card border border-aegis-border rounded-xl p-12 text-center text-aegis-dim text-[13px]">
-          Search for an agent label or full ENS name to view their profile
+      {!displayAgent && !isLoading && !demo && (
+        <div
+          className="card"
+          style={{
+            padding: '64px',
+            textAlign: 'center',
+            color: 'var(--text-muted)',
+            fontSize: 13,
+          }}
+        >
+          Enter an agent label or .aegis.eth name to view their live accountability profile
         </div>
       )}
     </div>

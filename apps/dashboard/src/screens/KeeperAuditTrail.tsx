@@ -1,122 +1,112 @@
 import { useKeeperAudit } from '../hooks/useKeeperAudit';
 import { useDemoMode } from '../hooks/useDemoMode';
-import TxHashLink from '../components/TxHashLink';
+import { demoAuditRuns } from '../lib/demoData';
 
-const workflowId = import.meta.env.VITE_KEEPERHUB_WORKFLOW_ID ?? null;
-
-const statusCls: Record<string, string> = {
-  completed: 'bg-aegis-green-dim text-aegis-green',
-  failed: 'bg-aegis-red-dim text-aegis-red',
-  running: 'bg-aegis-purple-dim text-aegis-purple-light',
-  pending: 'bg-[rgba(107,114,128,0.12)] text-aegis-muted',
+type Run = {
+  runId: string;
+  status: string;
+  txHash?: string;
+  gasUsed?: number;
+  retryCount: number;
+  createdAt: number;
+  completedAt?: number;
 };
 
 export default function KeeperAuditTrail() {
   const { enabled: demo } = useDemoMode();
-  const { data: runs, isLoading } = useKeeperAudit(demo ? 'wf_aegis_remedy' : workflowId, 20);
-
-  const displayRuns = runs ?? [];
+  const { data: live, isLoading } = useKeeperAudit(import.meta.env.VITE_KEEPERHUB_WORKFLOW_ID ?? '');
+  const runs = (demo ? demoAuditRuns : (live ?? [])) as Run[];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="text-xl font-bold mb-1">Keeper Audit Trail</div>
-          <div className="text-[13px] text-aegis-muted">
-            KeeperHub workflow runs for automated onchain remedy execution
-          </div>
-        </div>
-        {workflowId && <div className="text-xs text-aegis-dim font-mono">{workflowId}</div>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
+          KeeperHub Audit Trail
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          Automated remedy execution log for{' '}
+          <code style={{ fontSize: 12, color: '#a78bfa' }}>aegis.execute_remedy</code>
+        </p>
       </div>
 
-      {!workflowId && !demo && (
-        <div className="bg-aegis-amber-dim border border-[rgba(245,158,11,0.25)] rounded-xl px-4 py-3 text-[13px] text-aegis-amber">
-          Set <code className="font-mono">VITE_KEEPERHUB_WORKFLOW_ID</code> in your .env to see live
-          audit data, or enable Demo Mode.
-        </div>
-      )}
-
-      <div className="bg-aegis-card border border-aegis-border rounded-xl overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              {['Run ID', 'Status', 'Created', 'Completed', 'Tx Hash', 'Gas Used', 'Retries'].map(
-                (h, i) => (
-                  <th
-                    key={h}
-                    className={`px-4 py-2.5 text-xs text-aegis-muted font-semibold border-b border-aegis-border bg-black/20 ${
-                      i === 5 ? 'text-right' : i === 6 ? 'text-center' : 'text-left'
-                    }`}
-                  >
-                    {h}
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-3 text-[13px] border-b border-aegis-border text-center text-aegis-dim"
+      <div className="card">
+        {isLoading && !demo ? (
+          <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="skeleton" style={{ height: 56, borderRadius: 8 }} />
+            ))}
+          </div>
+        ) : runs.length === 0 ? (
+          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+            No remedy runs yet. Runs appear when a FLAGGED verdict fires the workflow.
+          </div>
+        ) : (
+          <div>
+            {runs.map((r, i) => (
+              <div
+                key={r.runId}
+                style={{
+                  padding: '16px 20px',
+                  borderBottom: i < runs.length - 1 ? '1px solid var(--border)' : 'none',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}
                 >
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!isLoading && displayRuns.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-10 text-[13px] border-b border-aegis-border text-center text-aegis-dim"
-                >
-                  No workflow runs found
-                </td>
-              </tr>
-            )}
-            {displayRuns.map((run) => {
-              const sc = statusCls[run.status] ?? statusCls.pending;
-              return (
-                <tr key={run.runId}>
-                  <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle font-mono text-aegis-muted">
-                    {run.runId}
-                  </td>
-                  <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${sc}`}
-                    >
-                      {run.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle text-aegis-muted">
-                    {new Date(run.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle text-aegis-muted">
-                    {run.completedAt ? new Date(run.completedAt).toLocaleString() : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle">
-                    {run.txHash ? (
-                      <TxHashLink hash={run.txHash} />
-                    ) : (
-                      <span className="text-aegis-dim">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle text-right text-aegis-muted">
-                    {run.gasUsed ? run.gasUsed.toLocaleString() : '—'}
-                  </td>
-                  <td
-                    className={`px-4 py-3 text-[13px] border-b border-aegis-border align-middle text-center ${
-                      run.retryCount > 0 ? 'text-aegis-amber' : 'text-aegis-dim'
-                    }`}
+                  <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-secondary)' }}>
+                    {r.runId}
+                  </div>
+                  <span
+                    className={
+                      r.status === 'completed'
+                        ? 'badge-cleared'
+                        : r.status === 'failed'
+                          ? 'badge-flagged'
+                          : 'badge-pending'
+                    }
                   >
-                    {run.retryCount}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    {r.status}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                  {r.txHash && (
+                    <div style={{ fontSize: 11 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Tx: </span>
+                      <a
+                        href={`https://chainscan-galileo.0g.ai/tx/${r.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontFamily: 'monospace', color: 'var(--accent)' }}
+                      >
+                        {r.txHash.slice(0, 14)}…
+                      </a>
+                    </div>
+                  )}
+                  {r.gasUsed != null && (
+                    <div style={{ fontSize: 11 }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Gas: </span>
+                      <span style={{ color: 'var(--text-primary)' }}>{r.gasUsed.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11 }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Retries: </span>
+                    <span style={{ color: 'var(--text-primary)' }}>{r.retryCount}</span>
+                  </div>
+                  {r.completedAt && (
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {new Date(r.completedAt).toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
