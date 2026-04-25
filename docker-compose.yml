@@ -9,6 +9,12 @@ services:
     env_file: .env
     volumes:
       - ./axl-configs:/app/axl-configs:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10022/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
 
   axl-witness:
     build:
@@ -23,7 +29,14 @@ services:
     volumes:
       - ./axl-configs:/app/axl-configs:ro
     depends_on:
-      - axl-propagator
+      axl-propagator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10002/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
 
   axl-verifier:
     build:
@@ -38,7 +51,14 @@ services:
     volumes:
       - ./axl-configs:/app/axl-configs:ro
     depends_on:
-      - axl-propagator
+      axl-propagator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10012/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
 
   axl-memory:
     build:
@@ -53,7 +73,14 @@ services:
     volumes:
       - ./axl-configs:/app/axl-configs:ro
     depends_on:
-      - axl-propagator
+      axl-propagator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10032/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
 
   orchestrator:
     build:
@@ -66,10 +93,14 @@ services:
       WITNESS_MGMT_URL: http://axl-witness:10002
       VERIFIER_MGMT_URL: http://axl-verifier:10012
     depends_on:
-      - axl-witness
-      - axl-verifier
-      - axl-propagator
-      - axl-memory
+      axl-witness:
+        condition: service_healthy
+      axl-verifier:
+        condition: service_healthy
+      axl-propagator:
+        condition: service_healthy
+      axl-memory:
+        condition: service_healthy
 
   dashboard:
     build:
