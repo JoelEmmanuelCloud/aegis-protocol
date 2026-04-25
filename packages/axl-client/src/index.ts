@@ -14,7 +14,11 @@ export interface AXLTopologyPeer {
   latency: number;
 }
 
-export async function send(baseUrl: string, destinationPeerId: string, message: AXLMessage): Promise<void> {
+export async function send(
+  baseUrl: string,
+  destinationPeerId: string,
+  message: AXLMessage
+): Promise<void> {
   const response = await fetch(`${baseUrl}/send`, {
     method: 'POST',
     headers: {

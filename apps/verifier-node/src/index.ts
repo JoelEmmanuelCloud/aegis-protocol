@@ -21,13 +21,12 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
 
   const existing = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`);
   const reputation: ReputationRecord = {
-    score: replay.verdict === 'FLAGGED'
-      ? Math.max(0, (existing?.score ?? 100) - 10)
-      : Math.min(100, (existing?.score ?? 100) + 1),
+    score:
+      replay.verdict === 'FLAGGED'
+        ? Math.max(0, (existing?.score ?? 100) - 10)
+        : Math.min(100, (existing?.score ?? 100) + 1),
     totalDecisions: existing?.totalDecisions ?? 1,
-    flagged: replay.verdict === 'FLAGGED'
-      ? (existing?.flagged ?? 0) + 1
-      : (existing?.flagged ?? 0),
+    flagged: replay.verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
     lastVerified: Date.now(),
   };
   await writeKVObject(`aegis:${body.agentId}:reputation`, reputation);

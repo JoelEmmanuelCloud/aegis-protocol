@@ -31,11 +31,7 @@ export class DisputesService {
   constructor() {
     const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
     const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
-    this.court = new ethers.Contract(
-      process.env.AEGIS_COURT_ADDRESS!,
-      AEGIS_COURT_ABI,
-      signer,
-    );
+    this.court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
     const verifierPort = process.env.AXL_VERIFIER_PORT ?? '9012';
     this.verifierUrl = `http://localhost:${verifierPort}`;
   }
@@ -43,11 +39,10 @@ export class DisputesService {
   async file(dto: FileDisputeDto): Promise<Record<string, unknown>> {
     const rootHashBytes = ethers.zeroPadValue(
       ethers.hexlify(ethers.toUtf8Bytes(dto.rootHash).slice(0, 32)),
-      32,
+      32
     );
-    const rootHash32 = dto.rootHash.startsWith('0x') && dto.rootHash.length === 66
-      ? dto.rootHash
-      : rootHashBytes;
+    const rootHash32 =
+      dto.rootHash.startsWith('0x') && dto.rootHash.length === 66 ? dto.rootHash : rootHashBytes;
 
     const submitTx = await this.court.submitDispute(rootHash32, dto.agentId, dto.reason);
     await submitTx.wait();
@@ -55,14 +50,18 @@ export class DisputesService {
     const verifyResponse = await fetch(`${this.verifierUrl}/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'VERIFY_DECISION', rootHash: dto.rootHash, agentId: dto.agentId }),
+      body: JSON.stringify({
+        type: 'VERIFY_DECISION',
+        rootHash: dto.rootHash,
+        agentId: dto.agentId,
+      }),
     });
 
     if (!verifyResponse.ok) {
       throw new BadGatewayException(`Verifier error: ${await verifyResponse.text()}`);
     }
 
-    const verification = await verifyResponse.json() as VerifyResponse;
+    const verification = (await verifyResponse.json()) as VerifyResponse;
     const verdictUint = VERDICT_TO_UINT[verification.verdict];
     const teeProofBytes = ethers.toUtf8Bytes(verification.teeProof ?? '');
 
@@ -78,11 +77,20 @@ export class DisputesService {
   }
 
   async get(rootHash: string): Promise<Record<string, unknown>> {
-    const rootHash32 = rootHash.startsWith('0x') && rootHash.length === 66
-      ? rootHash
-      : ethers.zeroPadValue(ethers.hexlify(ethers.toUtf8Bytes(rootHash).slice(0, 32)), 32);
+    const rootHash32 =
+      rootHash.startsWith('0x') && rootHash.length === 66
+        ? rootHash
+        : ethers.zeroPadValue(ethers.hexlify(ethers.toUtf8Bytes(rootHash).slice(0, 32)), 32);
 
-    let dispute: { exists: boolean; agentId: string; disputedBy: string; reason: string; timestamp: bigint; verdict: number; teeProof: string };
+    let dispute: {
+      exists: boolean;
+      agentId: string;
+      disputedBy: string;
+      reason: string;
+      timestamp: bigint;
+      verdict: number;
+      teeProof: string;
+    };
     try {
       dispute = await this.court.getDispute(rootHash32);
     } catch {

@@ -27,11 +27,13 @@ export class AgentsService {
     this.registry = new ethers.Contract(
       process.env.AGENT_REGISTRY_ADDRESS!,
       AGENT_REGISTRY_ABI,
-      signer,
+      signer
     );
   }
 
-  async register(dto: RegisterAgentDto): Promise<{ tokenId: string; ensName: string; txHash: string }> {
+  async register(
+    dto: RegisterAgentDto
+  ): Promise<{ tokenId: string; ensName: string; txHash: string }> {
     if (dto.userPercent + dto.builderPercent !== 100) {
       throw new BadRequestException('userPercent + builderPercent must equal 100');
     }
@@ -41,13 +43,17 @@ export class AgentsService {
       dto.builderAddress,
       dto.label,
       dto.userPercent,
-      dto.builderPercent,
+      dto.builderPercent
     );
     const receipt = await tx.wait();
 
     const log = receipt.logs
       .map((l: ethers.Log) => {
-        try { return this.registry.interface.parseLog(l); } catch { return null; }
+        try {
+          return this.registry.interface.parseLog(l);
+        } catch {
+          return null;
+        }
       })
       .find((e: ethers.LogDescription | null) => e?.name === 'AgentMinted');
 
@@ -89,7 +95,7 @@ export class AgentsService {
           active: record.active,
           mintedAt: Number(record.mintedAt),
         };
-      }),
+      })
     );
     return agents;
   }
@@ -99,7 +105,7 @@ export class AgentsService {
     reputation: string,
     totalDecisions: string,
     lastVerdict: string,
-    flaggedCount: string,
+    flaggedCount: string
   ): Promise<void> {
     const tokenId: bigint = await this.registry.getTokenByEnsLabel(label);
     if (tokenId === 0n) throw new NotFoundException(`Agent '${label}' not found`);
@@ -109,7 +115,7 @@ export class AgentsService {
       reputation,
       totalDecisions,
       lastVerdict,
-      flaggedCount,
+      flaggedCount
     );
     await tx.wait();
   }

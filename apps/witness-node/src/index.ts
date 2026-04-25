@@ -1,7 +1,13 @@
 import express, { Request, Response } from 'express';
 import { uploadObject, writeKVObject, readKVObject } from '@aegis/0g-client';
 import { send } from '@aegis/axl-client';
-import type { AttestationRequest, AttestationResponse, DecisionRecord, ReputationRecord, LatestRecord } from '@aegis/types';
+import type {
+  AttestationRequest,
+  AttestationResponse,
+  DecisionRecord,
+  ReputationRecord,
+  LatestRecord,
+} from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_WITNESS_PORT ?? '9002', 10);
 const PROPAGATOR_AXL_URL = `http://localhost:${process.env.AXL_PROPAGATOR_PORT ?? 9022}`;

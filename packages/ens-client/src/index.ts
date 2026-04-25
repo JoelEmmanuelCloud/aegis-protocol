@@ -14,14 +14,17 @@ function getProvider(): ethers.JsonRpcProvider {
 }
 
 function getSigner(): ethers.Wallet {
-  return new ethers.Wallet(process.env.ENS_PRIVATE_KEY ?? process.env.ZG_PRIVATE_KEY!, getProvider());
+  return new ethers.Wallet(
+    process.env.ENS_PRIVATE_KEY ?? process.env.ZG_PRIVATE_KEY!,
+    getProvider()
+  );
 }
 
 function getResolver(): ethers.Contract {
   return new ethers.Contract(
     process.env.ENS_PUBLIC_RESOLVER_ADDRESS!,
     PUBLIC_RESOLVER_ABI,
-    getSigner(),
+    getSigner()
   );
 }
 
@@ -29,7 +32,11 @@ function ensNode(ensName: string): string {
   return ethers.namehash(ensName);
 }
 
-export async function setTextRecord(fullEnsName: string, key: string, value: string): Promise<void> {
+export async function setTextRecord(
+  fullEnsName: string,
+  key: string,
+  value: string
+): Promise<void> {
   const resolver = getResolver();
   const node = ensNode(fullEnsName);
   const tx = await resolver.setText(node, key, value);
@@ -38,7 +45,7 @@ export async function setTextRecord(fullEnsName: string, key: string, value: str
 
 export async function setTextRecords(
   fullEnsName: string,
-  records: Record<string, string>,
+  records: Record<string, string>
 ): Promise<void> {
   const resolver = getResolver();
   const node = ensNode(fullEnsName);
@@ -54,7 +61,7 @@ export async function getTextRecord(fullEnsName: string, key: string): Promise<s
   const resolver = new ethers.Contract(
     process.env.ENS_PUBLIC_RESOLVER_ADDRESS!,
     PUBLIC_RESOLVER_ABI,
-    provider,
+    provider
   );
   const node = ensNode(fullEnsName);
   return resolver.text(node, key) as Promise<string>;
@@ -81,7 +88,7 @@ export async function issueSubname(label: string, subowner: string): Promise<str
   const nameWrapper = new ethers.Contract(
     process.env.ENS_NAME_WRAPPER_ADDRESS!,
     NAME_WRAPPER_ABI,
-    signer,
+    signer
   );
 
   const aegisNode = ethers.namehash('aegis.eth');
@@ -94,7 +101,7 @@ export async function issueSubname(label: string, subowner: string): Promise<str
     process.env.ENS_PUBLIC_RESOLVER_ADDRESS!,
     0,
     0,
-    expiry,
+    expiry
   );
   await tx.wait();
 
