@@ -88,7 +88,7 @@ function Row({ label, value }: { label: string; value?: string }) {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '10px 0',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '1px solid var(--app-border)',
         gap: 12,
       }}
     >

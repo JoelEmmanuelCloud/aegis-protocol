@@ -69,7 +69,7 @@ export default function ConnectGate() {
         {connecting ? 'Connecting…' : 'Connect Wallet'}
       </button>
 
-      <a href="/" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+      <a href="/" style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
         Back to home
       </a>
     </div>

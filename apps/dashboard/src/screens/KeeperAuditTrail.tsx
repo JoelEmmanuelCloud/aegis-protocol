@@ -56,7 +56,7 @@ export default function KeeperAuditTrail() {
                 key={r.runId}
                 style={{
                   padding: '16px 20px',
-                  borderBottom: i < runs.length - 1 ? '1px solid var(--border)' : 'none',
+                  borderBottom: i < runs.length - 1 ? '1px solid var(--app-border)' : 'none',
                 }}
               >
                 <div

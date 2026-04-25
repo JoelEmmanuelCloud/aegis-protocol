@@ -163,7 +163,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           width: 220,
           flexShrink: 0,
           background: 'var(--app-surface)',
-          borderRight: '1px solid var(--border)',
+          borderRight: '1px solid var(--app-border)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -172,7 +172,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div
           style={{
             height: 64,
-            borderBottom: '1px solid var(--border)',
+            borderBottom: '1px solid var(--app-border)',
             display: 'flex',
             alignItems: 'center',
             gap: 10,
@@ -256,7 +256,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div
           style={{
             padding: '12px 10px',
-            borderTop: '1px solid var(--border)',
+            borderTop: '1px solid var(--app-border)',
             flexShrink: 0,
           }}
         >
@@ -268,7 +268,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               padding: '10px 12px',
               background: 'var(--app-elevated)',
               borderRadius: 8,
-              border: '1px solid var(--border)',
+              border: '1px solid var(--app-border)',
             }}
           >
             <div
@@ -338,7 +338,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <header
           style={{
             height: 64,
-            borderBottom: '1px solid var(--border)',
+            borderBottom: '1px solid var(--app-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',

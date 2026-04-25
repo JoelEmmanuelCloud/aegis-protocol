@@ -175,7 +175,7 @@ export default function Register() {
             padding: '14px 16px',
             background: 'var(--app-elevated)',
             borderRadius: 8,
-            border: '1px solid var(--border)',
+            border: '1px solid var(--app-border)',
           }}
         >
           <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginBottom: 8 }}>

@@ -96,7 +96,7 @@ export default function Overview() {
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: '1px solid var(--border)',
+            borderBottom: '1px solid var(--app-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -135,7 +135,7 @@ export default function Overview() {
                 style={{
                   padding: '14px 20px',
                   borderBottom:
-                    i < Math.min(feed.length, 8) - 1 ? '1px solid var(--border)' : 'none',
+                    i < Math.min(feed.length, 8) - 1 ? '1px solid var(--app-border)' : 'none',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 16,
@@ -203,7 +203,7 @@ export default function Overview() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '10px 0',
-                  borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
+                  borderBottom: i < 3 ? '1px solid var(--app-border)' : 'none',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -227,7 +227,7 @@ export default function Overview() {
               key={label}
               style={{
                 padding: '10px 0',
-                borderBottom: i === 0 ? '1px solid var(--border)' : 'none',
+                borderBottom: i === 0 ? '1px solid var(--app-border)' : 'none',
               }}
             >
               <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginBottom: 4 }}>

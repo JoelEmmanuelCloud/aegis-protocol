@@ -57,7 +57,7 @@ export default function AttestationFeed() {
         <div
           style={{
             padding: '14px 20px',
-            borderBottom: '1px solid var(--border)',
+            borderBottom: '1px solid var(--app-border)',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -90,7 +90,7 @@ export default function AttestationFeed() {
                 key={i}
                 style={{
                   padding: '16px 20px',
-                  borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
+                  borderBottom: i < items.length - 1 ? '1px solid var(--app-border)' : 'none',
                 }}
               >
                 <div

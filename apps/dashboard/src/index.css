@@ -195,6 +195,7 @@ textarea {
   background: var(--app-green);
   border-radius: 50%;
   animation: pulse-dot 2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes pulse-dot {
@@ -231,7 +232,7 @@ textarea {
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -240,25 +241,221 @@ textarea {
 }
 
 .animate-in {
-  animation: fade-up 0.6s ease-out forwards;
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-in-1 {
-  animation: fade-up 0.6s ease-out 0.1s forwards;
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
   opacity: 0;
 }
 
 .animate-in-2 {
-  animation: fade-up 0.6s ease-out 0.2s forwards;
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.22s forwards;
   opacity: 0;
 }
 
 .animate-in-3 {
-  animation: fade-up 0.6s ease-out 0.35s forwards;
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.36s forwards;
+  opacity: 0;
+}
+
+.animate-in-4 {
+  animation: fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
   opacity: 0;
 }
 
 .landing-dots {
   background-image: radial-gradient(circle, #c8c8c4 1px, transparent 1px);
   background-size: 28px 28px;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: #4a4a46;
+  font-weight: 400;
+  position: relative;
+  padding-bottom: 2px;
+  transition: color 0.15s;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: #0a0a08;
+  transition: width 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #0a0a08;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  background: #0a0a08;
+  color: #f7f7f5;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.cta-primary:hover {
+  background: #1a1a18;
+}
+
+.cta-primary:hover .cta-arrow {
+  transform: translateX(3px);
+}
+
+.cta-arrow {
+  transition: transform 0.2s ease;
+}
+
+.cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  background: transparent;
+  color: #0a0a08;
+  border: 1px solid #c8c8c4;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  font-family: inherit;
+}
+
+.cta-secondary:hover {
+  border-color: #0a0a08;
+  background: rgba(10, 10, 8, 0.04);
+}
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  align-items: center;
+}
+
+.landing-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.landing-integration {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.mesh-node {
+  animation: node-pulse 3s ease-in-out infinite;
+}
+
+.mesh-node:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.mesh-node:nth-child(3) {
+  animation-delay: 1s;
+}
+
+.mesh-node:nth-child(4) {
+  animation-delay: 1.5s;
+}
+
+@keyframes node-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.mesh-edge {
+  stroke-dasharray: 6 4;
+  animation: dash-flow 3s linear infinite;
+}
+
+@keyframes dash-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+.float-card {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-integration {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .hero-visual {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .landing-nav {
+    padding: 0 20px !important;
+  }
+
+  .landing-nav-links {
+    display: none !important;
+  }
+
+  .landing-section {
+    padding: 48px 20px !important;
+  }
+
+  .hero-headline {
+    font-size: 38px !important;
+  }
 }

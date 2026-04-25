@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 
-function MeshVisual() {
+function AnimatedMesh() {
   const nodes = [
-    { x: 280, y: 80, label: 'Witness', port: ':9002', color: '#7c3aed' },
-    { x: 460, y: 180, label: 'Verifier', port: ':9012', color: '#2563eb' },
-    { x: 360, y: 300, label: 'Propagator', port: ':9022', color: '#059669' },
-    { x: 170, y: 220, label: 'Memory', port: ':9032', color: '#d97706' },
-    { x: 310, y: 190, label: '0G Storage', port: '', color: '#9ca3af' },
+    { x: 260, y: 85, label: 'Witness', sub: ':9002', color: '#7c3aed', r: 20 },
+    { x: 440, y: 170, label: 'Verifier', sub: ':9012', color: '#2563eb', r: 20 },
+    { x: 350, y: 295, label: 'Propagator', sub: ':9022', color: '#059669', r: 20 },
+    { x: 150, y: 210, label: 'Memory', sub: ':9032', color: '#d97706', r: 20 },
+    { x: 295, y: 190, label: '0G', sub: 'Storage', color: '#6b7280', r: 14 },
   ];
   const edges = [
     [0, 4],
@@ -24,25 +24,26 @@ function MeshVisual() {
 
   return (
     <svg
-      viewBox="0 0 520 380"
-      style={{ width: '100%', maxWidth: 520, opacity: 0.9 }}
+      viewBox="0 0 500 390"
+      style={{ width: '100%', maxWidth: 480 }}
       xmlns="http://www.w3.org/2000/svg"
+      className="hero-visual"
     >
       <defs>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+        <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ede9fe" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#f7f7f5" stopOpacity="0" />
+        </radialGradient>
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
-            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ede9fe" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#f7f7f5" stopOpacity="0" />
-        </radialGradient>
       </defs>
 
-      <ellipse cx="310" cy="190" rx="200" ry="160" fill="url(#bgGrad)" />
+      <ellipse cx="295" cy="190" rx="210" ry="165" fill="url(#bg)" />
 
       {edges.map(([a, b], i) => (
         <line
@@ -51,117 +52,182 @@ function MeshVisual() {
           y1={nodes[a].y}
           x2={nodes[b].x}
           y2={nodes[b].y}
-          stroke="#d4d4d0"
-          strokeWidth="1"
-          strokeDasharray="4 4"
+          stroke={i < 4 ? nodes[a].color : '#d4d4d0'}
+          strokeWidth={i < 4 ? '1.5' : '1'}
+          strokeOpacity={i < 4 ? '0.3' : '0.6'}
+          className="mesh-edge"
+          style={{ animationDelay: `${i * 0.3}s` }}
         />
       ))}
 
       {nodes.map((n, i) => (
-        <g key={i}>
+        <g
+          key={i}
+          className="mesh-node"
+          style={{ transformOrigin: `${n.x}px ${n.y}px`, animationDelay: `${i * 0.4}s` }}
+        >
+          <circle cx={n.x} cy={n.y} r={n.r + 8} fill={n.color} opacity="0.06" />
           <circle
             cx={n.x}
             cy={n.y}
-            r={i === 4 ? 18 : 22}
+            r={n.r}
             fill="white"
             stroke={n.color}
             strokeWidth="1.5"
             filter="url(#glow)"
           />
-          <circle cx={n.x} cy={n.y} r={i === 4 ? 6 : 7} fill={n.color} opacity="0.8" />
+          <circle cx={n.x} cy={n.y} r={n.r === 14 ? 5 : 7} fill={n.color} opacity="0.9" />
           <text
             x={n.x}
-            y={n.y + (i === 4 ? 32 : 36)}
+            y={n.y + n.r + 14}
             textAnchor="middle"
-            fontSize="10"
-            fontFamily="Inter, sans-serif"
+            fontSize="9.5"
             fontWeight="600"
-            fill="#4a4a46"
+            fontFamily="Inter, sans-serif"
+            fill="#3a3a38"
           >
             {n.label}
           </text>
-          {n.port && (
-            <text
-              x={n.x}
-              y={n.y + 48}
-              textAnchor="middle"
-              fontSize="9"
-              fontFamily="monospace"
-              fill="#9a9a96"
-            >
-              {n.port}
-            </text>
-          )}
+          <text
+            x={n.x}
+            y={n.y + n.r + 26}
+            textAnchor="middle"
+            fontSize="8"
+            fontFamily="'JetBrains Mono', monospace"
+            fill="#9a9a96"
+          >
+            {n.sub}
+          </text>
         </g>
       ))}
 
-      <g>
+      <g className="float-card" style={{ animationDelay: '0.5s' }}>
         <rect
-          x="10"
-          y="310"
-          width="160"
-          height="52"
+          x="6"
+          y="308"
+          width="172"
+          height="60"
           rx="8"
           fill="white"
           stroke="#e2e2de"
           strokeWidth="1"
         />
-        <circle cx="30" cy="324" r="5" fill="#22c55e" />
+        <circle cx="24" cy="322" r="5" fill="#22c55e" />
+        <circle cx="24" cy="322" r="9" fill="#22c55e" opacity="0.15" />
         <text
-          x="42"
-          y="328"
+          x="38"
+          y="326"
           fontSize="9"
           fontWeight="600"
-          fill="#4a4a46"
+          fill="#3a3a38"
           fontFamily="Inter, sans-serif"
         >
           trading-bot.aegis.eth
         </text>
-        <text x="20" y="344" fontSize="8" fill="#9a9a96" fontFamily="monospace">
-          rootHash: 0xabc123...
+        <text x="14" y="342" fontSize="7.5" fill="#9a9a96" fontFamily="monospace">
+          0xabc123…d4f9
         </text>
-        <rect x="20" y="350" width="40" height="6" rx="3" fill="#ede9fe" />
+        <rect x="14" y="350" width="50" height="11" rx="3" fill="#ede9fe" />
         <text
-          x="24"
-          y="356"
-          fontSize="7"
+          x="18"
+          y="359"
+          fontSize="7.5"
           fill="#7c3aed"
           fontWeight="700"
           fontFamily="Inter, sans-serif"
         >
           CLEARED
         </text>
+        <text x="72" y="359" fontSize="7.5" fill="#9a9a96" fontFamily="Inter, sans-serif">
+          2s ago
+        </text>
       </g>
 
-      <g>
+      <g className="float-card" style={{ animationDelay: '1.2s' }}>
         <rect
-          x="348"
-          y="8"
-          width="148"
-          height="52"
+          x="326"
+          y="4"
+          width="158"
+          height="56"
           rx="8"
           fill="white"
           stroke="#e2e2de"
           strokeWidth="1"
         />
         <text
-          x="358"
-          y="24"
-          fontSize="9"
-          fontWeight="600"
-          fill="#4a4a46"
+          x="338"
+          y="20"
+          fontSize="8.5"
+          fontWeight="700"
+          fill="#3a3a38"
           fontFamily="Inter, sans-serif"
         >
           AegisCourt.sol
         </text>
-        <text x="358" y="38" fontSize="8" fill="#9a9a96" fontFamily="monospace">
-          0x3De273...
+        <text x="338" y="34" fontSize="7.5" fill="#9a9a96" fontFamily="monospace">
+          0x3De27365…F734a
         </text>
-        <text x="358" y="52" fontSize="8" fill="#9a9a96" fontFamily="monospace">
-          0G Galileo :16602
+        <text x="338" y="50" fontSize="7.5" fill="#9a9a96" fontFamily="Inter, sans-serif">
+          0G Galileo · chainId 16602
         </text>
       </g>
     </svg>
+  );
+}
+
+function LiveCounter({ label, end }: { label: string; end: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const animated = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !animated.current) {
+          animated.current = true;
+          const duration = 1400;
+          const step = 16;
+          const increment = (end / duration) * step;
+          let current = 0;
+          const timer = setInterval(() => {
+            current = Math.min(current + increment, end);
+            setCount(Math.floor(current));
+            if (current >= end) clearInterval(timer);
+          }, step);
+        }
+      },
+      { threshold: 0.4 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [end]);
+
+  return (
+    <div ref={ref} style={{ textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: 36,
+          fontWeight: 800,
+          letterSpacing: '-0.04em',
+          color: '#0a0a08',
+          lineHeight: 1,
+          marginBottom: 6,
+        }}
+      >
+        {count.toLocaleString()}
+      </div>
+      <div
+        style={{
+          fontSize: 11,
+          color: '#9a9a96',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </div>
+    </div>
   );
 }
 
@@ -191,6 +257,7 @@ export default function Landing() {
       }}
     >
       <nav
+        className="landing-nav"
         style={{
           height: 60,
           borderBottom: '1px solid #e2e2de',
@@ -198,8 +265,8 @@ export default function Landing() {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 48px',
-          background: 'rgba(247,247,245,0.9)',
-          backdropFilter: 'blur(8px)',
+          background: 'rgba(247,247,245,0.92)',
+          backdropFilter: 'blur(10px)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
@@ -232,15 +299,9 @@ export default function Landing() {
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: 32 }}>
+        <div className="landing-nav-links" style={{ display: 'flex', gap: 32 }}>
           {['About', 'Developers', 'The Protocol', 'Docs'].map((item) => (
-            <a
-              key={item}
-              href="#"
-              style={{ fontSize: 13, color: '#4a4a46', fontWeight: 400, transition: 'color 0.1s' }}
-              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#0a0a08')}
-              onMouseLeave={(e) => ((e.target as HTMLElement).style.color = '#4a4a46')}
-            >
+            <a key={item} href="#" className="nav-link">
               {item}
             </a>
           ))}
@@ -251,25 +312,15 @@ export default function Landing() {
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ fontSize: 13, color: '#4a4a46', padding: '6px 14px' }}
+            className="nav-link"
+            style={{ padding: '4px 0' }}
           >
             GitHub
           </a>
           <button
             onClick={handleConnect}
-            style={{
-              padding: '7px 18px',
-              background: '#0a0a08',
-              color: '#f7f7f5',
-              border: 'none',
-              borderRadius: 6,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'opacity 0.15s',
-            }}
-            onMouseEnter={(e) => ((e.target as HTMLElement).style.opacity = '0.8')}
-            onMouseLeave={(e) => ((e.target as HTMLElement).style.opacity = '1')}
+            className="cta-primary"
+            style={{ fontSize: 13, padding: '7px 16px' }}
           >
             {connecting ? 'Connecting…' : 'Launch App'}
           </button>
@@ -277,16 +328,12 @@ export default function Landing() {
       </nav>
 
       <section
+        className="landing-section"
         style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 0,
+          padding: '80px 48px 60px',
           maxWidth: 1200,
           margin: '0 auto',
-          padding: '80px 48px 60px',
           width: '100%',
-          alignItems: 'center',
           position: 'relative',
         }}
       >
@@ -295,159 +342,166 @@ export default function Landing() {
           style={{
             position: 'absolute',
             inset: 0,
-            opacity: 0.5,
-            maskImage: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 80%)',
+            opacity: 0.45,
+            maskImage: 'radial-gradient(ellipse 65% 85% at 25% 50%, black 20%, transparent 75%)',
             pointerEvents: 'none',
           }}
         />
 
-        <div style={{ position: 'relative' }}>
-          <div className="animate-in" style={{ marginBottom: 24 }}>
-            <span
+        <div className="landing-hero">
+          <div style={{ position: 'relative' }}>
+            <div className="animate-in" style={{ marginBottom: 22 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: '#9a9a96',
+                  border: '1px solid #e2e2de',
+                  padding: '5px 12px',
+                  borderRadius: 4,
+                }}
+              >
+                [ verify anything · enforce everything ]
+              </span>
+            </div>
+
+            <h1
+              className="animate-in-1 hero-headline"
               style={{
-                display: 'inline-block',
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                color: '#9a9a96',
-                border: '1px solid #e2e2de',
-                padding: '5px 12px',
-                borderRadius: 4,
+                fontSize: 58,
+                fontWeight: 800,
+                letterSpacing: '-0.045em',
+                lineHeight: 1.02,
+                marginBottom: 24,
+                color: '#0a0a08',
               }}
             >
-              [ WITNESS ANYTHING · ENFORCE EVERYTHING ]
-            </span>
+              Prove every
+              <br />
+              AI decision.
+            </h1>
+
+            <p
+              className="animate-in-2"
+              style={{
+                fontSize: 15,
+                color: '#4a4a46',
+                lineHeight: 1.8,
+                maxWidth: 380,
+                marginBottom: 36,
+              }}
+            >
+              Aegis is the accountability layer for AI agents — any agent can prove what it decided,
+              why it decided it, and face consequences if it was wrong.
+            </p>
+
+            <div
+              className="animate-in-3"
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'center',
+                marginBottom: 52,
+                flexWrap: 'wrap',
+              }}
+            >
+              <button onClick={handleConnect} className="cta-primary">
+                {connecting ? 'Connecting…' : 'View More'}
+                <svg
+                  className="cta-arrow"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
+              <button onClick={handleConnect} className="cta-secondary">
+                Get In Touch
+              </button>
+              <a
+                href="#how"
+                style={{
+                  fontSize: 13,
+                  color: '#9a9a96',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                Here's How It Works
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </a>
+            </div>
+
+            <div
+              className="animate-in-4"
+              style={{ borderTop: '1px solid #e2e2de', paddingTop: 28 }}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  color: '#9a9a96',
+                  marginBottom: 14,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                }}
+              >
+                Built on
+              </div>
+              <div style={{ display: 'flex', gap: 28, alignItems: 'center', flexWrap: 'wrap' }}>
+                {[
+                  { name: '0G', desc: 'Storage + Compute' },
+                  { name: 'Gensyn', desc: 'AXL Mesh' },
+                  { name: 'ENS', desc: 'Identity' },
+                  { name: 'KeeperHub', desc: 'Enforcement' },
+                ].map((s) => (
+                  <div key={s.name} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0a0a08' }}>{s.name}</div>
+                    <div style={{ fontSize: 10, color: '#9a9a96' }}>{s.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-
-          <h1
-            className="animate-in-1"
-            style={{
-              fontSize: 54,
-              fontWeight: 800,
-              letterSpacing: '-0.04em',
-              lineHeight: 1.05,
-              marginBottom: 28,
-              color: '#0a0a08',
-            }}
-          >
-            Introducing the
-            <br />
-            AI agent
-            <br />
-            accountability layer
-          </h1>
-
-          <p
-            className="animate-in-2"
-            style={{
-              fontSize: 15,
-              color: '#4a4a46',
-              lineHeight: 1.75,
-              maxWidth: 400,
-              marginBottom: 36,
-            }}
-          >
-            From KYC to brand loyalty, unlock insights you can act on without holding any data. Any
-            agent. Any framework. One call.
-          </p>
 
           <div
-            className="animate-in-3"
-            style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 48 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingLeft: 32,
+            }}
           >
-            <button
-              onClick={handleConnect}
-              style={{
-                padding: '10px 22px',
-                background: '#0a0a08',
-                color: '#f7f7f5',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              {connecting ? 'Connecting…' : 'View More'}
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </button>
-            <button
-              onClick={handleConnect}
-              style={{
-                padding: '10px 22px',
-                background: 'transparent',
-                color: '#0a0a08',
-                border: '1px solid #c8c8c4',
-                borderRadius: 6,
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              Connect Wallet
-            </button>
+            <AnimatedMesh />
           </div>
-
-          <div style={{ borderTop: '1px solid #e2e2de', paddingTop: 28 }}>
-            <div
-              style={{
-                fontSize: 11,
-                color: '#9a9a96',
-                marginBottom: 16,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Built on
-            </div>
-            <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-              {[
-                { name: '0G', desc: 'Storage + Compute' },
-                { name: 'Gensyn', desc: 'AXL Mesh' },
-                { name: 'ENS', desc: 'Identity' },
-                { name: 'KeeperHub', desc: 'Enforcement' },
-              ].map((s) => (
-                <div key={s.name} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0a0a08' }}>{s.name}</div>
-                  <div style={{ fontSize: 10, color: '#9a9a96' }}>{s.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingLeft: 40,
-          }}
-        >
-          <MeshVisual />
         </div>
       </section>
 
       <section
         style={{
-          borderTop: '1px solid #e2e2de',
-          padding: '64px 48px',
+          padding: '0 48px 72px',
           maxWidth: 1200,
           margin: '0 auto',
           width: '100%',
@@ -458,29 +512,93 @@ export default function Landing() {
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 1,
+            background: '#e2e2de',
             border: '1px solid #e2e2de',
             borderRadius: 12,
             overflow: 'hidden',
           }}
         >
           {[
+            { label: 'Total Attestations', end: 12847 },
+            { label: 'Active Agents', end: 284 },
+            { label: 'Verdicts Issued', end: 391 },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              style={{ background: '#f7f7f5', padding: '32px', textAlign: 'center' }}
+            >
+              <LiveCounter label={stat.label} end={stat.end} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        id="how"
+        className="landing-section"
+        style={{
+          borderTop: '1px solid #e2e2de',
+          padding: '72px 48px',
+          maxWidth: 1200,
+          margin: '0 auto',
+          width: '100%',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 40,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: '#9a9a96',
+                marginBottom: 10,
+              }}
+            >
+              How It Works
+            </div>
+            <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>
+              Witness. Verify. Enforce.
+            </h2>
+          </div>
+          <button onClick={handleConnect} className="cta-secondary">
+            Start Building
+          </button>
+        </div>
+
+        <div
+          className="landing-steps"
+          style={{ border: '1px solid #e2e2de', borderRadius: 12, overflow: 'hidden' }}
+        >
+          {[
             {
               num: '01',
               title: 'Witness',
-              desc: 'Agent submits a decision via AXL. Committed to 0G Storage. Root hash returned as a permanent receipt.',
+              desc: 'Agent submits a decision via AXL. Committed to 0G Storage permanently. Root hash returned as a cryptographic receipt.',
               tag: '0G Storage',
+              color: '#7c3aed',
             },
             {
               num: '02',
               title: 'Verify',
-              desc: 'Disputed decisions are replayed via 0G Compute TEE with the same model and inputs. CLEARED or FLAGGED.',
+              desc: 'Disputed decisions are replayed via 0G Compute TEE. Same model, same inputs. CLEARED or FLAGGED with a cryptographic proof.',
               tag: '0G Compute',
+              color: '#2563eb',
             },
             {
               num: '03',
               title: 'Enforce',
-              desc: 'Verdict recorded onchain in AegisCourt.sol. KeeperHub executes the remedy. ENS reputation updates instantly.',
+              desc: 'Verdict recorded onchain in AegisCourt.sol. KeeperHub executes the remedy automatically. ENS reputation updates.',
               tag: 'KeeperHub',
+              color: '#059669',
             },
           ].map((step, i) => (
             <div
@@ -489,7 +607,10 @@ export default function Landing() {
                 padding: '36px 32px',
                 background: 'white',
                 borderRight: i < 2 ? '1px solid #e2e2de' : 'none',
+                transition: 'background 0.15s',
               }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = '#fafaf8')}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'white')}
             >
               <div
                 style={{
@@ -502,9 +623,9 @@ export default function Landing() {
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 700,
-                    color: '#c8c8c4',
-                    letterSpacing: '0.06em',
+                    fontWeight: 800,
+                    color: '#d4d4d0',
+                    letterSpacing: '0.04em',
                   }}
                 >
                   {step.num}
@@ -512,8 +633,9 @@ export default function Landing() {
                 <span
                   style={{
                     fontSize: 9,
-                    color: '#9a9a96',
-                    border: '1px solid #e2e2de',
+                    color: step.color,
+                    border: `1px solid ${step.color}30`,
+                    background: `${step.color}0a`,
                     padding: '3px 8px',
                     borderRadius: 3,
                     letterSpacing: '0.06em',
@@ -535,29 +657,26 @@ export default function Landing() {
               >
                 {step.title}
               </div>
-              <div style={{ fontSize: 13, color: '#4a4a46', lineHeight: 1.7 }}>{step.desc}</div>
+              <div style={{ fontSize: 13, color: '#4a4a46', lineHeight: 1.75 }}>{step.desc}</div>
             </div>
           ))}
         </div>
       </section>
 
       <section
+        className="landing-section landing-integration"
         style={{
-          padding: '64px 48px',
+          padding: '72px 48px',
           maxWidth: 1200,
           margin: '0 auto',
           width: '100%',
           borderTop: '1px solid #e2e2de',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 64,
-          alignItems: 'center',
         }}
       >
         <div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 10,
               color: '#9a9a96',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
@@ -580,69 +699,67 @@ export default function Landing() {
             <br />
             Full accountability.
           </h2>
-          <p style={{ fontSize: 14, color: '#4a4a46', lineHeight: 1.75, marginBottom: 28 }}>
+          <p
+            style={{
+              fontSize: 14,
+              color: '#4a4a46',
+              lineHeight: 1.8,
+              marginBottom: 28,
+              maxWidth: 400,
+            }}
+          >
             Add a single AXL fetch after every agent decision. Storage, verification, court,
-            reputation score, and ENS update — handled automatically.
+            reputation score, and ENS update — all handled automatically by Aegis.
           </p>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={handleConnect}
-              style={{
-                padding: '10px 22px',
-                background: '#0a0a08',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button onClick={handleConnect} className="cta-primary">
               Register Your Agent
             </button>
             <a
               href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                padding: '10px 22px',
-                background: 'transparent',
-                color: '#0a0a08',
-                border: '1px solid #c8c8c4',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
             >
-              View Docs
+              <button className="cta-secondary">View Docs</button>
             </a>
           </div>
         </div>
 
-        <div style={{ background: '#0a0a08', borderRadius: 12, overflow: 'hidden' }}>
+        <div
+          style={{
+            background: '#0c0c10',
+            borderRadius: 12,
+            overflow: 'hidden',
+            border: '1px solid #1e1e28',
+          }}
+        >
           <div
             style={{
               padding: '12px 16px',
-              borderBottom: '1px solid #1e1e2a',
+              borderBottom: '1px solid #1e1e28',
               display: 'flex',
-              gap: 6,
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            <div style={{ width: 10, height: 10, background: '#ef4444', borderRadius: '50%' }} />
-            <div style={{ width: 10, height: 10, background: '#eab308', borderRadius: '50%' }} />
-            <div style={{ width: 10, height: 10, background: '#22c55e', borderRadius: '50%' }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ width: 10, height: 10, background: '#ef4444', borderRadius: '50%' }} />
+              <div style={{ width: 10, height: 10, background: '#eab308', borderRadius: '50%' }} />
+              <div style={{ width: 10, height: 10, background: '#22c55e', borderRadius: '50%' }} />
+            </div>
+            <span style={{ fontSize: 11, color: '#4a4a60', fontFamily: 'monospace' }}>
+              agent-integration.ts
+            </span>
           </div>
           <pre
             style={{
-              padding: '20px',
-              fontSize: 11.5,
-              lineHeight: 1.8,
-              color: '#a78bfa',
+              padding: '22px',
+              fontSize: 12,
+              lineHeight: 1.85,
+              color: '#c4b5fd',
               overflowX: 'auto',
               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+              margin: 0,
             }}
           >{`await fetch("http://localhost:9002/send", {
   method: "POST",
@@ -659,7 +776,7 @@ export default function Landing() {
     timestamp: Date.now()
   })
 })
-// { rootHash: "0xabc...", status: "COMMITTED" }`}</pre>
+// → { rootHash: "0xabc…", status: "COMMITTED" }`}</pre>
         </div>
       </section>
 
@@ -667,14 +784,16 @@ export default function Landing() {
         style={{
           background: '#0a0a08',
           color: '#9a9a96',
-          padding: '32px 48px',
+          padding: '28px 48px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 16,
           marginTop: 'auto',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div
             style={{
               width: 20,
@@ -697,21 +816,33 @@ export default function Landing() {
             </svg>
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#f7f7f5' }}>Aegis Protocol</span>
-          <span style={{ fontSize: 12, color: '#4a4a46' }}>Open Agents</span>
+          <span
+            style={{
+              fontSize: 10,
+              color: '#3a3a38',
+              border: '1px solid #2a2a28',
+              padding: '2px 8px',
+              borderRadius: 3,
+            }}
+          >
+            ETHConf 2026
+          </span>
         </div>
-        <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#4a4a46' }}>
+        <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#3a3a38' }}>
           AegisCourt: 0x3De27365b376D43422314899dA0E18042f0F734a
         </div>
-        <div style={{ display: 'flex', gap: 24, fontSize: 12 }}>
+        <div style={{ display: 'flex', gap: 20, fontSize: 12 }}>
           <a
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: '#9a9a96' }}
+            style={{ color: '#9a9a96', transition: 'color 0.15s' }}
+            onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#f7f7f5')}
+            onMouseLeave={(e) => ((e.target as HTMLElement).style.color = '#9a9a96')}
           >
             GitHub
           </a>
-          <span style={{ color: '#4a4a46' }}>0G Galileo Testnet</span>
+          <span style={{ color: '#3a3a38' }}>0G Galileo · chainId 16602</span>
         </div>
       </footer>
     </div>
