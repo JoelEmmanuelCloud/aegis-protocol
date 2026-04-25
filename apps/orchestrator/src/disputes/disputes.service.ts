@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, BadGatewayException } from '@nestjs/common';
 import { ethers } from 'ethers';
-import type { VerifyResponse, Verdict } from '@aegis/types';
+import { readKVObject, writeKVObject } from '@aegis/0g-client';
+import { triggerWorkflow } from '@aegis/keeper-client';
+import type { VerifyResponse, Verdict, NetworkStats } from '@aegis/types';
 
 const AEGIS_COURT_ABI = [
   'function submitDispute(bytes32 rootHash, string agentId, string reason)',
@@ -32,8 +34,9 @@ export class DisputesService {
     const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
     const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
     this.court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
-    const verifierPort = process.env.AXL_VERIFIER_PORT ?? '9012';
-    this.verifierUrl = `http://localhost:${verifierPort}`;
+    const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
+    this.verifierUrl =
+      process.env.VERIFIER_MGMT_URL ?? `http://localhost:${verifierAxlPort + 1000}`;
   }
 
   async file(dto: FileDisputeDto): Promise<Record<string, unknown>> {
@@ -47,7 +50,7 @@ export class DisputesService {
     const submitTx = await this.court.submitDispute(rootHash32, dto.agentId, dto.reason);
     await submitTx.wait();
 
-    const verifyResponse = await fetch(`${this.verifierUrl}/send`, {
+    const verifyResponse = await fetch(`${this.verifierUrl}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,6 +70,21 @@ export class DisputesService {
 
     const recordTx = await this.court.recordVerdict(rootHash32, verdictUint, teeProofBytes);
     await recordTx.wait();
+
+    if (verification.verdict === 'FLAGGED' && process.env.KEEPERHUB_WORKFLOW_ID) {
+      await triggerWorkflow(process.env.KEEPERHUB_WORKFLOW_ID, {
+        rootHash: dto.rootHash,
+        agentId: dto.agentId,
+        verdict: verification.verdict,
+      }).catch(() => {});
+    }
+
+    const stats = await readKVObject<NetworkStats>('aegis:network:stats');
+    await writeKVObject('aegis:network:stats', {
+      totalAttestations: stats?.totalAttestations ?? 0,
+      disputes: (stats?.disputes ?? 0) + 1,
+      activeAgents: stats?.activeAgents ?? 0,
+    }).catch(() => {});
 
     return {
       rootHash: dto.rootHash,
