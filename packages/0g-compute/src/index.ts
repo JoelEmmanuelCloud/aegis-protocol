@@ -6,7 +6,7 @@ const client = new OpenAI({
   apiKey: process.env.ZG_COMPUTE_API_KEY!,
 });
 
-const MODEL = process.env.ZG_COMPUTE_MODEL ?? 'qwen3.6-plus';
+const MODEL = process.env.ZG_COMPUTE_MODEL ?? 'qwen/qwen-2.5-7b-instruct';
 
 export interface ReplayResult {
   output: string;

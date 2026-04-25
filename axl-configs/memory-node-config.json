@@ -1,0 +1,7 @@
+{
+  "node_name": "aegis-memory",
+  "listen_addr": "0.0.0.0:9032",
+  "http_port": 9032,
+  "private_key_path": "./axl-configs/memory.pem",
+  "peers": []
+}

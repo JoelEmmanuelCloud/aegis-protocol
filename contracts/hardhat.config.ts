@@ -9,12 +9,19 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200,
       },
+      evmVersion: 'cancun',
     },
+  },
+  paths: {
+    sources: '.',
+    scripts: './scripts',
+    artifacts: './artifacts',
+    cache: './cache',
   },
   networks: {
     'zero-g-testnet': {
       url: process.env.ZG_RPC_URL ?? 'https://evmrpc-testnet.0g.ai',
-      chainId: 16600,
+      chainId: 16602,
       accounts: process.env.ZG_PRIVATE_KEY ? [process.env.ZG_PRIVATE_KEY] : [],
     },
   },

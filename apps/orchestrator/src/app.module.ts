@@ -1,13 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AttestationController } from './attestation.controller';
-import { AttestationService } from './attestation.service';
-import { DisputeController } from './dispute.controller';
-import { DisputeService } from './dispute.service';
-import { AgentController } from './agent.controller';
-import { AgentService } from './agent.service';
+import { AgentsModule } from './agents/agents.module';
+import { AttestationsModule } from './attestations/attestations.module';
+import { DisputesModule } from './disputes/disputes.module';
+import { NetworkModule } from './network/network.module';
 
 @Module({
-  controllers: [AttestationController, DisputeController, AgentController],
-  providers: [AttestationService, DisputeService, AgentService],
+  imports: [AgentsModule, AttestationsModule, DisputesModule, NetworkModule],
 })
 export class AppModule {}

@@ -1,0 +1,7 @@
+{
+  "node_name": "aegis-propagator",
+  "listen_addr": "0.0.0.0:9022",
+  "http_port": 9022,
+  "private_key_path": "./axl-configs/propagator.pem",
+  "peers": []
+}
