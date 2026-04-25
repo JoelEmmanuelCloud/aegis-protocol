@@ -4,7 +4,6 @@ import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import AegisLogo from '../components/AegisLogo';
 import ThemeToggle from '../components/ThemeToggle';
-import { useTheme } from '../context/ThemeContext';
 
 function AnimatedMesh() {
   const nodes = [
@@ -193,7 +192,6 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
   const { connect } = useConnect();
-  const { theme } = useTheme();
   const [connecting, setConnecting] = useState(false);
   const [copied, setCopied] = useState(false);
 
