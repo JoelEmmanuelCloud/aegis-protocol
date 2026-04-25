@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ethers } from 'ethers';
+import { readKVObject, writeKVObject } from '@aegis/0g-client';
+import type { NetworkStats } from '@aegis/types';
 
 const AGENT_REGISTRY_ABI = [
   'function mint(address agentOwner, address builderAddress, string label, uint8 userPercent, uint8 builderPercent) returns (uint256 tokenId)',
@@ -59,6 +61,13 @@ export class AgentsService {
 
     const tokenId: bigint = log?.args.tokenId ?? 0n;
     const ensName = `${dto.label}.aegis.eth`;
+
+    const stats = await readKVObject<NetworkStats>('aegis:network:stats');
+    await writeKVObject('aegis:network:stats', {
+      totalAttestations: stats?.totalAttestations ?? 0,
+      disputes: stats?.disputes ?? 0,
+      activeAgents: (stats?.activeAgents ?? 0) + 1,
+    }).catch(() => {});
 
     return { tokenId: tokenId.toString(), ensName, txHash: receipt.hash };
   }
