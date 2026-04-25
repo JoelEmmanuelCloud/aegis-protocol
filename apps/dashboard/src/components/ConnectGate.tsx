@@ -1,6 +1,7 @@
 import { useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { useState } from 'react';
+import AegisLogo from './AegisLogo';
 
 export default function ConnectGate() {
   const { connect } = useConnect();
@@ -28,27 +29,8 @@ export default function ConnectGate() {
         padding: 24,
       }}
     >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          background: 'var(--app-accent)',
-          borderRadius: 14,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 40px var(--accent-glow)',
-        }}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+      <div style={{ filter: 'drop-shadow(0 0 24px rgba(124,58,237,0.4))' }}>
+        <AegisLogo variant="purple" size={52} />
       </div>
 
       <div style={{ textAlign: 'center', maxWidth: 360 }}>
