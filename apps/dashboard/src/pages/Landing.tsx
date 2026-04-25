@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
@@ -125,7 +125,7 @@ function AnimatedMesh() {
           trading-bot.aegis.eth
         </text>
         <text x="14" y="342" fontSize="7.5" fill="#9a9a96" fontFamily="monospace">
-          0xabc123…d4f9
+          0xabc123â€¦d4f9
         </text>
         <rect x="14" y="350" width="50" height="11" rx="3" fill="#ede9fe" />
         <text
@@ -165,10 +165,10 @@ function AnimatedMesh() {
           AegisCourt.sol
         </text>
         <text x="338" y="34" fontSize="7.5" fill="#9a9a96" fontFamily="monospace">
-          0x3De27365…F734a
+          0x3De27365â€¦F734a
         </text>
         <text x="338" y="50" fontSize="7.5" fill="#9a9a96" fontFamily="Inter, sans-serif">
-          0G Galileo · chainId 16602
+          0G Galileo Â· chainId 16602
         </text>
       </g>
     </svg>
@@ -364,7 +364,7 @@ export default function Landing() {
                   borderRadius: 4,
                 }}
               >
-                [ verify anything · enforce everything ]
+                [ verify anything Â· enforce everything ]
               </span>
             </div>
 
@@ -394,8 +394,8 @@ export default function Landing() {
                 marginBottom: 36,
               }}
             >
-              Aegis is the accountability layer for AI agents — any agent can prove what it decided,
-              why it decided it, and face consequences if it was wrong.
+              Aegis is the accountability layer for AI agents â€” any agent can prove what it
+              decided, why it decided it, and face consequences if it was wrong.
             </p>
 
             <div
@@ -409,7 +409,7 @@ export default function Landing() {
               }}
             >
               <button onClick={handleConnect} className="cta-primary">
-                {connecting ? 'Connecting…' : 'View More'}
+                {connecting ? 'Connecting…' : 'Connect Wallet'}
                 <svg
                   className="cta-arrow"
                   width="14"
@@ -425,8 +425,13 @@ export default function Landing() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
-              <button onClick={handleConnect} className="cta-secondary">
-                Get In Touch
+              <button
+                onClick={() =>
+                  window.open(`https://github.com/JoelEmmanuelCloud/aegis-protocol`, `_blank`)
+                }
+                className="cta-secondary"
+              >
+                Docs
               </button>
               <a
                 href="#how"
@@ -438,7 +443,7 @@ export default function Landing() {
                   gap: 6,
                 }}
               >
-                Here's How It Works
+                Get Started
                 <svg
                   width="12"
                   height="12"
@@ -709,7 +714,7 @@ export default function Landing() {
             }}
           >
             Add a single AXL fetch after every agent decision. Storage, verification, court,
-            reputation score, and ENS update — all handled automatically by Aegis.
+            reputation score, and ENS update â€” all handled automatically by Aegis.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={handleConnect} className="cta-primary">
@@ -776,7 +781,7 @@ export default function Landing() {
     timestamp: Date.now()
   })
 })
-// → { rootHash: "0xabc…", status: "COMMITTED" }`}</pre>
+// â†’ { rootHash: "0xabcâ€¦", status: "COMMITTED" }`}</pre>
         </div>
       </section>
 
@@ -842,7 +847,7 @@ export default function Landing() {
           >
             GitHub
           </a>
-          <span style={{ color: '#3a3a38' }}>0G Galileo · chainId 16602</span>
+          <span style={{ color: '#3a3a38' }}>0G Galileo Â· chainId 16602</span>
         </div>
       </footer>
     </div>
