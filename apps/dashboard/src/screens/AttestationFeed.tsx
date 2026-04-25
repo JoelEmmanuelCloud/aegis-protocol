@@ -1,57 +1,151 @@
 import { useState } from 'react';
 import { useAttestations } from '../hooks/useAttestations';
-import { useDemoMode } from '../hooks/useDemoMode';
-import AgentSearch from '../components/AgentSearch';
-import AttestationCard from '../components/AttestationCard';
+
+type Attestation = { agentId: string; rootHash: string; verdict: string; timestamp: number };
+
+function VerdictBadge({ verdict }: { verdict: string }) {
+  if (verdict === 'CLEARED') return <span className="badge-cleared">Cleared</span>;
+  if (verdict === 'FLAGGED') return <span className="badge-flagged">Flagged</span>;
+  return <span className="badge-pending">Pending</span>;
+}
 
 export default function AttestationFeed() {
-  const [agentId, setAgentId] = useState<string | null>(null);
-  const { enabled: demo } = useDemoMode();
+  const { data: live, isLoading } = useAttestations();
+  const [filter, setFilter] = useState<string>('ALL');
 
-  const { data, isLoading, isFetching } = useAttestations(agentId);
-  const entries = data?.items ?? [];
+  const raw = (live ?? []) as Attestation[];
+  const items = filter === 'ALL' ? raw : raw.filter((a) => a.verdict === filter);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div className="text-xl font-bold mb-1">Attestation Feed</div>
-          <div className="text-[13px] text-aegis-muted">
-            Live decision stream — refreshes every 5 seconds
-          </div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
+            Attestation Feed
+          </h1>
+          <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
+            Real-time decision records committed to 0G Storage
+          </p>
         </div>
-        {isFetching && !isLoading && <div className="text-xs text-aegis-dim pt-1">Refreshing…</div>}
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['ALL', 'PENDING', 'CLEARED', 'FLAGGED'].map((v) => (
+            <button
+              key={v}
+              onClick={() => setFilter(v)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: '1px solid',
+                borderColor: filter === v ? 'var(--app-accent)' : 'var(--app-border)',
+                background: filter === v ? 'var(--accent-dim)' : 'transparent',
+                color: filter === v ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
+              }}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {!demo && <AgentSearch onSearch={setAgentId} />}
-
-      <div className="bg-aegis-card border border-aegis-border rounded-xl overflow-hidden">
-        <div className="px-4 py-3.5 border-b border-aegis-border flex items-center justify-between">
-          <div className="text-sm font-semibold">
-            {demo ? 'demo-alpha.aegis.eth' : (agentId ?? 'No agent selected')}
-          </div>
-          <div
-            className={`w-2 h-2 rounded-full ${agentId || demo ? 'bg-aegis-green' : 'bg-aegis-dim'}`}
-          />
+      <div className="app-card">
+        <div
+          style={{
+            padding: '14px 20px',
+            borderBottom: '1px solid var(--app-border)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12,
+            color: 'var(--app-green)',
+          }}
+        >
+          <span className="app-pulse-dot" /> Live stream from Witness Node
         </div>
-
-        {isLoading && <div className="p-8 text-center text-aegis-dim text-[13px]">Loading…</div>}
-
-        {!isLoading && entries.length === 0 && (
-          <div className="p-12 text-center text-aegis-dim text-[13px]">
-            {demo || agentId
-              ? 'No attestations found'
-              : 'Select an agent to see their live attestation feed'}
+        {isLoading ? (
+          <div style={{ padding: '48px', textAlign: 'center' }}>
+            <div className="skeleton" style={{ height: 16, width: 200, margin: '0 auto 12px' }} />
+            <div className="skeleton" style={{ height: 12, width: 140, margin: '0 auto' }} />
+          </div>
+        ) : items.length === 0 ? (
+          <div
+            style={{
+              padding: '48px',
+              textAlign: 'center',
+              color: 'var(--app-text-muted)',
+              fontSize: 13,
+            }}
+          >
+            No attestations match this filter
+          </div>
+        ) : (
+          <div>
+            {items.map((a, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: '16px 20px',
+                  borderBottom: i < items.length - 1 ? '1px solid var(--app-border)' : 'none',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background: 'var(--accent-dim)',
+                        border: '1px solid rgba(212,148,26,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: 'var(--app-accent-light)',
+                      }}
+                    >
+                      {a.agentId?.[0]?.toUpperCase() ?? 'A'}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
+                        {a.agentId}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                        {new Date(a.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                  <VerdictBadge verdict={a.verdict} />
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--app-text-muted)',
+                    fontFamily: 'monospace',
+                    background: 'var(--app-elevated)',
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  rootHash: {a.rootHash}
+                </div>
+              </div>
+            ))}
           </div>
         )}
-
-        {entries.map((entry) => (
-          <AttestationCard
-            key={entry.rootHash}
-            entry={entry}
-            agentId={demo ? 'demo-alpha.aegis.eth' : (agentId ?? undefined)}
-          />
-        ))}
       </div>
     </div>
   );

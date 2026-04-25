@@ -1,5 +1,5 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { mainnet, sepolia } from 'viem/chains';
+import { createConfig, http } from 'wagmi';
+import { injected } from 'wagmi/connectors';
 import { defineChain } from 'viem';
 
 export const galileo = defineChain({
@@ -15,9 +15,11 @@ export const galileo = defineChain({
   testnet: true,
 });
 
-export const wagmiConfig = getDefaultConfig({
-  appName: 'Aegis Protocol',
-  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? '',
-  chains: [galileo, mainnet, sepolia],
+export const wagmiConfig = createConfig({
+  chains: [galileo],
+  connectors: [injected()],
+  transports: {
+    [galileo.id]: http('https://evmrpc-testnet.0g.ai/'),
+  },
   ssr: false,
 });

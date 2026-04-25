@@ -1,133 +1,171 @@
 import { useState } from 'react';
 import { useDispute } from '../hooks/useDispute';
 import { useDisputeStatus } from '../hooks/useDisputeStatus';
-import { useDemoMode } from '../hooks/useDemoMode';
-import { demoDisputes } from '../lib/demoData';
-import VerdictBadge from '../components/VerdictBadge';
-
-const inputCls =
-  'w-full px-3.5 py-2.5 bg-aegis-base border border-aegis-border-solid rounded-lg text-aegis-text text-sm outline-none';
-
-const labelCls = 'text-[13px] text-aegis-muted mb-1.5 block';
 
 export default function DisputeUI() {
-  const { enabled: demo } = useDemoMode();
-  const [agentId, setAgentId] = useState('');
   const [rootHash, setRootHash] = useState('');
+  const [agentId, setAgentId] = useState('');
   const [reason, setReason] = useState('');
-  const [filedRootHash, setFiledRootHash] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const { mutate: fileDispute, isPending, isSuccess, error } = useDispute();
+  const { data: status } = useDisputeStatus(submitted ? rootHash : undefined);
 
-  const { mutate: file, isPending, error, data: result } = useDispute();
-  const { data: status } = useDisputeStatus(
-    filedRootHash ?? (demo ? demoDisputes[0].rootHash : null)
-  );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!agentId || !rootHash || !reason) return;
-    file({ rootHash, agentId, reason }, { onSuccess: () => setFiledRootHash(rootHash) });
+  const handleSubmit = () => {
+    if (!rootHash || !agentId || !reason) return;
+    fileDispute({ rootHash, agentId, reason }, { onSuccess: () => setSubmitted(true) });
   };
 
-  const canSubmit = !isPending && !demo && !!agentId && !!rootHash && !!reason;
+  const verdictColor =
+    status?.verdict === 'CLEARED'
+      ? 'var(--app-green)'
+      : status?.verdict === 'FLAGGED'
+        ? 'var(--app-red)'
+        : 'var(--app-yellow)';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
-        <div className="text-xl font-bold mb-1">File a Dispute</div>
-        <div className="text-[13px] text-aegis-muted">
-          Challenge a decision. The verifier replays it via 0G Compute TEE.
-        </div>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
+          File Dispute
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
+          Challenge an agent decision. The Verifier replays it via 0G Compute TEE.
+        </p>
       </div>
 
-      <div className="grid grid-cols-[1fr_340px] gap-4 items-start">
-        <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className={labelCls}>Agent ID (ENS name)</label>
-              <input
-                className={inputCls}
-                value={agentId}
-                onChange={(e) => setAgentId(e.target.value)}
-                placeholder="trading-bot.aegis.eth"
-                disabled={demo}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Root Hash</label>
-              <input
-                className={inputCls}
-                value={rootHash}
-                onChange={(e) => setRootHash(e.target.value)}
-                placeholder="0x..."
-                disabled={demo}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Reason</label>
-              <textarea
-                className={`${inputCls} h-24 resize-y`}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Describe why this decision should be disputed…"
-                disabled={demo}
-              />
-            </div>
-
-            {error && (
-              <div className="text-aegis-red text-[13px] bg-aegis-red-dim px-3.5 py-2.5 rounded-lg">
-                {error.message}
-              </div>
-            )}
-
-            {result && (
-              <div className="text-aegis-green text-[13px] bg-aegis-green-dim px-3.5 py-2.5 rounded-lg">
-                Dispute filed — verdict: <strong>{result.verdict}</strong>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className={`py-3 border-0 rounded-lg text-sm font-semibold transition-colors ${
-                canSubmit
-                  ? 'bg-aegis-purple text-white cursor-pointer'
-                  : 'bg-aegis-card-hover text-aegis-dim cursor-default'
-              }`}
+      {isSuccess && status && (
+        <div
+          style={{
+            padding: '20px',
+            background:
+              status.verdict === 'CLEARED'
+                ? 'var(--app-green-dim)'
+                : status.verdict === 'FLAGGED'
+                  ? 'var(--app-red-dim)'
+                  : 'var(--app-yellow-dim)',
+            border: `1px solid ${verdictColor}40`,
+            borderRadius: 10,
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: 16, color: verdictColor, marginBottom: 8 }}>
+            Verdict: {status.verdict}
+          </div>
+          {status.teeProof && (
+            <div
+              style={{
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: 'var(--app-text-muted)',
+                wordBreak: 'break-all',
+              }}
             >
-              {isPending ? 'Submitting…' : demo ? 'Demo Mode — disabled' : 'File Dispute'}
-            </button>
-          </form>
-        </div>
-
-        <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-          <div className="text-sm font-semibold mb-4">Dispute Status</div>
-          {status ? (
-            <div className="flex flex-col gap-2.5">
-              <div className="flex justify-between items-center">
-                <span className="text-[13px] text-aegis-muted">Verdict</span>
-                <VerdictBadge verdict={status.verdict ?? 'PENDING'} />
-              </div>
-              {[
-                ['Agent', status.agentId],
-                ['Filed by', `${status.disputedBy.slice(0, 8)}…`],
-                ['Reason', status.reason],
-                ['Filed', new Date(status.timestamp).toLocaleString()],
-              ].map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex justify-between text-[13px] border-b border-aegis-border pb-2"
-                >
-                  <span className="text-aegis-muted">{k}</span>
-                  <span className="text-aegis-text max-w-[160px] truncate">{v}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-aegis-dim text-[13px] text-center py-6">
-              {demo ? 'Loading demo dispute…' : 'File a dispute to track its status here'}
+              TEE Proof: {status.teeProof.slice(0, 80)}…
             </div>
           )}
         </div>
+      )}
+
+      <div
+        className="app-card"
+        style={{
+          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 18,
+          maxWidth: 560,
+        }}
+      >
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--app-text-2)',
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
+            Root Hash
+          </label>
+          <input
+            className="app-input"
+            style={{ fontFamily: 'monospace' }}
+            placeholder="0xabc123..."
+            value={rootHash}
+            onChange={(e) => setRootHash(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--app-text-2)',
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
+            Agent ENS Name
+          </label>
+          <input
+            className="app-input"
+            placeholder="trading-bot.aegis.eth"
+            value={agentId}
+            onChange={(e) => setAgentId(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--app-text-2)',
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
+            Reason
+          </label>
+          <textarea
+            className="app-input"
+            placeholder="Describe the disputed action and why it was incorrect..."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={4}
+            style={{ resize: 'vertical' }}
+          />
+        </div>
+
+        {error && (
+          <div
+            style={{
+              padding: '12px 16px',
+              background: 'var(--app-red-dim)',
+              border: '1px solid rgba(239,68,68,0.2)',
+              borderRadius: 8,
+              fontSize: 12,
+              color: 'var(--app-red)',
+            }}
+          >
+            {String(error).slice(0, 160)}
+          </div>
+        )}
+
+        <button
+          className="app-btn-primary"
+          onClick={handleSubmit}
+          disabled={!rootHash || !agentId || !reason || isPending}
+          style={{
+            width: '100%',
+            padding: '12px',
+            opacity: !rootHash || !agentId || !reason || isPending ? 0.5 : 1,
+            cursor: isPending ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isPending ? 'Submitting to AegisCourt…' : 'File Dispute'}
+        </button>
       </div>
     </div>
   );

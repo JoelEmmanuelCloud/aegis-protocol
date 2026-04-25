@@ -2,7 +2,6 @@ import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
-import { useDemoMode } from '../hooks/useDemoMode';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '⬡' },
@@ -15,7 +14,6 @@ const navItems = [
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { enabled, toggle } = useDemoMode();
   const { address } = useAccount();
   const displayName = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : null;
 
@@ -50,29 +48,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             </NavLink>
           ))}
         </nav>
-
-        <div className="px-3 pt-4 border-t border-aegis-border">
-          <button
-            onClick={toggle}
-            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm w-full text-left border-0 cursor-pointer transition-all duration-150 ${
-              enabled
-                ? 'text-aegis-purple-light bg-aegis-purple-dim'
-                : 'text-aegis-muted bg-transparent hover:text-aegis-text'
-            }`}
-          >
-            <span className="text-base w-[18px] text-center">◈</span>
-            Demo Mode
-          </button>
-        </div>
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {enabled && (
-          <div className="bg-aegis-purple text-white text-center py-1.5 px-4 text-xs font-semibold tracking-wider">
-            DEMO MODE ACTIVE
-          </div>
-        )}
-
         <header className="h-16 shrink-0 border-b border-aegis-border flex items-center justify-between px-7 bg-aegis-sidebar">
           <div>
             <div className="text-base font-semibold text-aegis-text">

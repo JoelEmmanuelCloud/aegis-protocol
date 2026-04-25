@@ -32,14 +32,16 @@ export function fetchAgentsByOwner(address: string): Promise<AgentRecord[]> {
 }
 
 export function fetchAttestations(
-  agentId: string,
+  agentId?: string | null,
   cursor?: string,
   limit?: number
 ): Promise<AttestationListResponse> {
-  const params = new URLSearchParams({ agentId });
+  const params = new URLSearchParams();
+  if (agentId) params.set('agentId', agentId);
   if (cursor) params.set('cursor', cursor);
   if (limit !== undefined) params.set('limit', String(limit));
-  return apiFetch<AttestationListResponse>(`/attestations?${params}`);
+  const qs = params.toString();
+  return apiFetch<AttestationListResponse>(`/attestations${qs ? `?${qs}` : ''}`);
 }
 
 export function fileDispute(body: {

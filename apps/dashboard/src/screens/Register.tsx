@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import OwnershipSlider from '../components/OwnershipSlider';
 
-const AGENT_REGISTRY_ABI = [
+const REGISTRY_ABI = [
   {
     name: 'mint',
-    type: 'function' as const,
-    stateMutability: 'nonpayable' as const,
+    type: 'function',
+    stateMutability: 'nonpayable',
     inputs: [
       { name: 'agentOwner', type: 'address' },
       { name: 'builderAddress', type: 'address' },
@@ -19,155 +17,206 @@ const AGENT_REGISTRY_ABI = [
   },
 ] as const;
 
-const registryAddress = import.meta.env.VITE_AGENT_REGISTRY_ADDRESS as `0x${string}`;
-
-const inputCls =
-  'w-full px-3.5 py-2.5 bg-aegis-base border border-aegis-border-solid rounded-lg text-aegis-text text-sm outline-none';
-
-const labelCls = 'text-[13px] text-aegis-muted mb-1.5 block';
+const REGISTRY = (import.meta.env.VITE_AGENT_REGISTRY_ADDRESS ?? '0x0') as `0x${string}`;
 
 export default function Register() {
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const [label, setLabel] = useState('');
-  const [builderAddress, setBuilderAddress] = useState('');
-  const [userPercent, setUserPercent] = useState(60);
-
+  const [builder, setBuilder] = useState('');
+  const [userPct, setUserPct] = useState(60);
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
+  const { isSuccess, isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
 
-  const ensPreview = label.trim() ? `${label.trim().toLowerCase()}.aegis.eth` : null;
-  const builderAddr = (builderAddress.trim() || address) as `0x${string}` | undefined;
-  const canMint =
-    isConnected &&
-    !!label.trim() &&
-    !!address &&
-    !!builderAddr &&
-    !!registryAddress &&
-    !isPending &&
-    !isConfirming;
+  const valid =
+    label.trim().length > 0 && /^[a-z0-9-]+$/.test(label) && userPct + (100 - userPct) === 100;
 
   const handleMint = () => {
-    if (!address || !builderAddr || !label.trim() || !registryAddress) return;
+    if (!address || !valid) return;
     writeContract({
-      address: registryAddress,
-      abi: AGENT_REGISTRY_ABI,
+      address: REGISTRY,
+      abi: REGISTRY_ABI,
       functionName: 'mint',
-      args: [address, builderAddr, label.trim().toLowerCase(), userPercent, 100 - userPercent],
-      chainId: 16602,
+      args: [address, (builder as `0x${string}`) || address, label, userPct, 100 - userPct],
     });
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
       <div>
-        <div className="text-xl font-bold mb-1">Register Agent</div>
-        <div className="text-[13px] text-aegis-muted">
-          Mint an iNFT (ERC-7857) and issue an aegis.eth ENS subname for your AI agent
-        </div>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
+          Register Agent
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
+          Mint an iNFT and auto-issue an ENS subname under aegis.eth
+        </p>
       </div>
 
-      <div className="grid grid-cols-[1fr_320px] gap-4 items-start">
-        <div className="flex flex-col gap-4">
-          <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-            <div className="text-sm font-semibold mb-4">Wallet</div>
-            <ConnectButton />
+      {isSuccess && (
+        <div
+          style={{
+            padding: '16px 20px',
+            background: 'var(--app-green-dim)',
+            border: '1px solid rgba(34,197,94,0.2)',
+            borderRadius: 10,
+          }}
+        >
+          <div style={{ fontWeight: 600, color: 'var(--app-green)', marginBottom: 4 }}>
+            Agent registered
           </div>
-
-          {isConnected && (
-            <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-              <div className="text-sm font-semibold mb-5">Agent Details</div>
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className={labelCls}>ENS Label</label>
-                  <input
-                    className={inputCls}
-                    value={label}
-                    onChange={(e) => setLabel(e.target.value.replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="trading-bot"
-                    maxLength={32}
-                  />
-                  {ensPreview && (
-                    <div className="text-xs text-aegis-purple-light mt-1">ENS: {ensPreview}</div>
-                  )}
-                </div>
-
-                <div>
-                  <label className={labelCls}>Builder Address</label>
-                  <input
-                    className={inputCls}
-                    value={builderAddress}
-                    onChange={(e) => setBuilderAddress(e.target.value)}
-                    placeholder={address ?? '0x…'}
-                  />
-                  <div className="text-xs text-aegis-dim mt-1">
-                    Leave empty to use your connected wallet
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelCls}>Accountability Split</label>
-                  <OwnershipSlider userPercent={userPercent} onChange={setUserPercent} />
-                </div>
-
-                {error && (
-                  <div className="text-aegis-red text-[13px] bg-aegis-red-dim px-3.5 py-2.5 rounded-lg">
-                    {error.message}
-                  </div>
-                )}
-
-                {isSuccess && txHash && (
-                  <div className="text-aegis-green text-[13px] bg-aegis-green-dim px-3.5 py-2.5 rounded-lg">
-                    Agent minted successfully. Tx: {txHash.slice(0, 10)}…
-                  </div>
-                )}
-
-                <button
-                  onClick={handleMint}
-                  disabled={!canMint}
-                  className={`py-3 border-0 rounded-lg text-sm font-semibold transition-colors ${
-                    canMint
-                      ? 'bg-aegis-purple text-white cursor-pointer'
-                      : 'bg-aegis-card-hover text-aegis-dim cursor-default'
-                  }`}
-                >
-                  {isPending ? 'Awaiting wallet…' : isConfirming ? 'Confirming…' : 'Mint iNFT'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div className="bg-aegis-card border border-aegis-border rounded-xl px-6 py-5">
-            <div className="text-sm font-semibold mb-4">Preview</div>
-            <div className="flex flex-col gap-3">
-              {[
-                ['ENS Name', ensPreview ?? '—'],
-                ['Owner', address ? `${address.slice(0, 8)}…` : '—'],
-                ['Builder', builderAddr ? `${builderAddr.slice(0, 8)}…` : '—'],
-                ['User Split', `${userPercent}%`],
-                ['Builder Split', `${100 - userPercent}%`],
-                ['Chain', '0G Galileo Testnet (16602)'],
-              ].map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex justify-between text-[13px] pb-2.5 border-b border-aegis-border"
-                >
-                  <span className="text-aegis-muted">{k}</span>
-                  <span className="text-aegis-text font-mono">{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-aegis-purple-dim border border-[rgba(124,58,237,0.3)] rounded-xl px-6 py-5">
-            <div className="text-[13px] text-aegis-purple-light leading-relaxed">
-              Minting creates an ERC-7857 iNFT on 0G Galileo Testnet, issues an aegis.eth ENS
-              subname via NameWrapper, and sets initial reputation text records on the Public
-              Resolver.
-            </div>
+          <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
+            {label}.aegis.eth issued
           </div>
         </div>
+      )}
+
+      <div
+        className="app-card"
+        style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}
+      >
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--app-text-2)',
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
+            ENS Label
+          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+            <input
+              className="app-input"
+              style={{ borderRadius: '8px 0 0 8px', borderRight: 'none' }}
+              placeholder="trading-bot"
+              value={label}
+              onChange={(e) => setLabel(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+            />
+            <div
+              style={{
+                padding: '10px 14px',
+                background: 'var(--app-elevated)',
+                border: '1px solid var(--border-bright)',
+                borderRadius: '0 8px 8px 0',
+                fontSize: 13,
+                color: 'var(--app-text-muted)',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              .aegis.eth
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+            Lowercase letters, numbers, and hyphens only
+          </div>
+        </div>
+
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--app-text-2)',
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
+            Builder Address{' '}
+            <span style={{ color: 'var(--app-text-muted)', fontWeight: 400 }}>(optional)</span>
+          </label>
+          <input
+            className="app-input"
+            placeholder={address ?? '0x...'}
+            value={builder}
+            onChange={(e) => setBuilder(e.target.value)}
+          />
+          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+            Leave blank to use your connected wallet
+          </div>
+        </div>
+
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--app-text-2)',
+              display: 'block',
+              marginBottom: 12,
+            }}
+          >
+            Accountability Split
+          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: 'var(--app-text)' }}>
+              User <strong style={{ color: 'var(--app-accent-light)' }}>{userPct}%</strong>
+            </span>
+            <span style={{ fontSize: 13, color: 'var(--app-text)' }}>
+              Builder <strong>{100 - userPct}%</strong>
+            </span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={userPct}
+            onChange={(e) => setUserPct(Number(e.target.value))}
+            style={{ width: '100%', accentColor: 'var(--app-accent)', cursor: 'pointer' }}
+          />
+          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+            Encoded permanently in the iNFT contract at mint time
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'var(--app-elevated)',
+            borderRadius: 8,
+            border: '1px solid var(--app-border)',
+          }}
+        >
+          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginBottom: 8 }}>
+            Preview
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--app-text)' }}>
+            {label || 'your-agent'}.aegis.eth
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--app-text-muted)', marginTop: 4 }}>
+            Owner: {address?.slice(0, 10)}…
+          </div>
+        </div>
+
+        {error && (
+          <div
+            style={{
+              padding: '12px 16px',
+              background: 'var(--app-red-dim)',
+              border: '1px solid rgba(239,68,68,0.2)',
+              borderRadius: 8,
+              fontSize: 12,
+              color: 'var(--app-red)',
+            }}
+          >
+            {error.message.slice(0, 120)}
+          </div>
+        )}
+
+        <button
+          className="app-btn-primary"
+          onClick={handleMint}
+          disabled={!valid || isPending || confirming}
+          style={{
+            width: '100%',
+            padding: '12px',
+            opacity: !valid || isPending || confirming ? 0.5 : 1,
+            cursor: !valid || isPending || confirming ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isPending ? 'Confirm in wallet…' : confirming ? 'Confirming on-chain…' : 'Mint iNFT'}
+        </button>
       </div>
     </div>
   );
