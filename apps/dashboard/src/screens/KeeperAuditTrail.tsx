@@ -14,7 +14,9 @@ type Run = {
 
 export default function KeeperAuditTrail() {
   const { enabled: demo } = useDemoMode();
-  const { data: live, isLoading } = useKeeperAudit(import.meta.env.VITE_KEEPERHUB_WORKFLOW_ID ?? '');
+  const { data: live, isLoading } = useKeeperAudit(
+    import.meta.env.VITE_KEEPERHUB_WORKFLOW_ID ?? ''
+  );
   const runs = (demo ? demoAuditRuns : (live ?? [])) as Run[];
 
   return (
@@ -23,13 +25,13 @@ export default function KeeperAuditTrail() {
         <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
           KeeperHub Audit Trail
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+        <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
           Automated remedy execution log for{' '}
           <code style={{ fontSize: 12, color: '#a78bfa' }}>aegis.execute_remedy</code>
         </p>
       </div>
 
-      <div className="card">
+      <div className="app-card">
         {isLoading && !demo ? (
           <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[1, 2, 3].map((i) => (
@@ -37,7 +39,14 @@ export default function KeeperAuditTrail() {
             ))}
           </div>
         ) : runs.length === 0 ? (
-          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+          <div
+            style={{
+              padding: '48px',
+              textAlign: 'center',
+              color: 'var(--app-text-muted)',
+              fontSize: 13,
+            }}
+          >
             No remedy runs yet. Runs appear when a FLAGGED verdict fires the workflow.
           </div>
         ) : (
@@ -58,7 +67,13 @@ export default function KeeperAuditTrail() {
                     marginBottom: 10,
                   }}
                 >
-                  <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <div
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: 'var(--app-text-2)',
+                    }}
+                  >
                     {r.runId}
                   </div>
                   <span
@@ -76,12 +91,12 @@ export default function KeeperAuditTrail() {
                 <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                   {r.txHash && (
                     <div style={{ fontSize: 11 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Tx: </span>
+                      <span style={{ color: 'var(--app-text-muted)' }}>Tx: </span>
                       <a
                         href={`https://chainscan-galileo.0g.ai/tx/${r.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ fontFamily: 'monospace', color: 'var(--accent)' }}
+                        style={{ fontFamily: 'monospace', color: 'var(--app-accent)' }}
                       >
                         {r.txHash.slice(0, 14)}…
                       </a>
@@ -89,16 +104,16 @@ export default function KeeperAuditTrail() {
                   )}
                   {r.gasUsed != null && (
                     <div style={{ fontSize: 11 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Gas: </span>
-                      <span style={{ color: 'var(--text-primary)' }}>{r.gasUsed.toLocaleString()}</span>
+                      <span style={{ color: 'var(--app-text-muted)' }}>Gas: </span>
+                      <span style={{ color: 'var(--app-text)' }}>{r.gasUsed.toLocaleString()}</span>
                     </div>
                   )}
                   <div style={{ fontSize: 11 }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Retries: </span>
-                    <span style={{ color: 'var(--text-primary)' }}>{r.retryCount}</span>
+                    <span style={{ color: 'var(--app-text-muted)' }}>Retries: </span>
+                    <span style={{ color: 'var(--app-text)' }}>{r.retryCount}</span>
                   </div>
                   {r.completedAt && (
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
                       {new Date(r.completedAt).toLocaleString()}
                     </div>
                   )}

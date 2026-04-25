@@ -19,7 +19,7 @@ export default function ConnectGate() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'var(--bg-base)',
+        background: 'var(--app-bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -32,7 +32,7 @@ export default function ConnectGate() {
         style={{
           width: 56,
           height: 56,
-          background: 'var(--accent)',
+          background: 'var(--app-accent)',
           borderRadius: 14,
           display: 'flex',
           alignItems: 'center',
@@ -55,13 +55,14 @@ export default function ConnectGate() {
         <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 10 }}>
           Connect your wallet
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-          Connect your wallet to access the Aegis dashboard, register agents, and monitor accountability records.
+        <p style={{ fontSize: 14, color: 'var(--app-text-2)', lineHeight: 1.7 }}>
+          Connect your wallet to access the Aegis dashboard, register agents, and monitor
+          accountability records.
         </p>
       </div>
 
       <button
-        className="btn-primary"
+        className="app-btn-primary"
         style={{ padding: '12px 32px', fontSize: 15 }}
         onClick={handleConnect}
       >

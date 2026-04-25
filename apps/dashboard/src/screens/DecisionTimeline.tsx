@@ -32,12 +32,12 @@ export default function DecisionTimeline() {
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
             Decision Timeline
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
             Full history of every attested decision on the mesh
           </p>
         </div>
         <input
-          className="input"
+          className="app-input"
           style={{ width: 240 }}
           placeholder="Search agent or hash…"
           value={search}
@@ -53,19 +53,33 @@ export default function DecisionTimeline() {
             top: 0,
             bottom: 0,
             width: 1,
-            background: 'var(--border)',
+            background: 'var(--app-border)',
             zIndex: 0,
           }}
         />
         {items.length === 0 ? (
-          <div className="card" style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+          <div
+            className="app-card"
+            style={{
+              padding: '48px',
+              textAlign: 'center',
+              color: 'var(--app-text-muted)',
+              fontSize: 13,
+            }}
+          >
             {search ? 'No results match your search' : 'No decisions recorded yet'}
           </div>
         ) : (
           items.map((a, i) => (
             <div
               key={i}
-              style={{ display: 'flex', gap: 16, marginBottom: 12, position: 'relative', zIndex: 1 }}
+              style={{
+                display: 'flex',
+                gap: 16,
+                marginBottom: 12,
+                position: 'relative',
+                zIndex: 1,
+              }}
             >
               <div
                 style={{
@@ -74,11 +88,11 @@ export default function DecisionTimeline() {
                   borderRadius: '50%',
                   background:
                     a.verdict === 'CLEARED'
-                      ? 'var(--green-dim)'
+                      ? 'var(--app-green-dim)'
                       : a.verdict === 'FLAGGED'
-                        ? 'var(--red-dim)'
-                        : 'var(--yellow-dim)',
-                  border: `2px solid ${a.verdict === 'CLEARED' ? 'var(--green)' : a.verdict === 'FLAGGED' ? 'var(--red)' : 'var(--yellow)'}`,
+                        ? 'var(--app-red-dim)'
+                        : 'var(--app-yellow-dim)',
+                  border: `2px solid ${a.verdict === 'CLEARED' ? 'var(--app-green)' : a.verdict === 'FLAGGED' ? 'var(--app-red)' : 'var(--app-yellow)'}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -93,14 +107,14 @@ export default function DecisionTimeline() {
                     borderRadius: '50%',
                     background:
                       a.verdict === 'CLEARED'
-                        ? 'var(--green)'
+                        ? 'var(--app-green)'
                         : a.verdict === 'FLAGGED'
-                          ? 'var(--red)'
-                          : 'var(--yellow)',
+                          ? 'var(--app-red)'
+                          : 'var(--app-yellow)',
                   }}
                 />
               </div>
-              <div className="card" style={{ flex: 1, padding: '14px 18px' }}>
+              <div className="app-card" style={{ flex: 1, padding: '14px 18px' }}>
                 <div
                   style={{
                     display: 'flex',
@@ -112,7 +126,7 @@ export default function DecisionTimeline() {
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{a.agentId}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <VerdictBadge verdict={a.verdict} />
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
                       {new Date(a.timestamp).toLocaleString()}
                     </span>
                   </div>
@@ -121,8 +135,8 @@ export default function DecisionTimeline() {
                   style={{
                     fontSize: 11,
                     fontFamily: 'monospace',
-                    color: 'var(--text-muted)',
-                    background: 'var(--bg-elevated)',
+                    color: 'var(--app-text-muted)',
+                    background: 'var(--app-elevated)',
                     padding: '6px 10px',
                     borderRadius: 5,
                     overflow: 'hidden',

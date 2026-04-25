@@ -17,10 +17,10 @@ export default function DisputeUI() {
 
   const verdictColor =
     status?.verdict === 'CLEARED'
-      ? 'var(--green)'
+      ? 'var(--app-green)'
       : status?.verdict === 'FLAGGED'
-        ? 'var(--red)'
-        : 'var(--yellow)';
+        ? 'var(--app-red)'
+        : 'var(--app-yellow)';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -28,7 +28,7 @@ export default function DisputeUI() {
         <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
           File Dispute
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+        <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
           Challenge an agent decision. The Verifier replays it via 0G Compute TEE.
         </p>
       </div>
@@ -39,10 +39,10 @@ export default function DisputeUI() {
             padding: '20px',
             background:
               status.verdict === 'CLEARED'
-                ? 'var(--green-dim)'
+                ? 'var(--app-green-dim)'
                 : status.verdict === 'FLAGGED'
-                  ? 'var(--red-dim)'
-                  : 'var(--yellow-dim)',
+                  ? 'var(--app-red-dim)'
+                  : 'var(--app-yellow-dim)',
             border: `1px solid ${verdictColor}40`,
             borderRadius: 10,
           }}
@@ -55,7 +55,7 @@ export default function DisputeUI() {
               style={{
                 fontSize: 11,
                 fontFamily: 'monospace',
-                color: 'var(--text-muted)',
+                color: 'var(--app-text-muted)',
                 wordBreak: 'break-all',
               }}
             >
@@ -66,7 +66,7 @@ export default function DisputeUI() {
       )}
 
       <div
-        className="card"
+        className="app-card"
         style={{
           padding: '24px',
           display: 'flex',
@@ -80,7 +80,7 @@ export default function DisputeUI() {
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: 'var(--text-secondary)',
+              color: 'var(--app-text-2)',
               display: 'block',
               marginBottom: 8,
             }}
@@ -88,7 +88,7 @@ export default function DisputeUI() {
             Root Hash
           </label>
           <input
-            className="input"
+            className="app-input"
             style={{ fontFamily: 'monospace' }}
             placeholder="0xabc123..."
             value={rootHash}
@@ -101,7 +101,7 @@ export default function DisputeUI() {
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: 'var(--text-secondary)',
+              color: 'var(--app-text-2)',
               display: 'block',
               marginBottom: 8,
             }}
@@ -109,7 +109,7 @@ export default function DisputeUI() {
             Agent ENS Name
           </label>
           <input
-            className="input"
+            className="app-input"
             placeholder="trading-bot.aegis.eth"
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
@@ -121,7 +121,7 @@ export default function DisputeUI() {
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: 'var(--text-secondary)',
+              color: 'var(--app-text-2)',
               display: 'block',
               marginBottom: 8,
             }}
@@ -129,7 +129,7 @@ export default function DisputeUI() {
             Reason
           </label>
           <textarea
-            className="input"
+            className="app-input"
             placeholder="Describe the disputed action and why it was incorrect..."
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -142,11 +142,11 @@ export default function DisputeUI() {
           <div
             style={{
               padding: '12px 16px',
-              background: 'var(--red-dim)',
+              background: 'var(--app-red-dim)',
               border: '1px solid rgba(239,68,68,0.2)',
               borderRadius: 8,
               fontSize: 12,
-              color: 'var(--red)',
+              color: 'var(--app-red)',
             }}
           >
             {String(error).slice(0, 160)}
@@ -154,7 +154,7 @@ export default function DisputeUI() {
         )}
 
         <button
-          className="btn-primary"
+          className="app-btn-primary"
           onClick={handleSubmit}
           disabled={!rootHash || !agentId || !reason || isPending}
           style={{

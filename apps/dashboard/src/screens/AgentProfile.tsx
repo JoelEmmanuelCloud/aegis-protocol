@@ -34,7 +34,8 @@ function ScoreRing({ score }: { score: number }) {
   const r = 40;
   const circ = 2 * Math.PI * r;
   const dash = (score / 100) * circ;
-  const color = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
+  const color =
+    score >= 70 ? 'var(--app-green)' : score >= 40 ? 'var(--app-yellow)' : 'var(--app-red)';
   return (
     <div style={{ position: 'relative', width: 100, height: 100 }}>
       <svg width="100" height="100" viewBox="0 0 100 100">
@@ -63,7 +64,16 @@ function ScoreRing({ score }: { score: number }) {
         }}
       >
         <div style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1 }}>{score}</div>
-        <div style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>score</div>
+        <div
+          style={{
+            fontSize: 9,
+            color: 'var(--app-text-muted)',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+          }}
+        >
+          score
+        </div>
       </div>
     </div>
   );
@@ -85,7 +95,7 @@ function Row({ label, value }: { label: string; value?: string }) {
       <span
         style={{
           fontSize: 12,
-          color: isEnsip25 ? '#a78bfa' : 'var(--text-muted)',
+          color: isEnsip25 ? '#a78bfa' : 'var(--app-text-muted)',
           fontFamily: 'monospace',
           flexShrink: 0,
         }}
@@ -95,7 +105,7 @@ function Row({ label, value }: { label: string; value?: string }) {
       <span
         style={{
           fontSize: 12,
-          color: 'var(--text-secondary)',
+          color: 'var(--app-text-2)',
           fontFamily: 'monospace',
           textAlign: 'right',
           overflow: 'hidden',
@@ -155,57 +165,77 @@ export default function AgentProfile() {
         <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
           Agent Profile
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+        <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
           ENS identity and live reputation for any registered agent
         </p>
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
         <input
-          className="input"
+          className="app-input"
           style={{ flex: 1 }}
           placeholder="trading-bot or trading-bot.aegis.eth"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
         />
-        <button className="btn-primary" onClick={handleSearch} style={{ flexShrink: 0, padding: '10px 20px' }}>
+        <button
+          className="app-btn-primary"
+          onClick={handleSearch}
+          style={{ flexShrink: 0, padding: '10px 20px' }}
+        >
           Lookup
         </button>
       </div>
 
       {isLoading && !demo && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[1, 2].map((i) => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />)}
+          {[1, 2].map((i) => (
+            <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />
+          ))}
         </div>
       )}
 
       {(displayAgent || demo) && (
         <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+            <div
+              className="app-card"
+              style={{
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 16,
+              }}
+            >
               <ScoreRing score={demo ? demoReputation.score : score} />
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
                   {displayAgent?.ensName ?? ensName}
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>
                   Token #{displayAgent?.tokenId ?? '—'}
                 </div>
               </div>
-              <span
-                className={displayAgent?.active ? 'badge-cleared' : 'badge-flagged'}
-              >
+              <span className={displayAgent?.active ? 'badge-cleared' : 'badge-flagged'}>
                 {displayAgent?.active ? 'Active' : 'Suspended'}
               </span>
             </div>
 
-            <div className="card" style={{ padding: '18px' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12 }}>
+            <div className="app-card" style={{ padding: '18px' }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--app-text-2)',
+                  marginBottom: 12,
+                }}
+              >
                 Accountability Split
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>User</span>
+                <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>User</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#a78bfa' }}>
                   {displayAgent?.userPercent ?? '—'}%
                 </span>
@@ -213,7 +243,7 @@ export default function AgentProfile() {
               <div
                 style={{
                   height: 4,
-                  background: 'var(--bg-overlay)',
+                  background: 'var(--app-elevated)',
                   borderRadius: 2,
                   overflow: 'hidden',
                   marginBottom: 6,
@@ -223,14 +253,14 @@ export default function AgentProfile() {
                   style={{
                     height: '100%',
                     width: `${displayAgent?.userPercent ?? 0}%`,
-                    background: 'var(--accent)',
+                    background: 'var(--app-accent)',
                     borderRadius: 2,
                   }}
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Builder</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>Builder</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)' }}>
                   {displayAgent?.builderPercent ?? '—'}%
                 </span>
               </div>
@@ -238,8 +268,15 @@ export default function AgentProfile() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div className="card" style={{ padding: '18px' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
+            <div className="app-card" style={{ padding: '18px' }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--app-text-2)',
+                  marginBottom: 4,
+                }}
+              >
                 Agent Record
               </div>
               <Row label="Builder" value={displayAgent?.builderAddress} />
@@ -254,7 +291,7 @@ export default function AgentProfile() {
               />
             </div>
 
-            <div className="card" style={{ padding: '18px' }}>
+            <div className="app-card" style={{ padding: '18px' }}>
               <div
                 style={{
                   display: 'flex',
@@ -263,7 +300,7 @@ export default function AgentProfile() {
                   marginBottom: 4,
                 }}
               >
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)' }}>
                   ENS Text Records
                 </div>
                 <span
@@ -289,7 +326,7 @@ export default function AgentProfile() {
                   href={`https://app.ens.domains/${ensName ?? ''}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: 'var(--accent)' }}
+                  style={{ fontSize: 12, color: 'var(--app-accent)' }}
                 >
                   View on ENS App
                 </a>
@@ -301,11 +338,11 @@ export default function AgentProfile() {
 
       {!displayAgent && !isLoading && !demo && (
         <div
-          className="card"
+          className="app-card"
           style={{
             padding: '64px',
             textAlign: 'center',
-            color: 'var(--text-muted)',
+            color: 'var(--app-text-muted)',
             fontSize: 13,
           }}
         >
