@@ -1,11 +1,14 @@
+import '@rainbow-me/rainbowkit/styles.css';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider } from 'wagmi';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { WagmiProvider, useAccount } from 'wagmi';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { wagmiConfig } from './wagmi.config';
 import { queryClient } from './lib/queryClient';
-import Layout from './components/Layout';
+import AppShell from './components/AppShell';
+import ConnectGate from './components/ConnectGate';
 import ErrorBoundary from './components/ErrorBoundary';
+import Landing from './pages/Landing';
 import Overview from './screens/Overview';
 import AgentProfile from './screens/AgentProfile';
 import AttestationFeed from './screens/AttestationFeed';
@@ -14,25 +17,47 @@ import DisputeUI from './screens/DisputeUI';
 import KeeperAuditTrail from './screens/KeeperAuditTrail';
 import Register from './screens/Register';
 
+function AppRoutes() {
+  const { isConnected } = useAccount();
+
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route
+        path="/app/*"
+        element={
+          isConnected ? (
+            <AppShell>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<Overview />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/attestations" element={<AttestationFeed />} />
+                  <Route path="/timeline" element={<DecisionTimeline />} />
+                  <Route path="/disputes" element={<DisputeUI />} />
+                  <Route path="/agents" element={<AgentProfile />} />
+                  <Route path="/audit" element={<KeeperAuditTrail />} />
+                  <Route path="*" element={<Navigate to="/app" replace />} />
+                </Routes>
+              </ErrorBoundary>
+            </AppShell>
+          ) : (
+            <ConnectGate />
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <BrowserRouter>
-            <ErrorBoundary>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Overview />} />
-                  <Route path="/agents" element={<AgentProfile />} />
-                  <Route path="/attestations" element={<AttestationFeed />} />
-                  <Route path="/timeline" element={<DecisionTimeline />} />
-                  <Route path="/disputes" element={<DisputeUI />} />
-                  <Route path="/audit" element={<KeeperAuditTrail />} />
-                  <Route path="/register" element={<Register />} />
-                </Routes>
-              </Layout>
-            </ErrorBoundary>
+            <AppRoutes />
           </BrowserRouter>
         </RainbowKitProvider>
       </QueryClientProvider>
