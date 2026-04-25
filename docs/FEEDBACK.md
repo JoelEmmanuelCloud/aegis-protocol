@@ -9,14 +9,14 @@ All entries are real integration findings from building the `aegis.execute_remed
 
 After installing via `/plugin marketplace add KeeperHub/claude-plugins`:
 
-| Tool Name | Parameters | Notes |
-|-----------|------------|-------|
-| `keeperhub.create_workflow` | `name`, `trigger`, `steps[]` | Core workflow definition tool |
-| `keeperhub.trigger_workflow` | `workflowId`, `payload` | Manual trigger for testing |
-| `keeperhub.get_workflow_run` | `runId` | Poll run status |
-| `keeperhub.list_runs` | `workflowId`, `limit` | Audit trail retrieval |
-| `keeperhub.get_workflow` | `workflowId` | Inspect existing workflow |
-| `keeperhub.delete_workflow` | `workflowId` | Cleanup stale workflows |
+| Tool Name                    | Parameters                   | Notes                         |
+| ---------------------------- | ---------------------------- | ----------------------------- |
+| `keeperhub.create_workflow`  | `name`, `trigger`, `steps[]` | Core workflow definition tool |
+| `keeperhub.trigger_workflow` | `workflowId`, `payload`      | Manual trigger for testing    |
+| `keeperhub.get_workflow_run` | `runId`                      | Poll run status               |
+| `keeperhub.list_runs`        | `workflowId`, `limit`        | Audit trail retrieval         |
+| `keeperhub.get_workflow`     | `workflowId`                 | Inspect existing workflow     |
+| `keeperhub.delete_workflow`  | `workflowId`                 | Cleanup stale workflows       |
 
 ---
 
@@ -25,6 +25,7 @@ After installing via `/plugin marketplace add KeeperHub/claude-plugins`:
 Trigger: `onchain:AegisCourtVerdictEmitted`
 
 Steps:
+
 1. `aegis.fetch_verdict` — reads verdict from AegisCourt.sol
 2. `aegis.notify_agent_owner` — notifies iNFT owner wallet
 3. `aegis.execute_remedy_tx` (if: `verdict===FLAGGED`) — fires onchain remedy

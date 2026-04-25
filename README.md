@@ -24,7 +24,7 @@ Propagator Node (9022) ───────────────────
      │  AXL send → PROPAGATE_ATTESTATION
      ▼
 Memory Node (9032) ───────────────────────────────── 0G KV + ENS text records
-     
+
 Dispute filed
      │  AXL send → VERIFY_DECISION
      ▼
@@ -51,6 +51,7 @@ docker-compose up
 ```
 
 **Local (without Docker):**
+
 ```bash
 # Start each node in a separate terminal
 npx ts-node apps/witness-node/src/index.ts
@@ -62,30 +63,32 @@ npx ts-node -r tsconfig-paths/register apps/orchestrator/src/main.ts
 
 ## AXL Node Peer IDs
 
-| Node | Port | Peer ID |
-|------|------|---------|
-| Witness | 9002 | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
-| Verifier | 9012 | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
+| Node       | Port | Peer ID                                                            |
+| ---------- | ---- | ------------------------------------------------------------------ |
+| Witness    | 9002 | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
+| Verifier   | 9012 | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
 | Propagator | 9022 | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
-| Memory | 9032 | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
+| Memory     | 9032 | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
 
 ## Agent Integration
 
 Add one call to your agent after every decision:
 
 ```typescript
-await fetch("http://localhost:9002/send", {
-  method: "POST",
-  headers: { "X-Destination-Peer-Id": "23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1" },
+await fetch('http://localhost:9002/send', {
+  method: 'POST',
+  headers: {
+    'X-Destination-Peer-Id': '23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1',
+  },
   body: JSON.stringify({
-    type: "ATTEST_DECISION",
-    agentId: "trading-bot.aegis.eth",
-    inputs: { context: "wallet 0x1234, balance 0.3 ETH" },
-    reasoning: "Balance below 0.5 threshold. Confidence 0.94. Swap.",
-    action: { type: "swap", amount: "100 USDC", to: "ETH" },
-    timestamp: Date.now()
-  })
-})
+    type: 'ATTEST_DECISION',
+    agentId: 'trading-bot.aegis.eth',
+    inputs: { context: 'wallet 0x1234, balance 0.3 ETH' },
+    reasoning: 'Balance below 0.5 threshold. Confidence 0.94. Swap.',
+    action: { type: 'swap', amount: '100 USDC', to: 'ETH' },
+    timestamp: Date.now(),
+  }),
+});
 // Response: { "rootHash": "0xabc123...", "status": "COMMITTED" }
 ```
 
@@ -103,12 +106,13 @@ GET  /network/stats       — read global stats from 0G KV
 
 ## Contracts (0G Testnet)
 
-| Contract | Address |
-|----------|---------|
-| AegisCourt.sol | `AEGIS_COURT_ADDRESS` (set in .env after deploy) |
+| Contract          | Address                                             |
+| ----------------- | --------------------------------------------------- |
+| AegisCourt.sol    | `AEGIS_COURT_ADDRESS` (set in .env after deploy)    |
 | AgentRegistry.sol | `AGENT_REGISTRY_ADDRESS` (set in .env after deploy) |
 
 Deploy:
+
 ```bash
 cd contracts && npx hardhat run scripts/deploy.ts --network zero-g-testnet
 ```
@@ -123,6 +127,7 @@ trading-bot.aegis.eth          ← auto-issued on mint
 ```
 
 Text records updated after every attestation:
+
 ```
 aegis.reputation      = "87"
 aegis.totalDecisions  = "1247"
@@ -132,6 +137,7 @@ aegis.flaggedCount    = "2"
 ```
 
 ENSIP-25 records link name to AgentRegistry.sol:
+
 ```
 agent.registry = "0xAGENT_REGISTRY_ADDRESS"
 agent.id       = "0xTOKEN_ID_HEX"
