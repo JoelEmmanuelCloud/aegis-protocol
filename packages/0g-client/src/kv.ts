@@ -33,11 +33,7 @@ export async function writeKV(key: string, value: string): Promise<void> {
   const streamId = getStreamId();
   const batcher = await createBatcher();
 
-  batcher.streamDataBuilder.set(
-    streamId,
-    Buffer.from(key, 'utf-8'),
-    Buffer.from(value, 'utf-8')
-  );
+  batcher.streamDataBuilder.set(streamId, Buffer.from(key, 'utf-8'), Buffer.from(value, 'utf-8'));
 
   const [, err] = await batcher.exec();
   if (err) throw new Error(`KV write failed: ${err}`);
