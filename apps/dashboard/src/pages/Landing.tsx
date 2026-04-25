@@ -689,7 +689,7 @@ export default function Landing() {
               borderRadius: 4,
             }}
           >
-            ETHConf 2026
+            Open Agents
           </span>
         </div>
         <div style={{ fontSize: 12, fontFamily: 'monospace', color: '#4a4a48' }}>
