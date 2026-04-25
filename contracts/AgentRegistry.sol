@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 interface INameWrapper {
     function setSubnodeRecord(
@@ -45,8 +45,8 @@ contract AgentRegistry is ERC721, Ownable {
 
     bytes32 public immutable AEGIS_NODE;
 
-    INameWrapper public immutable nameWrapper;
-    IPublicResolver public immutable publicResolver;
+    INameWrapper public immutable NAME_WRAPPER;
+    IPublicResolver public immutable PUBLIC_RESOLVER;
 
     uint256 private _nextTokenId;
 
@@ -75,10 +75,10 @@ contract AgentRegistry is ERC721, Ownable {
     constructor(
         address _nameWrapper,
         address _publicResolver
-    ) ERC721('Aegis iNFT', 'AINFT') Ownable(msg.sender) {
-        nameWrapper = INameWrapper(_nameWrapper);
-        publicResolver = IPublicResolver(_publicResolver);
-        AEGIS_NODE = keccak256(abi.encodePacked(ETH_NODE, keccak256(bytes('aegis'))));
+    ) ERC721("Aegis iNFT", "AINFT") Ownable(msg.sender) {
+        NAME_WRAPPER = INameWrapper(_nameWrapper);
+        PUBLIC_RESOLVER = IPublicResolver(_publicResolver);
+        AEGIS_NODE = keccak256(abi.encodePacked(ETH_NODE, keccak256(bytes("aegis"))));
     }
 
     function mint(
@@ -95,30 +95,30 @@ contract AgentRegistry is ERC721, Ownable {
 
         _safeMint(agentOwner, tokenId);
 
-        bytes32 subnode = nameWrapper.setSubnodeRecord(
+        bytes32 subnode = NAME_WRAPPER.setSubnodeRecord(
             AEGIS_NODE,
             label,
             address(this),
-            address(publicResolver),
+            address(PUBLIC_RESOLVER),
             0,
             0,
             uint64(block.timestamp + 365 days)
         );
 
-        string memory ensName = string(abi.encodePacked(label, '.aegis.eth'));
+        string memory ensName = string(abi.encodePacked(label, ".aegis.eth"));
 
-        publicResolver.setText(subnode, 'agent.registry', _toHexString(address(this)));
-        publicResolver.setText(subnode, 'agent.id', _uint256ToHex(tokenId));
-        publicResolver.setText(subnode, 'aegis.reputation', '100');
-        publicResolver.setText(subnode, 'aegis.totalDecisions', '0');
-        publicResolver.setText(subnode, 'aegis.lastVerdict', 'CLEARED');
-        publicResolver.setText(subnode, 'aegis.flaggedCount', '0');
-        publicResolver.setText(subnode, 'aegis.registry', 'aegis.eth');
+        PUBLIC_RESOLVER.setText(subnode, "agent.registry", _toHexString(address(this)));
+        PUBLIC_RESOLVER.setText(subnode, "agent.id", _uint256ToHex(tokenId));
+        PUBLIC_RESOLVER.setText(subnode, "aegis.reputation", "100");
+        PUBLIC_RESOLVER.setText(subnode, "aegis.totalDecisions", "0");
+        PUBLIC_RESOLVER.setText(subnode, "aegis.lastVerdict", "CLEARED");
+        PUBLIC_RESOLVER.setText(subnode, "aegis.flaggedCount", "0");
+        PUBLIC_RESOLVER.setText(subnode, "aegis.registry", "aegis.eth");
 
         _agents[tokenId] = AgentRecord({
             ensName: ensName,
             ensNode: subnode,
-            storageRoot: '',
+            storageRoot: "",
             builderAddress: builderAddress,
             split: AccountabilitySplit(userPercent, builderPercent),
             active: true,
@@ -135,7 +135,7 @@ contract AgentRegistry is ERC721, Ownable {
         if (!_exists(tokenId)) revert TokenNotFound();
         _agents[tokenId].storageRoot = storageRoot;
 
-        publicResolver.setText(_agents[tokenId].ensNode, 'aegis.storageIndex', storageRoot);
+        PUBLIC_RESOLVER.setText(_agents[tokenId].ensNode, "aegis.storageIndex", storageRoot);
 
         emit StorageRootUpdated(tokenId, storageRoot);
     }
@@ -150,10 +150,10 @@ contract AgentRegistry is ERC721, Ownable {
         if (!_exists(tokenId)) revert TokenNotFound();
         bytes32 node = _agents[tokenId].ensNode;
 
-        publicResolver.setText(node, 'aegis.reputation', reputation);
-        publicResolver.setText(node, 'aegis.totalDecisions', totalDecisions);
-        publicResolver.setText(node, 'aegis.lastVerdict', lastVerdict);
-        publicResolver.setText(node, 'aegis.flaggedCount', flaggedCount);
+        PUBLIC_RESOLVER.setText(node, "aegis.reputation", reputation);
+        PUBLIC_RESOLVER.setText(node, "aegis.totalDecisions", totalDecisions);
+        PUBLIC_RESOLVER.setText(node, "aegis.lastVerdict", lastVerdict);
+        PUBLIC_RESOLVER.setText(node, "aegis.flaggedCount", flaggedCount);
     }
 
     function suspendAgent(uint256 tokenId) external onlyOwner {
@@ -187,8 +187,8 @@ contract AgentRegistry is ERC721, Ownable {
 
     function _toHexString(address addr) internal pure returns (string memory) {
         bytes memory buffer = new bytes(42);
-        buffer[0] = '0';
-        buffer[1] = 'x';
+        buffer[0] = "0";
+        buffer[1] = "x";
         for (uint256 i = 0; i < 20; i++) {
             bytes1 b = bytes1(uint8(uint160(addr) >> (8 * (19 - i))));
             buffer[2 + i * 2] = _hexChar(uint8(b) >> 4);
@@ -198,10 +198,10 @@ contract AgentRegistry is ERC721, Ownable {
     }
 
     function _uint256ToHex(uint256 value) internal pure returns (string memory) {
-        if (value == 0) return '0x0';
+        if (value == 0) return "0x0";
         bytes memory buffer = new bytes(66);
-        buffer[0] = '0';
-        buffer[1] = 'x';
+        buffer[0] = "0";
+        buffer[1] = "x";
         for (uint256 i = 0; i < 32; i++) {
             bytes1 b = bytes1(uint8(value >> (8 * (31 - i))));
             buffer[2 + i * 2] = _hexChar(uint8(b) >> 4);

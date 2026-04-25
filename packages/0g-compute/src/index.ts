@@ -27,7 +27,7 @@ export async function replayDecision(
 
   const choice = response.choices[0];
   const replayOutput = choice.message.content ?? '';
-  const teeProof = (response as unknown as Record<string, unknown>).teeProof as string ?? '';
+  const teeProof = ((response as unknown as Record<string, unknown>).teeProof as string) ?? '';
 
   const originalAction = JSON.stringify(originalOutput);
   const replayAction = replayOutput.trim();

@@ -66,7 +66,7 @@ contract AegisCourt {
             reason: reason,
             timestamp: block.timestamp,
             verdict: Verdict.PENDING,
-            teeProof: bytes(''),
+            teeProof: bytes(""),
             exists: true
         });
 
