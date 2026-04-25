@@ -4,6 +4,7 @@
   --bg-base: #f7f7f5;
   --bg-surface: #ffffff;
   --bg-elevated: #f0f0ee;
+  --bg-hover: #fafaf8;
   --bg-overlay: #e8e8e5;
   --border: #e2e2de;
   --border-dark: #c8c8c4;
@@ -12,7 +13,13 @@
   --accent-hover: #5b21b6;
   --text-primary: #0a0a08;
   --text-secondary: #4a4a46;
-  --text-muted: #9a9a96;
+  --text-muted: #6a6a66;
+  --nav-bg: rgba(247, 247, 245, 0.92);
+  --landing-dots-color: #c8c8c4;
+  --cta-bg: #0a0a08;
+  --cta-text: #f7f7f5;
+  --cta-hover: #1a1a18;
+  --cta2-border: #c8c8c4;
   --green: #16a34a;
   --green-dim: rgba(22, 163, 74, 0.08);
   --red: #dc2626;
@@ -39,10 +46,53 @@
   --app-yellow-dim: rgba(234, 179, 8, 0.1);
 }
 
+[data-theme='dark'] {
+  --bg-base: #0d0d0b;
+  --bg-surface: #161614;
+  --bg-elevated: #1e1e1c;
+  --bg-hover: #1c1c1a;
+  --border: #2a2a28;
+  --border-dark: #3a3a38;
+  --accent-light: rgba(109, 40, 217, 0.15);
+  --text-primary: #f2f2f0;
+  --text-secondary: #8a8a86;
+  --text-muted: #5a5a56;
+  --nav-bg: rgba(13, 13, 11, 0.92);
+  --landing-dots-color: #2a2a28;
+  --cta-bg: #f2f2f0;
+  --cta-text: #0a0a08;
+  --cta-hover: #dededb;
+  --cta2-border: #3a3a38;
+}
+
+[data-theme='light'] {
+  --app-bg: #f4f4f2;
+  --app-surface: #ffffff;
+  --app-elevated: #efefed;
+  --app-border: #e2e2de;
+  --app-border-bright: #d0d0cc;
+  --app-text: #0a0a08;
+  --app-text-2: #4a4a46;
+  --app-text-muted: #8a8a86;
+  --app-accent-dim: rgba(124, 58, 237, 0.08);
+  --app-accent-glow: rgba(124, 58, 237, 0.15);
+  --app-green: #16a34a;
+  --app-green-dim: rgba(22, 163, 74, 0.08);
+  --app-red: #dc2626;
+  --app-red-dim: rgba(220, 38, 38, 0.08);
+  --app-yellow: #ca8a04;
+  --app-yellow-dim: rgba(202, 138, 4, 0.08);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 76px;
 }
 
 html,
@@ -265,13 +315,13 @@ textarea {
 }
 
 .landing-dots {
-  background-image: radial-gradient(circle, #c8c8c4 1px, transparent 1px);
+  background-image: radial-gradient(circle, var(--landing-dots-color) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
 .nav-link {
   font-size: 13px;
-  color: #4a4a46;
+  color: var(--text-secondary);
   font-weight: 400;
   position: relative;
   padding-bottom: 2px;
@@ -285,12 +335,12 @@ textarea {
   bottom: 0;
   width: 0;
   height: 1px;
-  background: #0a0a08;
+  background: var(--text-primary);
   transition: width 0.2s ease;
 }
 
 .nav-link:hover {
-  color: #0a0a08;
+  color: var(--text-primary);
 }
 
 .nav-link:hover::after {
@@ -302,8 +352,8 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 11px 24px;
-  background: #0a0a08;
-  color: #f7f7f5;
+  background: var(--cta-bg);
+  color: var(--cta-text);
   border: none;
   border-radius: 6px;
   font-size: 14px;
@@ -314,7 +364,7 @@ textarea {
 }
 
 .cta-primary:hover {
-  background: #1a1a18;
+  background: var(--cta-hover);
 }
 
 .cta-primary:hover .cta-arrow {
@@ -331,8 +381,8 @@ textarea {
   gap: 8px;
   padding: 11px 24px;
   background: transparent;
-  color: #0a0a08;
-  border: 1px solid #c8c8c4;
+  color: var(--text-primary);
+  border: 1px solid var(--cta2-border);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
@@ -344,8 +394,8 @@ textarea {
 }
 
 .cta-secondary:hover {
-  border-color: #0a0a08;
-  background: rgba(10, 10, 8, 0.04);
+  border-color: var(--text-primary);
+  background: var(--bg-elevated);
 }
 
 .landing-hero {
