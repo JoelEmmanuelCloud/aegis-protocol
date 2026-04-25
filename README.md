@@ -104,14 +104,14 @@ GET  /disputes/:rootHash  — read dispute from AegisCourt.sol
 GET  /network/stats       — read global stats from 0G KV
 ```
 
-## Contracts (0G Testnet)
+## Contracts (0G Testnet — chainId 16602)
 
-| Contract          | Address                                             |
-| ----------------- | --------------------------------------------------- |
-| AegisCourt.sol    | `AEGIS_COURT_ADDRESS` (set in .env after deploy)    |
-| AgentRegistry.sol | `AGENT_REGISTRY_ADDRESS` (set in .env after deploy) |
+| Contract          | Address                                      |
+| ----------------- | -------------------------------------------- |
+| AegisCourt.sol    | `0x3De27365b376D43422314899dA0E18042f0F734a` |
+| AgentRegistry.sol | `0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc` |
 
-Deploy:
+To redeploy:
 
 ```bash
 cd contracts && npx hardhat run scripts/deploy.ts --network zero-g-testnet
