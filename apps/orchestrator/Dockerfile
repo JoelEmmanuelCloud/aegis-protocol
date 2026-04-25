@@ -14,4 +14,4 @@ COPY packages/0g-client packages/0g-client/
 COPY apps/orchestrator apps/orchestrator/
 
 WORKDIR /app/apps/orchestrator
-CMD ["node", "--require", "ts-node/register", "src/main.ts"]
+CMD ["node", "-r", "ts-node/register", "-r", "tsconfig-paths/register", "src/main.ts"]
