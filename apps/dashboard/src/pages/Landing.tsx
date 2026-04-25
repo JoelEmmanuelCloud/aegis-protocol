@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
@@ -54,7 +54,7 @@ function AnimatedMesh() {
           y2={nodes[b].y}
           stroke={i < 4 ? nodes[a].color : '#d4d4d0'}
           strokeWidth={i < 4 ? '1.5' : '1'}
-          strokeOpacity={i < 4 ? '0.3' : '0.6'}
+          strokeOpacity={i < 4 ? '0.35' : '0.6'}
           className="mesh-edge"
           style={{ animationDelay: `${i * 0.3}s` }}
         />
@@ -66,7 +66,7 @@ function AnimatedMesh() {
           className="mesh-node"
           style={{ transformOrigin: `${n.x}px ${n.y}px`, animationDelay: `${i * 0.4}s` }}
         >
-          <circle cx={n.x} cy={n.y} r={n.r + 8} fill={n.color} opacity="0.06" />
+          <circle cx={n.x} cy={n.y} r={n.r + 8} fill={n.color} opacity="0.07" />
           <circle
             cx={n.x}
             cy={n.y}
@@ -79,22 +79,22 @@ function AnimatedMesh() {
           <circle cx={n.x} cy={n.y} r={n.r === 14 ? 5 : 7} fill={n.color} opacity="0.9" />
           <text
             x={n.x}
-            y={n.y + n.r + 14}
+            y={n.y + n.r + 16}
             textAnchor="middle"
-            fontSize="9.5"
-            fontWeight="600"
+            fontSize="11"
+            fontWeight="700"
             fontFamily="Inter, sans-serif"
-            fill="#3a3a38"
+            fill="#2a2a28"
           >
             {n.label}
           </text>
           <text
             x={n.x}
-            y={n.y + n.r + 26}
+            y={n.y + n.r + 30}
             textAnchor="middle"
-            fontSize="8"
+            fontSize="10"
             fontFamily="'JetBrains Mono', monospace"
-            fill="#9a9a96"
+            fill="#6a6a66"
           >
             {n.sub}
           </text>
@@ -105,40 +105,40 @@ function AnimatedMesh() {
         <rect
           x="6"
           y="308"
-          width="172"
-          height="60"
+          width="180"
+          height="64"
           rx="8"
           fill="white"
           stroke="#e2e2de"
           strokeWidth="1"
         />
-        <circle cx="24" cy="322" r="5" fill="#22c55e" />
-        <circle cx="24" cy="322" r="9" fill="#22c55e" opacity="0.15" />
+        <circle cx="24" cy="324" r="6" fill="#22c55e" />
+        <circle cx="24" cy="324" r="10" fill="#22c55e" opacity="0.15" />
         <text
-          x="38"
-          y="326"
-          fontSize="9"
-          fontWeight="600"
-          fill="#3a3a38"
+          x="40"
+          y="329"
+          fontSize="11"
+          fontWeight="700"
+          fill="#1a1a18"
           fontFamily="Inter, sans-serif"
         >
           trading-bot.aegis.eth
         </text>
-        <text x="14" y="342" fontSize="7.5" fill="#9a9a96" fontFamily="monospace">
-          0xabc123â€¦d4f9
+        <text x="14" y="346" fontSize="10" fill="#6a6a66" fontFamily="monospace">
+          0xabc123…d4f9
         </text>
-        <rect x="14" y="350" width="50" height="11" rx="3" fill="#ede9fe" />
+        <rect x="14" y="354" width="56" height="13" rx="3" fill="#ede9fe" />
         <text
           x="18"
-          y="359"
-          fontSize="7.5"
+          y="364"
+          fontSize="9.5"
           fill="#7c3aed"
           fontWeight="700"
           fontFamily="Inter, sans-serif"
         >
           CLEARED
         </text>
-        <text x="72" y="359" fontSize="7.5" fill="#9a9a96" fontFamily="Inter, sans-serif">
+        <text x="76" y="364" fontSize="9.5" fill="#6a6a66" fontFamily="Inter, sans-serif">
           2s ago
         </text>
       </g>
@@ -147,28 +147,28 @@ function AnimatedMesh() {
         <rect
           x="326"
           y="4"
-          width="158"
-          height="56"
+          width="166"
+          height="62"
           rx="8"
           fill="white"
           stroke="#e2e2de"
           strokeWidth="1"
         />
         <text
-          x="338"
-          y="20"
-          fontSize="8.5"
+          x="340"
+          y="22"
+          fontSize="11"
           fontWeight="700"
-          fill="#3a3a38"
+          fill="#1a1a18"
           fontFamily="Inter, sans-serif"
         >
           AegisCourt.sol
         </text>
-        <text x="338" y="34" fontSize="7.5" fill="#9a9a96" fontFamily="monospace">
-          0x3De27365â€¦F734a
+        <text x="340" y="38" fontSize="10" fill="#6a6a66" fontFamily="monospace">
+          0x3De27365…F734a
         </text>
-        <text x="338" y="50" fontSize="7.5" fill="#9a9a96" fontFamily="Inter, sans-serif">
-          0G Galileo Â· chainId 16602
+        <text x="340" y="54" fontSize="10" fill="#6a6a66" fontFamily="Inter, sans-serif">
+          0G Galileo · chainId 16602
         </text>
       </g>
     </svg>
@@ -206,22 +206,22 @@ function LiveCounter({ label, end }: { label: string; end: number }) {
     <div ref={ref} style={{ textAlign: 'center' }}>
       <div
         style={{
-          fontSize: 36,
+          fontSize: 38,
           fontWeight: 800,
           letterSpacing: '-0.04em',
           color: '#0a0a08',
           lineHeight: 1,
-          marginBottom: 6,
+          marginBottom: 8,
         }}
       >
         {count.toLocaleString()}
       </div>
       <div
         style={{
-          fontSize: 11,
-          color: '#9a9a96',
+          fontSize: 13,
+          color: '#6a6a66',
           textTransform: 'uppercase',
-          letterSpacing: '0.08em',
+          letterSpacing: '0.06em',
           fontWeight: 600,
         }}
       >
@@ -259,7 +259,7 @@ export default function Landing() {
       <nav
         className="landing-nav"
         style={{
-          height: 60,
+          height: 64,
           borderBottom: '1px solid #e2e2de',
           display: 'flex',
           alignItems: 'center',
@@ -272,19 +272,19 @@ export default function Landing() {
           zIndex: 50,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div
             style={{
-              width: 24,
-              height: 24,
+              width: 28,
+              height: 28,
               background: '#0a0a08',
-              borderRadius: 5,
+              borderRadius: 6,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
                 stroke="white"
@@ -294,33 +294,33 @@ export default function Landing() {
               />
             </svg>
           </div>
-          <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.02em' }}>
+          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.02em' }}>
             aegis protocol
           </span>
         </div>
 
         <div className="landing-nav-links" style={{ display: 'flex', gap: 32 }}>
           {['About', 'Developers', 'The Protocol', 'Docs'].map((item) => (
-            <a key={item} href="#" className="nav-link">
+            <a key={item} href="#" className="nav-link" style={{ fontSize: 14 }}>
               {item}
             </a>
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <a
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
             rel="noopener noreferrer"
             className="nav-link"
-            style={{ padding: '4px 0' }}
+            style={{ padding: '4px 0', fontSize: 14 }}
           >
             GitHub
           </a>
           <button
             onClick={handleConnect}
             className="cta-primary"
-            style={{ fontSize: 13, padding: '7px 16px' }}
+            style={{ fontSize: 14, padding: '8px 18px' }}
           >
             {connecting ? 'Connecting…' : 'Launch App'}
           </button>
@@ -350,21 +350,21 @@ export default function Landing() {
 
         <div className="landing-hero">
           <div style={{ position: 'relative' }}>
-            <div className="animate-in" style={{ marginBottom: 22 }}>
+            <div className="animate-in" style={{ marginBottom: 24 }}>
               <span
                 style={{
                   display: 'inline-block',
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: 600,
-                  letterSpacing: '0.12em',
+                  letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: '#9a9a96',
-                  border: '1px solid #e2e2de',
-                  padding: '5px 12px',
+                  color: '#6a6a66',
+                  border: '1px solid #d8d8d4',
+                  padding: '6px 14px',
                   borderRadius: 4,
                 }}
               >
-                [ verify anything Â· enforce everything ]
+                [ verify anything · enforce everything ]
               </span>
             </div>
 
@@ -387,22 +387,22 @@ export default function Landing() {
             <p
               className="animate-in-2"
               style={{
-                fontSize: 15,
-                color: '#4a4a46',
+                fontSize: 16,
+                color: '#3a3a38',
                 lineHeight: 1.8,
-                maxWidth: 380,
+                maxWidth: 400,
                 marginBottom: 36,
               }}
             >
-              Aegis is the accountability layer for AI agents â€” any agent can prove what it
-              decided, why it decided it, and face consequences if it was wrong.
+              Aegis is the accountability layer for AI agents — any agent can prove what it decided,
+              why it decided it, and face consequences if it was wrong.
             </p>
 
             <div
               className="animate-in-3"
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 12,
                 alignItems: 'center',
                 marginBottom: 52,
                 flexWrap: 'wrap',
@@ -412,8 +412,8 @@ export default function Landing() {
                 {connecting ? 'Connecting…' : 'Connect Wallet'}
                 <svg
                   className="cta-arrow"
-                  width="14"
-                  height="14"
+                  width="15"
+                  height="15"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -427,7 +427,7 @@ export default function Landing() {
               </button>
               <button
                 onClick={() =>
-                  window.open(`https://github.com/JoelEmmanuelCloud/aegis-protocol`, `_blank`)
+                  window.open('https://github.com/JoelEmmanuelCloud/aegis-protocol', '_blank')
                 }
                 className="cta-secondary"
               >
@@ -441,9 +441,9 @@ export default function Landing() {
             >
               <div
                 style={{
-                  fontSize: 10,
-                  color: '#9a9a96',
-                  marginBottom: 14,
+                  fontSize: 12,
+                  color: '#6a6a66',
+                  marginBottom: 16,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   fontWeight: 600,
@@ -458,9 +458,9 @@ export default function Landing() {
                   { name: 'ENS', desc: 'Identity' },
                   { name: 'KeeperHub', desc: 'Enforcement' },
                 ].map((s) => (
-                  <div key={s.name} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0a0a08' }}>{s.name}</div>
-                    <div style={{ fontSize: 10, color: '#9a9a96' }}>{s.desc}</div>
+                  <div key={s.name} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0a0a08' }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: '#6a6a66' }}>{s.desc}</div>
                   </div>
                 ))}
               </div>
@@ -480,14 +480,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section
-        style={{
-          padding: '0 48px 72px',
-          maxWidth: 1200,
-          margin: '0 auto',
-          width: '100%',
-        }}
-      >
+      <section style={{ padding: '0 48px 72px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         <div
           style={{
             display: 'grid',
@@ -504,10 +497,7 @@ export default function Landing() {
             { label: 'Active Agents', end: 284 },
             { label: 'Verdicts Issued', end: 391 },
           ].map((stat) => (
-            <div
-              key={stat.label}
-              style={{ background: '#f7f7f5', padding: '32px', textAlign: 'center' }}
-            >
+            <div key={stat.label} style={{ background: '#f7f7f5', padding: '36px' }}>
               <LiveCounter label={stat.label} end={stat.end} />
             </div>
           ))}
@@ -536,17 +526,17 @@ export default function Landing() {
           <div>
             <div
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: '#9a9a96',
+                color: '#6a6a66',
                 marginBottom: 10,
               }}
             >
               How It Works
             </div>
-            <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>
+            <h2 style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em' }}>
               Witness. Verify. Enforce.
             </h2>
           </div>
@@ -577,7 +567,7 @@ export default function Landing() {
             {
               num: '03',
               title: 'Enforce',
-              desc: 'Verdict recorded onchain in AegisCourt.sol. KeeperHub executes the remedy automatically. ENS reputation updates.',
+              desc: 'Verdict recorded onchain in AegisCourt.sol. KeeperHub executes the remedy automatically. ENS reputation updates instantly.',
               tag: 'KeeperHub',
               color: '#059669',
             },
@@ -603,9 +593,9 @@ export default function Landing() {
               >
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: 13,
                     fontWeight: 800,
-                    color: '#d4d4d0',
+                    color: '#c8c8c4',
                     letterSpacing: '0.04em',
                   }}
                 >
@@ -613,13 +603,13 @@ export default function Landing() {
                 </span>
                 <span
                   style={{
-                    fontSize: 9,
+                    fontSize: 11,
                     color: step.color,
-                    border: `1px solid ${step.color}30`,
-                    background: `${step.color}0a`,
-                    padding: '3px 8px',
-                    borderRadius: 3,
-                    letterSpacing: '0.06em',
+                    border: `1px solid ${step.color}40`,
+                    background: `${step.color}0d`,
+                    padding: '4px 10px',
+                    borderRadius: 4,
+                    letterSpacing: '0.05em',
                     textTransform: 'uppercase',
                     fontWeight: 600,
                   }}
@@ -629,16 +619,16 @@ export default function Landing() {
               </div>
               <div
                 style={{
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: 700,
                   letterSpacing: '-0.02em',
-                  marginBottom: 12,
+                  marginBottom: 14,
                   color: '#0a0a08',
                 }}
               >
                 {step.title}
               </div>
-              <div style={{ fontSize: 13, color: '#4a4a46', lineHeight: 1.75 }}>{step.desc}</div>
+              <div style={{ fontSize: 14, color: '#3a3a38', lineHeight: 1.75 }}>{step.desc}</div>
             </div>
           ))}
         </div>
@@ -657,8 +647,8 @@ export default function Landing() {
         <div>
           <div
             style={{
-              fontSize: 10,
-              color: '#9a9a96',
+              fontSize: 12,
+              color: '#6a6a66',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: 16,
@@ -669,10 +659,10 @@ export default function Landing() {
           </div>
           <h2
             style={{
-              fontSize: 32,
+              fontSize: 34,
               fontWeight: 800,
               letterSpacing: '-0.03em',
-              marginBottom: 16,
+              marginBottom: 18,
               lineHeight: 1.1,
             }}
           >
@@ -682,15 +672,15 @@ export default function Landing() {
           </h2>
           <p
             style={{
-              fontSize: 14,
-              color: '#4a4a46',
+              fontSize: 15,
+              color: '#3a3a38',
               lineHeight: 1.8,
               marginBottom: 28,
-              maxWidth: 400,
+              maxWidth: 420,
             }}
           >
             Add a single AXL fetch after every agent decision. Storage, verification, court,
-            reputation score, and ENS update â€” all handled automatically by Aegis.
+            reputation score, and ENS update — all handled automatically by Aegis.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={handleConnect} className="cta-primary">
@@ -728,14 +718,14 @@ export default function Landing() {
               <div style={{ width: 10, height: 10, background: '#eab308', borderRadius: '50%' }} />
               <div style={{ width: 10, height: 10, background: '#22c55e', borderRadius: '50%' }} />
             </div>
-            <span style={{ fontSize: 11, color: '#4a4a60', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: 12, color: '#4a4a60', fontFamily: 'monospace' }}>
               agent-integration.ts
             </span>
           </div>
           <pre
             style={{
               padding: '22px',
-              fontSize: 12,
+              fontSize: 12.5,
               lineHeight: 1.85,
               color: '#c4b5fd',
               overflowX: 'auto',
@@ -757,7 +747,7 @@ export default function Landing() {
     timestamp: Date.now()
   })
 })
-// â†’ { rootHash: "0xabcâ€¦", status: "COMMITTED" }`}</pre>
+// → { rootHash: "0xabc…", status: "COMMITTED" }`}</pre>
         </div>
       </section>
 
@@ -765,7 +755,7 @@ export default function Landing() {
         style={{
           background: '#0a0a08',
           color: '#9a9a96',
-          padding: '28px 48px',
+          padding: '32px 48px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -777,8 +767,8 @@ export default function Landing() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div
             style={{
-              width: 20,
-              height: 20,
+              width: 22,
+              height: 22,
               background: '#f7f7f5',
               borderRadius: 4,
               display: 'flex',
@@ -786,7 +776,7 @@ export default function Landing() {
               justifyContent: 'center',
             }}
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
                 stroke="#0a0a08"
@@ -796,23 +786,23 @@ export default function Landing() {
               />
             </svg>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#f7f7f5' }}>Aegis Protocol</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#f7f7f5' }}>Aegis Protocol</span>
           <span
             style={{
-              fontSize: 10,
-              color: '#3a3a38',
+              fontSize: 12,
+              color: '#4a4a48',
               border: '1px solid #2a2a28',
-              padding: '2px 8px',
-              borderRadius: 3,
+              padding: '3px 10px',
+              borderRadius: 4,
             }}
           >
             ETHConf 2026
           </span>
         </div>
-        <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#3a3a38' }}>
+        <div style={{ fontSize: 12, fontFamily: 'monospace', color: '#4a4a48' }}>
           AegisCourt: 0x3De27365b376D43422314899dA0E18042f0F734a
         </div>
-        <div style={{ display: 'flex', gap: 20, fontSize: 12 }}>
+        <div style={{ display: 'flex', gap: 24, fontSize: 13 }}>
           <a
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
@@ -823,7 +813,7 @@ export default function Landing() {
           >
             GitHub
           </a>
-          <span style={{ color: '#3a3a38' }}>0G Galileo Â· chainId 16602</span>
+          <span style={{ color: '#4a4a48' }}>0G Galileo · chainId 16602</span>
         </div>
       </footer>
     </div>
