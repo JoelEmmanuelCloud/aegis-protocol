@@ -52,7 +52,7 @@ export default function Overview() {
   const { data: stats } = useNetworkStats();
   const { data: attestations } = useAttestations();
 
-  const feed = (attestations ?? []) as Array<{
+  const feed = (attestations?.items ?? []) as Array<{
     agentId: string;
     rootHash: string;
     verdict: string;

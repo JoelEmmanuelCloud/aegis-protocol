@@ -3,6 +3,7 @@ import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import AegisLogo from './AegisLogo';
 import ThemeToggle from './ThemeToggle';
+import { useDemoMode } from '../context/DemoContext';
 
 const NAV = [
   {
@@ -155,8 +156,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
+  const { isDemoMode, enableDemo, disableDemo } = useDemoMode();
 
-  const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : '';
+  const short = isDemoMode
+    ? 'Demo Mode'
+    : address
+      ? `${address.slice(0, 6)}…${address.slice(-4)}`
+      : '';
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -332,6 +338,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <ThemeToggle />
+            <button
+              onClick={isDemoMode ? disableDemo : enableDemo}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: '1px solid',
+                borderColor: isDemoMode ? 'rgba(212,148,26,0.5)' : 'var(--app-border)',
+                background: isDemoMode ? 'rgba(212,148,26,0.12)' : 'transparent',
+                color: isDemoMode ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
+                transition: 'all 0.15s',
+              }}
+            >
+              {isDemoMode ? 'Exit Demo' : 'Demo'}
+            </button>
             <div
               style={{
                 display: 'flex',
@@ -348,9 +371,55 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             >
               <span className="app-pulse-dot" />4 Nodes Live
             </div>
-            <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+            {!isDemoMode && (
+              <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+            )}
           </div>
         </header>
+
+        {isDemoMode && (
+          <div
+            style={{
+              background: 'rgba(212,148,26,0.08)',
+              borderBottom: '1px solid rgba(212,148,26,0.25)',
+              padding: '7px 28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: 12,
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: 'var(--app-accent-light)',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Demo Mode
+              </span>
+              <span style={{ color: 'var(--app-text-muted)' }}>
+                Pre-seeded data — no backend or wallet required
+              </span>
+            </div>
+            <button
+              onClick={disableDemo}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                color: 'var(--app-text-muted)',
+                padding: '2px 6px',
+              }}
+            >
+              Exit
+            </button>
+          </div>
+        )}
 
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px', background: 'var(--app-bg)' }}>
           {children}

@@ -1,10 +1,14 @@
 import { useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AegisLogo from './AegisLogo';
+import { useDemoMode } from '../context/DemoContext';
 
 export default function ConnectGate() {
   const { connect } = useConnect();
+  const { enableDemo } = useDemoMode();
+  const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
 
   const handleConnect = async () => {
@@ -14,6 +18,11 @@ export default function ConnectGate() {
     } finally {
       setConnecting(false);
     }
+  };
+
+  const handleDemo = () => {
+    enableDemo();
+    navigate('/app');
   };
 
   return (
@@ -49,6 +58,30 @@ export default function ConnectGate() {
         onClick={handleConnect}
       >
         {connecting ? 'Connecting…' : 'Connect Wallet'}
+      </button>
+
+      <button
+        onClick={handleDemo}
+        style={{
+          background: 'none',
+          border: '1px solid var(--app-border)',
+          borderRadius: 8,
+          padding: '10px 28px',
+          fontSize: 14,
+          color: 'var(--app-text-muted)',
+          cursor: 'pointer',
+          transition: 'border-color 0.15s, color 0.15s',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,148,26,0.5)';
+          (e.currentTarget as HTMLButtonElement).style.color = 'var(--app-accent-light)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--app-border)';
+          (e.currentTarget as HTMLButtonElement).style.color = 'var(--app-text-muted)';
+        }}
+      >
+        Try Demo
       </button>
 
       <a href="/" style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
