@@ -1,11 +1,16 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
-interface ThemeCtx { theme: Theme; toggleTheme: () => void; }
+interface ThemeCtx {
+  theme: Theme;
+  toggleTheme: () => void;
+}
 
 const ThemeContext = createContext<ThemeCtx>({ theme: 'light', toggleTheme: () => {} });
 
-export function useTheme() { return useContext(ThemeContext); }
+export function useTheme() {
+  return useContext(ThemeContext);
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -14,8 +19,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       saved === 'light' || saved === 'dark'
         ? saved
         : window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+          ? 'dark'
+          : 'light';
     document.documentElement.setAttribute('data-theme', initial);
     return initial;
   });

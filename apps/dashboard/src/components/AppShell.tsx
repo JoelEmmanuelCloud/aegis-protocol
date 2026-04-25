@@ -214,7 +214,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 }}
               >
                 <span
-                  style={{ color: active ? 'var(--app-accent-light)' : 'var(--app-text-muted)', flexShrink: 0 }}
+                  style={{
+                    color: active ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
+                    flexShrink: 0,
+                  }}
                 >
                   {item.icon}
                 </span>

@@ -14,8 +14,14 @@ function AnimatedMesh() {
     { x: 295, y: 190, label: '0G', sub: 'Storage', color: '#d4941a', r: 14 },
   ];
   const edges = [
-    [0, 4], [1, 4], [2, 4], [3, 4],
-    [0, 1], [1, 2], [2, 3], [3, 0],
+    [0, 4],
+    [1, 4],
+    [2, 4],
+    [3, 4],
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 0],
   ];
 
   return (
@@ -98,17 +104,40 @@ function AnimatedMesh() {
       ))}
 
       <g className="float-card" style={{ animationDelay: '0.5s' }}>
-        <rect x="6" y="308" width="180" height="64" rx="8" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+        <rect
+          x="6"
+          y="308"
+          width="180"
+          height="64"
+          rx="8"
+          fill="var(--bg-surface)"
+          stroke="var(--border)"
+          strokeWidth="1"
+        />
         <circle cx="24" cy="324" r="6" fill="#22c55e" />
         <circle cx="24" cy="324" r="10" fill="#22c55e" opacity="0.15" />
-        <text x="40" y="329" fontSize="11" fontWeight="700" fill="var(--text-primary)" fontFamily="Inter, sans-serif">
+        <text
+          x="40"
+          y="329"
+          fontSize="11"
+          fontWeight="700"
+          fill="var(--text-primary)"
+          fontFamily="Inter, sans-serif"
+        >
           trading-bot.aegis.eth
         </text>
         <text x="14" y="346" fontSize="10" fill="var(--text-muted)" fontFamily="monospace">
           0xabc123…d4f9
         </text>
         <rect x="14" y="354" width="56" height="13" rx="3" fill="#dcfce7" />
-        <text x="18" y="364" fontSize="9.5" fill="#16a34a" fontWeight="700" fontFamily="Inter, sans-serif">
+        <text
+          x="18"
+          y="364"
+          fontSize="9.5"
+          fill="#16a34a"
+          fontWeight="700"
+          fontFamily="Inter, sans-serif"
+        >
           CLEARED
         </text>
         <text x="76" y="364" fontSize="9.5" fill="var(--text-muted)" fontFamily="Inter, sans-serif">
@@ -117,8 +146,24 @@ function AnimatedMesh() {
       </g>
 
       <g className="float-card" style={{ animationDelay: '1.2s' }}>
-        <rect x="326" y="4" width="166" height="62" rx="8" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
-        <text x="340" y="22" fontSize="11" fontWeight="700" fill="var(--text-primary)" fontFamily="Inter, sans-serif">
+        <rect
+          x="326"
+          y="4"
+          width="166"
+          height="62"
+          rx="8"
+          fill="var(--bg-surface)"
+          stroke="var(--border)"
+          strokeWidth="1"
+        />
+        <text
+          x="340"
+          y="22"
+          fontSize="11"
+          fontWeight="700"
+          fill="var(--text-primary)"
+          fontFamily="Inter, sans-serif"
+        >
           AegisCourt.sol
         </text>
         <text x="340" y="38" fontSize="10" fill="var(--text-muted)" fontFamily="monospace">
@@ -258,7 +303,10 @@ export default function Landing() {
         </a>
 
         <div className="landing-nav-links" style={{ display: 'flex', gap: 32 }}>
-          {[{ label: 'Builder', href: '#builder' }, { label: 'How it works', href: '#how' }].map((item) => (
+          {[
+            { label: 'Builder', href: '#builder' },
+            { label: 'How it works', href: '#how' },
+          ].map((item) => (
             <a key={item.label} href={item.href} className="nav-link" style={{ fontSize: 14 }}>
               {item.label}
             </a>
@@ -282,7 +330,13 @@ export default function Landing() {
       <section
         id="about"
         className="landing-section"
-        style={{ padding: '80px 48px 60px', maxWidth: 1200, margin: '0 auto', width: '100%', position: 'relative' }}
+        style={{
+          padding: '80px 48px 60px',
+          maxWidth: 1200,
+          margin: '0 auto',
+          width: '100%',
+          position: 'relative',
+        }}
       >
         <div
           className="landing-dots"
@@ -356,7 +410,13 @@ export default function Landing() {
 
             <div
               className="animate-in-3"
-              style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 52, flexWrap: 'wrap' }}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+                marginBottom: 52,
+                flexWrap: 'wrap',
+              }}
             >
               <button onClick={handleConnect} className="cta-primary">
                 {connecting ? 'Connecting…' : 'Register Your Agent'}
@@ -376,14 +436,19 @@ export default function Landing() {
                 </svg>
               </button>
               <button
-                onClick={() => window.open('https://github.com/JoelEmmanuelCloud/aegis-protocol', '_blank')}
+                onClick={() =>
+                  window.open('https://github.com/JoelEmmanuelCloud/aegis-protocol', '_blank')
+                }
                 className="cta-secondary"
               >
                 View Docs
               </button>
             </div>
 
-            <div className="animate-in-4" style={{ borderTop: '1px solid var(--border)', paddingTop: 28 }}>
+            <div
+              className="animate-in-4"
+              style={{ borderTop: '1px solid var(--border)', paddingTop: 28 }}
+            >
               <div
                 style={{
                   fontSize: 12,
@@ -404,7 +469,9 @@ export default function Landing() {
                   { name: 'KeeperHub', desc: 'Enforcement' },
                 ].map((s) => (
                   <div key={s.name} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {s.name}
+                    </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.desc}</div>
                   </div>
                 ))}
@@ -412,7 +479,14 @@ export default function Landing() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 32 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingLeft: 32,
+            }}
+          >
             <AnimatedMesh />
           </div>
         </div>
@@ -454,7 +528,12 @@ export default function Landing() {
         }}
       >
         <div
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 40,
+          }}
         >
           <div>
             <div
@@ -513,11 +592,29 @@ export default function Landing() {
                 borderRight: i < 2 ? '1px solid var(--border)' : 'none',
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)'; }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)';
+              }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: '#d4941a', letterSpacing: '0.04em' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 20,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: '#d4941a',
+                    letterSpacing: '0.04em',
+                  }}
+                >
                   {step.num}
                 </span>
                 <span
@@ -537,11 +634,19 @@ export default function Landing() {
                 </span>
               </div>
               <div
-                style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 14, color: 'var(--text-primary)' }}
+                style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  marginBottom: 14,
+                  color: 'var(--text-primary)',
+                }}
               >
                 {step.title}
               </div>
-              <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.75 }}>{step.desc}</div>
+              <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+                {step.desc}
+              </div>
             </div>
           ))}
         </div>
@@ -571,13 +676,27 @@ export default function Landing() {
           >
             Builder Integration
           </div>
-          <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 18, lineHeight: 1.1 }}>
+          <h2
+            style={{
+              fontSize: 34,
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              marginBottom: 18,
+              lineHeight: 1.1,
+            }}
+          >
             One call.
             <br />
             Full accountability.
           </h2>
           <p
-            style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 28, maxWidth: 420 }}
+            style={{
+              fontSize: 15,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.8,
+              marginBottom: 28,
+              maxWidth: 420,
+            }}
           >
             Add a single AXL fetch after every agent decision. Storage, verification, court,
             reputation score, and ENS update — all handled automatically by Aegis.
@@ -596,7 +715,14 @@ export default function Landing() {
           </div>
         </div>
 
-        <div style={{ background: '#0c0c10', borderRadius: 12, overflow: 'hidden', border: '1px solid #1e1e28' }}>
+        <div
+          style={{
+            background: '#0c0c10',
+            borderRadius: 12,
+            overflow: 'hidden',
+            border: '1px solid #1e1e28',
+          }}
+        >
           <div
             style={{
               padding: '12px 16px',
@@ -633,14 +759,32 @@ export default function Landing() {
             >
               {copied ? (
                 <>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   Copied
                 </>
               ) : (
                 <>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                   </svg>
@@ -659,7 +803,9 @@ export default function Landing() {
               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
               margin: 0,
             }}
-          >{codeSnippet}</pre>
+          >
+            {codeSnippet}
+          </pre>
         </div>
       </section>
 

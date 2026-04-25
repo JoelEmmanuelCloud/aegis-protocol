@@ -276,9 +276,7 @@ export default function AgentProfile() {
               <Row
                 label="Registered"
                 value={
-                  agent.mintedAt
-                    ? new Date(agent.mintedAt * 1000).toLocaleDateString()
-                    : undefined
+                  agent.mintedAt ? new Date(agent.mintedAt * 1000).toLocaleDateString() : undefined
                 }
               />
             </div>
