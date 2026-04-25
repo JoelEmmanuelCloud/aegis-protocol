@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-aegis-base: #09090f;
+  --color-aegis-sidebar: #0d0b19;
+  --color-aegis-card: #13112b;
+  --color-aegis-card-hover: #1a1640;
+  --color-aegis-border: rgba(139, 92, 246, 0.18);
+  --color-aegis-border-solid: #1e1b3a;
+  --color-aegis-purple: #7c3aed;
+  --color-aegis-purple-light: #a78bfa;
+  --color-aegis-purple-dim: rgba(124, 58, 237, 0.12);
+  --color-aegis-text: #f9fafb;
+  --color-aegis-muted: #9ca3af;
+  --color-aegis-dim: #6b7280;
+  --color-aegis-green: #22c55e;
+  --color-aegis-green-dim: rgba(34, 197, 94, 0.12);
+  --color-aegis-red: #ef4444;
+  --color-aegis-red-dim: rgba(239, 68, 68, 0.12);
+  --color-aegis-amber: #f59e0b;
+  --color-aegis-amber-dim: rgba(245, 158, 11, 0.12);
+}
+
+body {
+  background-color: #09090f;
+  color: #f9fafb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e1b3a;
+  border-radius: 2px;
+}
