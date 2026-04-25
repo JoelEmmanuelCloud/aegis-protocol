@@ -35,7 +35,8 @@ export class DisputesService {
     const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
     this.court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
     const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
-    this.verifierUrl = `http://127.0.0.1:${verifierAxlPort + 1000}`;
+    this.verifierUrl =
+      process.env.VERIFIER_MGMT_URL ?? `http://localhost:${verifierAxlPort + 1000}`;
   }
 
   async file(dto: FileDisputeDto): Promise<Record<string, unknown>> {

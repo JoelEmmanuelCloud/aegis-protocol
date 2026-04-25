@@ -7,7 +7,7 @@ export class AttestationsService {
 
   constructor() {
     const axlPort = parseInt(process.env.AXL_WITNESS_PORT ?? '9002', 10);
-    this.witnessUrl = `http://localhost:${axlPort + 1000}`;
+    this.witnessUrl = process.env.WITNESS_MGMT_URL ?? `http://localhost:${axlPort + 1000}`;
   }
 
   async submit(dto: AttestationRequest): Promise<AttestationResponse> {
