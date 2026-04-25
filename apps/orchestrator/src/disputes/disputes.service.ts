@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadGatewayException } from '@nestjs/common';
 import { ethers } from 'ethers';
+import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import { triggerWorkflow } from '@aegis/keeper-client';
-import type { VerifyResponse, Verdict } from '@aegis/types';
+import type { VerifyResponse, Verdict, NetworkStats } from '@aegis/types';
 
 const AEGIS_COURT_ABI = [
   'function submitDispute(bytes32 rootHash, string agentId, string reason)',
@@ -76,6 +77,13 @@ export class DisputesService {
         verdict: verification.verdict,
       }).catch(() => {});
     }
+
+    const stats = await readKVObject<NetworkStats>('aegis:network:stats');
+    await writeKVObject('aegis:network:stats', {
+      totalAttestations: stats?.totalAttestations ?? 0,
+      disputes: (stats?.disputes ?? 0) + 1,
+      activeAgents: stats?.activeAgents ?? 0,
+    }).catch(() => {});
 
     return {
       rootHash: dto.rootHash,

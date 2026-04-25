@@ -9,6 +9,7 @@ import type {
   DecisionRecord,
   ReputationRecord,
   LatestRecord,
+  NetworkStats,
 } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_WITNESS_PORT ?? '9002', 10);
@@ -65,6 +66,13 @@ async function handleAttestDecision(body: AttestationRequest): Promise<Attestati
       timestamp: record.timestamp,
     }).catch(() => {});
   }
+
+  const stats = await readKVObject<NetworkStats>('aegis:network:stats');
+  await writeKVObject('aegis:network:stats', {
+    totalAttestations: (stats?.totalAttestations ?? 0) + 1,
+    disputes: stats?.disputes ?? 0,
+    activeAgents: stats?.activeAgents ?? 0,
+  }).catch(() => {});
 
   return { rootHash, status: 'COMMITTED' };
 }
