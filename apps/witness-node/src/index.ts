@@ -1,4 +1,6 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import express, { Request, Response } from 'express';
 import { uploadObject, writeKVObject, readKVObject } from '@aegis/0g-client';
@@ -15,13 +17,25 @@ import type {
 const PORT = parseInt(process.env.AXL_WITNESS_PORT ?? '9002', 10);
 const MGMT_PORT = PORT + 1000;
 const PROPAGATOR_PEER_ID = process.env.AXL_PROPAGATOR_PEER_ID ?? '';
+const PEER_HOST = process.env.AXL_PEER_HOST ?? '127.0.0.1';
+const PROPAGATOR_PORT = parseInt(process.env.AXL_PROPAGATOR_PORT ?? '9022', 10);
 const AXL_BASE_URL = `http://127.0.0.1:${PORT}`;
-const CONFIG_PATH = path.resolve(process.cwd(), 'axl-configs', 'witness-node-config.json');
+const CONFIG_DIR = path.resolve(__dirname, '../../../axl-configs');
 const BINARY = path.resolve(
-  process.cwd(),
-  'bin',
+  __dirname,
+  '../../../bin',
   process.platform === 'win32' ? 'axl-node.exe' : 'axl-node'
 );
+
+const nodeConfig = {
+  node_name: 'aegis-witness',
+  listen_addr: `0.0.0.0:${PORT}`,
+  http_port: PORT,
+  private_key_path: path.join(CONFIG_DIR, 'witness.pem'),
+  peers: [`${PEER_HOST}:${PROPAGATOR_PORT}`],
+};
+const CONFIG_PATH = path.join(os.tmpdir(), 'axl-witness.json');
+fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
 
 const axl = spawn(BINARY, ['-config', CONFIG_PATH], { stdio: ['ignore', 'pipe', 'pipe'] });
 

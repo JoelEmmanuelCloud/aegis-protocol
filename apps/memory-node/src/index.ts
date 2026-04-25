@@ -1,4 +1,6 @@
 import { spawn } from 'child_process';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import express, { Request, Response } from 'express';
 import { writeKVObject, readKVObject } from '@aegis/0g-client';
@@ -8,11 +10,13 @@ import type { PropagateMessage, Verdict, ReputationRecord } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_MEMORY_PORT ?? '9032', 10);
 const MGMT_PORT = PORT + 1000;
+const PEER_HOST = process.env.AXL_PEER_HOST ?? '127.0.0.1';
+const PROPAGATOR_PORT = parseInt(process.env.AXL_PROPAGATOR_PORT ?? '9022', 10);
 const AXL_BASE_URL = `http://127.0.0.1:${PORT}`;
-const CONFIG_PATH = path.resolve(process.cwd(), 'axl-configs', 'memory-node-config.json');
+const CONFIG_DIR = path.resolve(__dirname, '../../../axl-configs');
 const BINARY = path.resolve(
-  process.cwd(),
-  'bin',
+  __dirname,
+  '../../../bin',
   process.platform === 'win32' ? 'axl-node.exe' : 'axl-node'
 );
 
@@ -21,6 +25,16 @@ interface AgentHistory {
   entries: Array<{ rootHash: string; verdict: Verdict; timestamp: number }>;
   lastUpdated: number;
 }
+
+const nodeConfig = {
+  node_name: 'aegis-memory',
+  listen_addr: `0.0.0.0:${PORT}`,
+  http_port: PORT,
+  private_key_path: path.join(CONFIG_DIR, 'memory.pem'),
+  peers: [`${PEER_HOST}:${PROPAGATOR_PORT}`],
+};
+const CONFIG_PATH = path.join(os.tmpdir(), 'axl-memory.json');
+fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
 
 const axl = spawn(BINARY, ['-config', CONFIG_PATH], { stdio: ['ignore', 'pipe', 'pipe'] });
 
