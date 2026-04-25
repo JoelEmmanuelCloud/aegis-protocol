@@ -256,7 +256,7 @@ export default function Landing() {
         }}
       >
         <a href="#about" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <AegisLogo variant={theme === 'dark' ? 'light' : 'dark'} size={40} showWordmark wordmarkColor="var(--text-primary)" />
+          <AegisLogo variant="gold" size={40} showWordmark wordmarkColor="var(--text-primary)" />
         </a>
 
         <div className="landing-nav-links" style={{ display: 'flex', gap: 32 }}>
