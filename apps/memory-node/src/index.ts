@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { writeKVObject, readKVObject } from '@aegis/0g-client';
-import type { PropagateMessage, Verdict } from '@aegis/types';
+import { setTextRecords } from '@aegis/ens-client';
+import type { PropagateMessage, Verdict, ReputationRecord } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_MEMORY_PORT ?? '9032', 10);
 
@@ -25,6 +26,18 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
   };
 
   await writeKVObject(key, history);
+
+  const reputation = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`);
+
+  if (body.agentId.endsWith('.aegis.eth')) {
+    await setTextRecords(body.agentId, {
+      'aegis.reputation': String(reputation?.score ?? 100),
+      'aegis.totalDecisions': String(reputation?.totalDecisions ?? history.entries.length),
+      'aegis.lastVerdict': body.verdict,
+      'aegis.flaggedCount': String(reputation?.flagged ?? 0),
+      'aegis.storageIndex': body.rootHash,
+    }).catch(() => {});
+  }
 }
 
 app.post('/send', async (req: Request, res: Response): Promise<void> => {
