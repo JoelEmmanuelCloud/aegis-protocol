@@ -1,5 +1,5 @@
 interface AegisLogoProps {
-  variant?: 'dark' | 'light' | 'purple';
+  variant?: 'dark' | 'light' | 'purple' | 'gold';
   size?: number;
   showWordmark?: boolean;
   wordmarkColor?: string;
@@ -32,6 +32,13 @@ export default function AegisLogo({
       accent: 'rgba(255,255,255,0.18)',
       node: '#ffffff',
       line: 'rgba(255,255,255,0.55)',
+    },
+    gold: {
+      bg: '#d4941a',
+      mark: '#0a0a08',
+      accent: 'rgba(10,10,8,0.10)',
+      node: '#0a0a08',
+      line: 'rgba(10,10,8,0.38)',
     },
   };
 

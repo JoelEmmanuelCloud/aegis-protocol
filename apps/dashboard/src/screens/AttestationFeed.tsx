@@ -41,7 +41,7 @@ export default function AttestationFeed() {
                 border: '1px solid',
                 borderColor: filter === v ? 'var(--app-accent)' : 'var(--app-border)',
                 background: filter === v ? 'var(--accent-dim)' : 'transparent',
-                color: filter === v ? '#a78bfa' : 'var(--app-text-muted)',
+                color: filter === v ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
               }}
             >
               {v}
@@ -105,13 +105,13 @@ export default function AttestationFeed() {
                         height: 32,
                         borderRadius: 8,
                         background: 'var(--accent-dim)',
-                        border: '1px solid rgba(124,58,237,0.2)',
+                        border: '1px solid rgba(212,148,26,0.2)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#a78bfa',
+                        color: 'var(--app-accent-light)',
                       }}
                     >
                       {a.agentId?.[0]?.toUpperCase() ?? 'A'}

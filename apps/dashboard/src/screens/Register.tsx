@@ -151,7 +151,7 @@ export default function Register() {
           </label>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 13, color: 'var(--app-text)' }}>
-              User <strong style={{ color: '#a78bfa' }}>{userPct}%</strong>
+              User <strong style={{ color: 'var(--app-accent-light)' }}>{userPct}%</strong>
             </span>
             <span style={{ fontSize: 13, color: 'var(--app-text)' }}>
               Builder <strong>{100 - userPct}%</strong>

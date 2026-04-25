@@ -24,7 +24,7 @@ export default function KeeperAuditTrail() {
         </h1>
         <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
           Automated remedy execution log for{' '}
-          <code style={{ fontSize: 12, color: '#a78bfa' }}>aegis.execute_remedy</code>
+          <code style={{ fontSize: 12, color: 'var(--app-accent-light)' }}>aegis.execute_remedy</code>
         </p>
       </div>
 

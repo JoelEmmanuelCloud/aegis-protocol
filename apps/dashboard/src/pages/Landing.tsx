@@ -12,7 +12,7 @@ function AnimatedMesh() {
     { x: 440, y: 170, label: 'Verifier', sub: ':9012', color: '#2563eb', r: 20 },
     { x: 350, y: 295, label: 'Propagator', sub: ':9022', color: '#059669', r: 20 },
     { x: 150, y: 210, label: 'Memory', sub: ':9032', color: '#d97706', r: 20 },
-    { x: 295, y: 190, label: '0G', sub: 'Storage', color: '#6b7280', r: 14 },
+    { x: 295, y: 190, label: '0G', sub: 'Storage', color: '#d4941a', r: 14 },
   ];
   const edges = [
     [0, 4], [1, 4], [2, 4], [3, 4],
@@ -108,8 +108,8 @@ function AnimatedMesh() {
         <text x="14" y="346" fontSize="10" fill="var(--text-muted)" fontFamily="monospace">
           0xabc123…d4f9
         </text>
-        <rect x="14" y="354" width="56" height="13" rx="3" fill="#ede9fe" />
-        <text x="18" y="364" fontSize="9.5" fill="#7c3aed" fontWeight="700" fontFamily="Inter, sans-serif">
+        <rect x="14" y="354" width="56" height="13" rx="3" fill="#dcfce7" />
+        <text x="18" y="364" fontSize="9.5" fill="#16a34a" fontWeight="700" fontFamily="Inter, sans-serif">
           CLEARED
         </text>
         <text x="76" y="364" fontSize="9.5" fill="var(--text-muted)" fontFamily="Inter, sans-serif">
@@ -167,7 +167,7 @@ function LiveCounter({ label, end }: { label: string; end: number }) {
           fontSize: 38,
           fontWeight: 800,
           letterSpacing: '-0.04em',
-          color: 'var(--text-primary)',
+          color: '#d4941a',
           lineHeight: 1,
           marginBottom: 8,
         }}
@@ -307,8 +307,8 @@ export default function Landing() {
                   fontWeight: 600,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
-                  border: '1px solid var(--border)',
+                  color: '#d4941a',
+                  border: '1px solid rgba(212,148,26,0.4)',
                   padding: '6px 14px',
                   borderRadius: 4,
                 }}
@@ -330,7 +330,16 @@ export default function Landing() {
             >
               Prove every
               <br />
-              AI decision.
+              <span
+                style={{
+                  background: 'linear-gradient(105deg, var(--text-primary) 0%, #d4941a 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                AI decision.
+              </span>
             </h1>
 
             <p
@@ -510,7 +519,7 @@ export default function Landing() {
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)'; }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--border-dark)', letterSpacing: '0.04em' }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#d4941a', letterSpacing: '0.04em' }}>
                   {step.num}
                 </span>
                 <span
@@ -647,7 +656,7 @@ export default function Landing() {
               padding: '22px',
               fontSize: 12.5,
               lineHeight: 1.85,
-              color: '#c4b5fd',
+              color: '#e8b84b',
               overflowX: 'auto',
               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
               margin: 0,
@@ -670,7 +679,7 @@ export default function Landing() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <AegisLogo variant="light" size={36} showWordmark wordmarkColor="#f7f7f5" />
+          <AegisLogo variant="gold" size={36} showWordmark wordmarkColor="#f7f7f5" />
           <span
             style={{
               fontSize: 12,

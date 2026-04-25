@@ -93,7 +93,7 @@ function Row({ label, value }: { label: string; value?: string }) {
       <span
         style={{
           fontSize: 12,
-          color: isEnsip25 ? '#a78bfa' : 'var(--app-text-muted)',
+          color: isEnsip25 ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
           fontFamily: 'monospace',
           flexShrink: 0,
         }}
@@ -228,7 +228,7 @@ export default function AgentProfile() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>User</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#a78bfa' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-accent-light)' }}>
                   {agent.userPercent ?? '—'}%
                 </span>
               </div>
@@ -301,7 +301,7 @@ export default function AgentProfile() {
                     fontWeight: 600,
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
-                    color: '#a78bfa',
+                    color: 'var(--app-accent-light)',
                     background: 'var(--accent-dim)',
                     padding: '2px 8px',
                     borderRadius: 4,

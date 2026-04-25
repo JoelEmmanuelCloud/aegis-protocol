@@ -143,14 +143,14 @@ export default function Overview() {
                     height: 32,
                     borderRadius: 8,
                     background: 'var(--accent-dim)',
-                    border: '1px solid rgba(124,58,237,0.2)',
+                    border: '1px solid rgba(212,148,26,0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
                     fontSize: 11,
                     fontWeight: 700,
-                    color: '#a78bfa',
+                    color: 'var(--app-accent-light)',
                   }}
                 >
                   {a.agentId?.[0]?.toUpperCase() ?? 'A'}

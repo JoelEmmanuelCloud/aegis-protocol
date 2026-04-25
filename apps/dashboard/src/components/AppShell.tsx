@@ -184,7 +184,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           }}
           onClick={() => navigate('/')}
         >
-          <AegisLogo variant="purple" size={30} showWordmark wordmarkColor="var(--app-text)" />
+          <AegisLogo variant="gold" size={30} showWordmark wordmarkColor="var(--app-text)" />
         </div>
 
         <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
@@ -208,13 +208,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   fontWeight: active ? 600 : 400,
                   color: active ? 'var(--app-text)' : 'var(--app-text-2)',
                   background: active ? 'var(--app-accent-dim)' : 'transparent',
-                  border: active ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
+                  border: active ? '1px solid rgba(212,148,26,0.25)' : '1px solid transparent',
                   textDecoration: 'none',
                   transition: 'all 0.1s',
                 }}
               >
                 <span
-                  style={{ color: active ? '#a78bfa' : 'var(--app-text-muted)', flexShrink: 0 }}
+                  style={{ color: active ? 'var(--app-accent-light)' : 'var(--app-text-muted)', flexShrink: 0 }}
                 >
                   {item.icon}
                 </span>
@@ -247,7 +247,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 width: 28,
                 height: 28,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%)',
+                background: 'linear-gradient(135deg, #d4941a 0%, #b8780e 100%)',
                 flexShrink: 0,
               }}
             />
