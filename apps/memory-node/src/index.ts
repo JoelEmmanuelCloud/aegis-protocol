@@ -1,9 +1,20 @@
+import { spawn } from 'child_process';
+import path from 'path';
 import express, { Request, Response } from 'express';
 import { writeKVObject, readKVObject } from '@aegis/0g-client';
+import { recv } from '@aegis/axl-client';
 import { setTextRecords } from '@aegis/ens-client';
 import type { PropagateMessage, Verdict, ReputationRecord } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_MEMORY_PORT ?? '9032', 10);
+const MGMT_PORT = PORT + 1000;
+const AXL_BASE_URL = `http://127.0.0.1:${PORT}`;
+const CONFIG_PATH = path.resolve(process.cwd(), 'axl-configs', 'memory-node-config.json');
+const BINARY = path.resolve(
+  process.cwd(),
+  'bin',
+  process.platform === 'win32' ? 'axl-node.exe' : 'axl-node'
+);
 
 interface AgentHistory {
   agentId: string;
@@ -11,8 +22,14 @@ interface AgentHistory {
   lastUpdated: number;
 }
 
-const app = express();
-app.use(express.json());
+const axl = spawn(BINARY, ['-config', CONFIG_PATH], { stdio: ['ignore', 'pipe', 'pipe'] });
+
+axl.stdout.on('data', (d: Buffer) => process.stdout.write(d));
+axl.stderr.on('data', (d: Buffer) => process.stderr.write(d));
+axl.on('exit', (code) => {
+  process.stderr.write(`axl-node exited with code ${code}\n`);
+  process.exit(1);
+});
 
 async function handlePropagateAttestation(body: PropagateMessage): Promise<void> {
   const key = `aegis:${body.agentId}:history`;
@@ -24,7 +41,6 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
     entries: [...(existing?.entries ?? []), entry],
     lastUpdated: Date.now(),
   };
-
   await writeKVObject(key, history);
 
   const reputation = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`);
@@ -40,32 +56,27 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
   }
 }
 
-app.post('/send', async (req: Request, res: Response): Promise<void> => {
-  const body = req.body as PropagateMessage;
-  if (body.type !== 'PROPAGATE_ATTESTATION') {
-    res.status(400).json({ error: `Unsupported message type: ${body.type}` });
-    return;
+setInterval(async () => {
+  const messages = await recv(AXL_BASE_URL).catch(() => []);
+  for (const msg of messages) {
+    if (msg.body.type === 'PROPAGATE_ATTESTATION') {
+      await handlePropagateAttestation(msg.body as unknown as PropagateMessage).catch(() => {});
+    }
   }
-  try {
-    await handlePropagateAttestation(body);
-    res.json({ status: 'stored' });
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
+}, 1000);
 
-app.get('/recv', (_req: Request, res: Response): void => {
-  res.json([]);
-});
-
-app.get('/topology', (_req: Request, res: Response): void => {
-  res.json([]);
-});
+const app = express();
+app.use(express.json());
 
 app.get('/health', (_req: Request, res: Response): void => {
-  res.json({ status: 'ok', node: 'memory', port: PORT });
+  res.json({
+    status: 'ok',
+    node: 'memory',
+    axlPort: PORT,
+    peerId: process.env.AXL_MEMORY_PEER_ID ?? 'unknown',
+  });
 });
 
-app.listen(PORT, () => {
-  process.stdout.write(`memory-node listening on port ${PORT}\n`);
+app.listen(MGMT_PORT, () => {
+  process.stdout.write(`memory management server on port ${MGMT_PORT}\n`);
 });
