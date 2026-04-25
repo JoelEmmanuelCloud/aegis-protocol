@@ -6,12 +6,12 @@ export class AttestationsService {
   private readonly witnessUrl: string;
 
   constructor() {
-    const port = process.env.AXL_WITNESS_PORT ?? '9002';
-    this.witnessUrl = `http://localhost:${port}`;
+    const axlPort = parseInt(process.env.AXL_WITNESS_PORT ?? '9002', 10);
+    this.witnessUrl = `http://localhost:${axlPort + 1000}`;
   }
 
   async submit(dto: AttestationRequest): Promise<AttestationResponse> {
-    const response = await fetch(`${this.witnessUrl}/send`, {
+    const response = await fetch(`${this.witnessUrl}/attest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dto),

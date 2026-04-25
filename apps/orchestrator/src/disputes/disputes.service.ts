@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, BadGatewayException } from '@nestjs/common';
 import { ethers } from 'ethers';
-import { send } from '@aegis/axl-client';
 import { triggerWorkflow } from '@aegis/keeper-client';
 import type { VerifyResponse, Verdict } from '@aegis/types';
 
@@ -34,8 +33,8 @@ export class DisputesService {
     const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
     const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
     this.court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
-    const verifierPort = process.env.AXL_VERIFIER_PORT ?? '9012';
-    this.verifierUrl = `http://127.0.0.1:${verifierPort}`;
+    const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
+    this.verifierUrl = `http://127.0.0.1:${verifierAxlPort + 1000}`;
   }
 
   async file(dto: FileDisputeDto): Promise<Record<string, unknown>> {
@@ -48,13 +47,6 @@ export class DisputesService {
 
     const submitTx = await this.court.submitDispute(rootHash32, dto.agentId, dto.reason);
     await submitTx.wait();
-
-    const verifierPeerId = process.env.AXL_VERIFIER_PEER_ID ?? '';
-    await send(this.verifierUrl, verifierPeerId, {
-      type: 'VERIFY_DECISION',
-      rootHash: dto.rootHash,
-      agentId: dto.agentId,
-    });
 
     const verifyResponse = await fetch(`${this.verifierUrl}/verify`, {
       method: 'POST',
