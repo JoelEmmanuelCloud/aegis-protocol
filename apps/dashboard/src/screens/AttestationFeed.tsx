@@ -13,7 +13,7 @@ export default function AttestationFeed() {
   const { data: live, isLoading } = useAttestations();
   const [filter, setFilter] = useState<string>('ALL');
 
-  const raw = (live ?? []) as Attestation[];
+  const raw = (live?.items ?? []) as Attestation[];
   const items = filter === 'ALL' ? raw : raw.filter((a) => a.verdict === filter);
 
   return (

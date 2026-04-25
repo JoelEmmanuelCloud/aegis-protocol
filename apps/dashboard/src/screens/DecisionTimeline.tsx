@@ -13,7 +13,7 @@ export default function DecisionTimeline() {
   const { data: live } = useAttestations();
   const [search, setSearch] = useState('');
 
-  const all = (live ?? []) as Entry[];
+  const all = (live?.items ?? []) as Entry[];
   const items = search
     ? all.filter(
         (a) =>
