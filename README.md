@@ -61,8 +61,8 @@ Four AXL nodes, four distinct ed25519 keys, communicating over the Yggdrasil mes
 
 ### AXL Node Peer IDs
 
-| Node       | Port | Management | Peer ID |
-|------------|------|------------|---------|
+| Node       | Port | Management | Peer ID                                                            |
+| ---------- | ---- | ---------- | ------------------------------------------------------------------ |
 | Witness    | 9002 | 10002      | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
 | Verifier   | 9012 | 10012      | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
 | Propagator | 9022 | 10022      | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
@@ -72,15 +72,16 @@ Four AXL nodes, four distinct ed25519 keys, communicating over the Yggdrasil mes
 
 ## 3. Prerequisites
 
-| Requirement | Version | Check |
-|-------------|---------|-------|
-| Node.js | 20+ | `node -v` |
-| npm | 10+ | `npm -v` |
-| Docker + Docker Compose | latest | `docker -v` |
-| MetaMask | any | browser extension installed |
-| 0G testnet wallet | funded | [faucet.0g.ai](https://faucet.0g.ai) |
+| Requirement             | Version | Check                                |
+| ----------------------- | ------- | ------------------------------------ |
+| Node.js                 | 20+     | `node -v`                            |
+| npm                     | 10+     | `npm -v`                             |
+| Docker + Docker Compose | latest  | `docker -v`                          |
+| MetaMask                | any     | browser extension installed          |
+| 0G testnet wallet       | funded  | [faucet.0g.ai](https://faucet.0g.ai) |
 
 **Fund your wallet before starting.** You need testnet OG tokens for:
+
 - Minting the iNFT on AgentRegistry.sol
 - Filing a dispute on AegisCourt.sol
 - KeeperHub remedy transaction
@@ -118,6 +119,7 @@ KEEPERHUB_API_KEY=...your_key_here
 ```
 
 The following are already set correctly and do not need to change:
+
 - All `AXL_*_PEER_ID` values (derived from keys in `axl-configs/`)
 - All contract addresses (`AEGIS_COURT_ADDRESS`, `AGENT_REGISTRY_ADDRESS`)
 - All ENS addresses (registry, name wrapper, resolver)
@@ -151,12 +153,14 @@ dashboard        | Local: http://localhost:4000
 Open **5 separate terminal windows** — this is what judges need to see during the demo.
 
 **Terminal 1 — Propagator (start first)**
+
 ```bash
 npx ts-node apps/propagator-node/src/index.ts
 # Expected: "AXL node started — peer 946df8c6... port 9022"
 ```
 
 **Terminal 2 — Witness**
+
 ```bash
 npx ts-node apps/witness-node/src/index.ts
 # Expected: "AXL node started — peer 23fb5c41... port 9002"
@@ -164,6 +168,7 @@ npx ts-node apps/witness-node/src/index.ts
 ```
 
 **Terminal 3 — Verifier**
+
 ```bash
 npx ts-node apps/verifier-node/src/index.ts
 # Expected: "AXL node started — peer 7c60360e... port 9012"
@@ -171,6 +176,7 @@ npx ts-node apps/verifier-node/src/index.ts
 ```
 
 **Terminal 4 — Memory**
+
 ```bash
 npx ts-node apps/memory-node/src/index.ts
 # Expected: "AXL node started — peer 87a69f08... port 9032"
@@ -178,12 +184,14 @@ npx ts-node apps/memory-node/src/index.ts
 ```
 
 **Terminal 5 — Orchestrator**
+
 ```bash
 npx ts-node -r tsconfig-paths/register apps/orchestrator/src/main.ts
 # Expected: "Listening on port 3000"
 ```
 
 **Terminal 6 — Dashboard**
+
 ```bash
 cd apps/dashboard && npm run dev
 # Expected: "Local: http://localhost:4005"
@@ -242,6 +250,7 @@ curl -s -X POST http://localhost:3000/agents \
 ```
 
 **Expected response:**
+
 ```json
 {
   "tokenId": "1",
@@ -255,6 +264,7 @@ curl -s -X POST http://localhost:3000/agents \
 ```
 
 **What this proves:**
+
 - iNFT minted on AgentRegistry.sol (0G testnet)
 - ENS subname `trading-bot.aegis.eth` auto-issued via Name Wrapper
 - ENSIP-25 text records written (`agent.registry` + `agent.id`)
@@ -282,6 +292,7 @@ curl -s -X POST http://localhost:9002/send \
 ```
 
 **Expected response:**
+
 ```json
 {
   "rootHash": "0xabc123...",
@@ -292,6 +303,7 @@ curl -s -X POST http://localhost:9002/send \
 ```
 
 **What to watch in terminals:**
+
 - **Witness terminal:** `ATTEST_DECISION received — uploading to 0G Storage`
 - **Propagator terminal:** `PROPAGATE_ATTESTATION received — broadcasting to peers`
 - **Memory terminal:** `ENS text records updated — trading-bot.aegis.eth`
@@ -335,6 +347,7 @@ curl -s -X POST http://localhost:3000/disputes \
 ```
 
 **Expected response:**
+
 ```json
 {
   "disputeId": "0x...",
@@ -346,6 +359,7 @@ curl -s -X POST http://localhost:3000/disputes \
 ```
 
 **What to watch in terminals:**
+
 - **Verifier terminal:** `VERIFY_DECISION received — fetching from 0G Storage`
 - **Verifier terminal:** `Replaying via 0G Compute TEE — model: qwen/qwen-2.5-7b-instruct`
 - **Verifier terminal:** `TEE proof received — verdict: FLAGGED`
@@ -366,6 +380,7 @@ curl -s http://localhost:3000/keeperhub/audit?workflowId=aegis.execute_remedy | 
 ```
 
 **Expected response:**
+
 ```json
 {
   "runId": "run_...",
@@ -391,6 +406,7 @@ curl -s http://localhost:3000/agents/label/trading-bot | jq .ensRecords
 ```
 
 **Expected response:**
+
 ```json
 {
   "aegis.reputation": "72",
@@ -413,27 +429,32 @@ Any app — any wallet, any DeFi protocol — can resolve `trading-bot.aegis.eth
 Open `http://localhost:4005` in a browser with MetaMask installed.
 
 ### Screen 1 — Landing Page
+
 - Confirm the animated mesh shows 4 nodes (Witness, Verifier, Propagator, Memory) with the 0G center node in gold
 - Click **Register Your Agent** → MetaMask popup → connect wallet
 
 ### Screen 2 — Register Agent
+
 - Fill in agent label: `trading-bot`
 - Set ownership split: drag slider to 60% user / 40% builder
 - Click **Mint iNFT** → MetaMask transaction → confirm
 - Confirm ENS subname preview shows `trading-bot.aegis.eth`
 
 ### Screen 3 — Overview
+
 - Shows **Total Attestations** counter incrementing
 - **Recent Attestations** feed shows `trading-bot.aegis.eth` with FLAGGED badge
 - **AXL Node Status** shows all 4 nodes as Online with pulsing green dot
 - **Deployed Contracts** shows both contract addresses with link to 0G Explorer
 
 ### Screen 4 — Attestation Feed
+
 - Filter by FLAGGED — `trading-bot.aegis.eth` appears
 - Root hash visible in monospace
 - Timestamp and verdict badge displayed
 
 ### Screen 5 — Agent Profile (ENS Profile Card)
+
 - Type `trading-bot` → click **Lookup**
 - Score ring shows reputation score (72 after FLAGGED)
 - ENS Text Records panel shows all 7 live records
@@ -441,10 +462,12 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 - **View on ENS App** link opens app.ens.domains
 
 ### Screen 6 — Decision Timeline
+
 - Full history shows the attested decision
 - Search by `trading-bot` or paste the root hash
 
 ### Screen 7 — KeeperHub Audit Trail
+
 - Shows the remedy run with tx hash, gas used (47,823), retry count (0), status: Completed
 - Tx hash links to 0G Explorer
 
@@ -453,6 +476,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 ## 9. Demo Video Script (3 min)
 
 **Setup before recording:**
+
 - All 5 terminals open and visible (use split-screen or a tiling layout)
 - Browser open to `http://localhost:4005`
 - MetaMask unlocked with funded 0G testnet wallet
@@ -473,6 +497,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 > "A builder integrates Aegis with one AXL fetch call. A user registers their agent in under a minute."
 
 **Do:**
+
 1. Click **Register Your Agent**
 2. MetaMask connects — show wallet address
 3. Switch to Register screen
@@ -493,6 +518,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 **Do:** Run the attestation curl command from Step 2.
 
 **Show simultaneously:**
+
 - Witness terminal: `ATTEST_DECISION received — uploading to 0G Storage`
 - Response in terminal: `"rootHash": "0xabc123..."`
 - Switch to dashboard → Attestation Feed → new card appears for `trading-bot.aegis.eth`
@@ -508,6 +534,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 > "Four separate AXL nodes. Four distinct ed25519 identity keys. Real encrypted messages over the Yggdrasil mesh. No central coordinator."
 
 **Show:** Pan across all 4 terminal windows. Point to each peer ID:
+
 - Witness: `23fb5c41...`
 - Verifier: `7c60360e...`
 - Propagator: `946df8c6...`
@@ -526,6 +553,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 **Do:** Run the dispute curl command from Step 4.
 
 **Show:**
+
 - Verifier terminal: `VERIFY_DECISION received — replaying via 0G Compute TEE`
 - Verifier terminal: `TEE proof received — verdict: FLAGGED`
 - Verifier terminal: `AegisCourt.sol — tx: 0x...`
@@ -542,6 +570,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 > "When AegisCourt emits the FLAGGED event, KeeperHub fires the remedy automatically."
 
 **Show:** Dashboard → KeeperHub Audit Trail
+
 - Run appears: status Completed, gas 47,823, retries 0
 - Tx hash link to 0G Explorer
 
@@ -556,6 +585,7 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 **Do:** In Agent Profile screen, type `trading-bot`, click Lookup.
 
 **Show:**
+
 - Score ring: 72 (dropped from 100 after FLAGGED)
 - ENS Text Records: `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1`
 
@@ -569,9 +599,9 @@ Open `http://localhost:4005` in a browser with MetaMask installed.
 
 Deployed on 0G testnet (chainId 16602).
 
-| Contract | Address | Explorer |
-|---|---|---|
-| AegisCourt.sol | `0x3De27365b376D43422314899dA0E18042f0F734a` | [View](https://chainscan-galileo.0g.ai/address/0x3De27365b376D43422314899dA0E18042f0F734a) |
+| Contract          | Address                                      | Explorer                                                                                   |
+| ----------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| AegisCourt.sol    | `0x3De27365b376D43422314899dA0E18042f0F734a` | [View](https://chainscan-galileo.0g.ai/address/0x3De27365b376D43422314899dA0E18042f0F734a) |
 | AgentRegistry.sol | `0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc` | [View](https://chainscan-galileo.0g.ai/address/0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc) |
 
 To redeploy:
@@ -619,6 +649,7 @@ GET  /keeperhub/audit?workflowId=aegis.execute_remedy
 ## 12. Troubleshooting
 
 **AXL node fails to start**
+
 ```bash
 # Check the AXL binary is present and executable
 ls -la bin/
@@ -626,15 +657,18 @@ chmod +x bin/axl
 ```
 
 **"Cannot connect to peer" in node logs**
+
 - Always start Propagator first — it is the bootstrap peer
 - Witness, Verifier, and Memory all connect to Propagator on startup
 - Wait for Propagator to log its peer ID before starting the others
 
 **MetaMask shows wrong network**
+
 - Add 0G testnet manually: RPC `https://evmrpc-testnet.0g.ai`, Chain ID `16602`, Symbol `OG`
 - Get testnet funds at [faucet.0g.ai](https://faucet.0g.ai)
 
 **0G Storage upload fails**
+
 ```bash
 # Verify your private key has OG balance
 # Check ZG_INDEXER_RPC is reachable
@@ -642,6 +676,7 @@ curl https://indexer-storage-testnet-turbo.0g.ai/info
 ```
 
 **0G Compute TEE replay fails**
+
 ```bash
 # Verify compute API key
 curl https://compute-network-6.integratenetwork.work/v1/proxy/models \
@@ -649,11 +684,13 @@ curl https://compute-network-6.integratenetwork.work/v1/proxy/models \
 ```
 
 **KeeperHub workflow not firing**
+
 - Confirm `KEEPERHUB_API_KEY` is set in `.env`
 - Verify the `aegis.execute_remedy` workflow exists: `keeperhub.get_workflow({workflowId: "aegis.execute_remedy"})`
 - Check the workflow trigger matches `onchain:AegisCourtVerdictEmitted`
 
 **ENS text records not updating**
+
 - Confirm `ENS_PRIVATE_KEY` is the wallet that controls `aegis.eth` (the registrar)
 - Confirm the wallet has ETH on mainnet for ENS transactions (or Sepolia for testnet ENS)
 

@@ -8,7 +8,9 @@ export function useKeeperAudit(workflowId: string | null, limit?: number) {
   const { isDemoMode } = useDemoMode();
   return useQuery<WorkflowRun[]>({
     queryKey: ['keeper-audit', isDemoMode ? 'demo' : workflowId, limit],
-    queryFn: isDemoMode ? () => Promise.resolve(demoKeeperRuns) : () => fetchKeeperAudit(workflowId!, limit),
+    queryFn: isDemoMode
+      ? () => Promise.resolve(demoKeeperRuns)
+      : () => fetchKeeperAudit(workflowId!, limit),
     enabled: isDemoMode || !!workflowId,
     staleTime: isDemoMode ? Infinity : 0,
   });

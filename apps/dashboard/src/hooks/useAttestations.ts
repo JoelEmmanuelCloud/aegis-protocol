@@ -8,7 +8,9 @@ export function useAttestations(agentId?: string | null, cursor?: string, limit?
   const { isDemoMode } = useDemoMode();
   return useQuery<AttestationListResponse>({
     queryKey: ['attestations', isDemoMode, agentId ?? null, cursor, limit],
-    queryFn: isDemoMode ? () => Promise.resolve(demoAttestations) : () => fetchAttestations(agentId ?? null, cursor, limit),
+    queryFn: isDemoMode
+      ? () => Promise.resolve(demoAttestations)
+      : () => fetchAttestations(agentId ?? null, cursor, limit),
     refetchInterval: isDemoMode ? false : 5_000,
     staleTime: isDemoMode ? Infinity : 0,
   });
