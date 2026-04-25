@@ -16,7 +16,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@aegis/types": ["../../packages/types/src/index.ts"]
+      "@aegis/types": ["./src/lib/types.ts"]
     }
   },
   "include": ["src"]

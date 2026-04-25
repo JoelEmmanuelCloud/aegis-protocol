@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@aegis/types': path.resolve(__dirname, '../../packages/types/src/index.ts'),
+      '@aegis/types': path.resolve(__dirname, './src/lib/types.ts'),
     },
   },
   server: {
