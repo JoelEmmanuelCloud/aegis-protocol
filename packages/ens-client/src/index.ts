@@ -96,7 +96,7 @@ export async function issueSubname(label: string, subowner: string): Promise<str
     0,
     expiry,
   );
-  const receipt = await tx.wait();
+  await tx.wait();
 
   return ethers.namehash(`${label}.aegis.eth`);
 }
