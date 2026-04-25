@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useAttestations } from '../hooks/useAttestations';
-import { useDemoMode } from '../hooks/useDemoMode';
-import { demoAttestations } from '../lib/demoData';
 
 type Entry = { agentId: string; rootHash: string; verdict: string; timestamp: number };
 
@@ -12,11 +10,10 @@ function VerdictBadge({ verdict }: { verdict: string }) {
 }
 
 export default function DecisionTimeline() {
-  const { enabled: demo } = useDemoMode();
   const { data: live } = useAttestations();
   const [search, setSearch] = useState('');
 
-  const all = (demo ? demoAttestations : (live ?? [])) as Entry[];
+  const all = (live ?? []) as Entry[];
   const items = search
     ? all.filter(
         (a) =>

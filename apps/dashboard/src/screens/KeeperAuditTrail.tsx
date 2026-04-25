@@ -1,6 +1,4 @@
 import { useKeeperAudit } from '../hooks/useKeeperAudit';
-import { useDemoMode } from '../hooks/useDemoMode';
-import { demoAuditRuns } from '../lib/demoData';
 
 type Run = {
   runId: string;
@@ -13,11 +11,10 @@ type Run = {
 };
 
 export default function KeeperAuditTrail() {
-  const { enabled: demo } = useDemoMode();
   const { data: live, isLoading } = useKeeperAudit(
     import.meta.env.VITE_KEEPERHUB_WORKFLOW_ID ?? ''
   );
-  const runs = (demo ? demoAuditRuns : (live ?? [])) as Run[];
+  const runs = (live ?? []) as Run[];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -32,7 +29,7 @@ export default function KeeperAuditTrail() {
       </div>
 
       <div className="app-card">
-        {isLoading && !demo ? (
+        {isLoading ? (
           <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[1, 2, 3].map((i) => (
               <div key={i} className="skeleton" style={{ height: 56, borderRadius: 8 }} />

@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useAttestations } from '../hooks/useAttestations';
-import { useDemoMode } from '../hooks/useDemoMode';
-import { demoAttestations } from '../lib/demoData';
 
 type Attestation = { agentId: string; rootHash: string; verdict: string; timestamp: number };
 
@@ -12,11 +10,10 @@ function VerdictBadge({ verdict }: { verdict: string }) {
 }
 
 export default function AttestationFeed() {
-  const { enabled: demo } = useDemoMode();
   const { data: live, isLoading } = useAttestations();
   const [filter, setFilter] = useState<string>('ALL');
 
-  const raw = (demo ? demoAttestations : (live ?? [])) as Attestation[];
+  const raw = (live ?? []) as Attestation[];
   const items = filter === 'ALL' ? raw : raw.filter((a) => a.verdict === filter);
 
   return (
@@ -67,7 +64,7 @@ export default function AttestationFeed() {
         >
           <span className="app-pulse-dot" /> Live stream from Witness Node
         </div>
-        {isLoading && !demo ? (
+        {isLoading ? (
           <div style={{ padding: '48px', textAlign: 'center' }}>
             <div className="skeleton" style={{ height: 16, width: 200, margin: '0 auto 12px' }} />
             <div className="skeleton" style={{ height: 12, width: 140, margin: '0 auto' }} />

@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useReadContracts } from 'wagmi';
 import { namehash } from 'viem';
 import { useAgent } from '../hooks/useAgent';
-import { useDemoMode } from '../hooks/useDemoMode';
-import { demoAgents, demoReputation, demoEnsRecords } from '../lib/demoData';
 
 const PUBLIC_RESOLVER_ABI = [
   {
@@ -122,13 +120,9 @@ function Row({ label, value }: { label: string; value?: string }) {
 export default function AgentProfile() {
   const [label, setLabel] = useState<string | null>(null);
   const [input, setInput] = useState('');
-  const { enabled: demo } = useDemoMode();
 
-  const ensName = label ?? (demo ? demoAgents[0].ensName : null);
-  const agentLabel = ensName ? ensName.replace('.aegis.eth', '') : null;
-
-  const { data: agent, isLoading } = useAgent(agentLabel);
-  const displayAgent = demo ? demoAgents[0] : agent;
+  const ensName = label ? `${label}.aegis.eth` : null;
+  const { data: agent, isLoading } = useAgent(label);
 
   const { data: ensData } = useReadContracts({
     contracts: ENS_TEXT_KEYS.map((key) => ({
@@ -138,19 +132,17 @@ export default function AgentProfile() {
       args: [namehash(ensName ?? ''), key] as [`0x${string}`, string],
       chainId: 16602,
     })),
-    query: { enabled: !demo && !!ensName && !!resolverAddress },
+    query: { enabled: !!ensName && !!resolverAddress },
   });
 
-  const ensRecords: Record<string, string> = demo
-    ? demoEnsRecords
-    : ENS_TEXT_KEYS.reduce(
-        (acc, key, i) => {
-          const val = ensData?.[i]?.result;
-          if (typeof val === 'string') acc[key] = val;
-          return acc;
-        },
-        {} as Record<string, string>
-      );
+  const ensRecords: Record<string, string> = ENS_TEXT_KEYS.reduce(
+    (acc, key, i) => {
+      const val = ensData?.[i]?.result;
+      if (typeof val === 'string') acc[key] = val;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   const score = parseInt(ensRecords['aegis.reputation'] ?? '0', 10);
 
@@ -188,7 +180,7 @@ export default function AgentProfile() {
         </button>
       </div>
 
-      {isLoading && !demo && (
+      {isLoading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2].map((i) => (
             <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />
@@ -196,7 +188,7 @@ export default function AgentProfile() {
         </div>
       )}
 
-      {(displayAgent || demo) && (
+      {agent && (
         <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div
@@ -209,17 +201,17 @@ export default function AgentProfile() {
                 gap: 16,
               }}
             >
-              <ScoreRing score={demo ? demoReputation.score : score} />
+              <ScoreRing score={score} />
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-                  {displayAgent?.ensName ?? ensName}
+                  {agent.ensName ?? ensName}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>
-                  Token #{displayAgent?.tokenId ?? '—'}
+                  Token #{agent.tokenId ?? '—'}
                 </div>
               </div>
-              <span className={displayAgent?.active ? 'badge-cleared' : 'badge-flagged'}>
-                {displayAgent?.active ? 'Active' : 'Suspended'}
+              <span className={agent.active ? 'badge-cleared' : 'badge-flagged'}>
+                {agent.active ? 'Active' : 'Suspended'}
               </span>
             </div>
 
@@ -237,7 +229,7 @@ export default function AgentProfile() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>User</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#a78bfa' }}>
-                  {displayAgent?.userPercent ?? '—'}%
+                  {agent.userPercent ?? '—'}%
                 </span>
               </div>
               <div
@@ -252,7 +244,7 @@ export default function AgentProfile() {
                 <div
                   style={{
                     height: '100%',
-                    width: `${displayAgent?.userPercent ?? 0}%`,
+                    width: `${agent.userPercent ?? 0}%`,
                     background: 'var(--app-accent)',
                     borderRadius: 2,
                   }}
@@ -261,7 +253,7 @@ export default function AgentProfile() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>Builder</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--app-text)' }}>
-                  {displayAgent?.builderPercent ?? '—'}%
+                  {agent.builderPercent ?? '—'}%
                 </span>
               </div>
             </div>
@@ -279,13 +271,13 @@ export default function AgentProfile() {
               >
                 Agent Record
               </div>
-              <Row label="Builder" value={displayAgent?.builderAddress} />
-              <Row label="Storage Root" value={displayAgent?.storageRoot || '—'} />
+              <Row label="Builder" value={agent.builderAddress} />
+              <Row label="Storage Root" value={agent.storageRoot || '—'} />
               <Row
                 label="Registered"
                 value={
-                  displayAgent?.mintedAt
-                    ? new Date(displayAgent.mintedAt * 1000).toLocaleDateString()
+                  agent.mintedAt
+                    ? new Date(agent.mintedAt * 1000).toLocaleDateString()
                     : undefined
                 }
               />
@@ -336,7 +328,7 @@ export default function AgentProfile() {
         </div>
       )}
 
-      {!displayAgent && !isLoading && !demo && (
+      {!agent && !isLoading && (
         <div
           className="app-card"
           style={{

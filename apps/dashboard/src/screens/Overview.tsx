@@ -1,7 +1,5 @@
 import { useNetworkStats } from '../hooks/useNetworkStats';
 import { useAttestations } from '../hooks/useAttestations';
-import { useDemoMode } from '../hooks/useDemoMode';
-import { demoStats, demoAttestations } from '../lib/demoData';
 
 function StatCard({
   label,
@@ -51,12 +49,10 @@ function VerdictBadge({ verdict }: { verdict: string }) {
 }
 
 export default function Overview() {
-  const { enabled: demo } = useDemoMode();
   const { data: stats } = useNetworkStats();
   const { data: attestations } = useAttestations();
 
-  const s = demo ? demoStats : stats;
-  const feed = (demo ? demoAttestations : (attestations ?? [])) as Array<{
+  const feed = (attestations ?? []) as Array<{
     agentId: string;
     rootHash: string;
     verdict: string;
@@ -76,18 +72,18 @@ export default function Overview() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
         <StatCard
           label="Total Attestations"
-          value={(s?.totalAttestations ?? 0).toLocaleString()}
+          value={(stats?.totalAttestations ?? 0).toLocaleString()}
           sub="decisions recorded"
         />
         <StatCard
           label="Active Agents"
-          value={s?.activeAgents ?? 0}
+          value={stats?.activeAgents ?? 0}
           sub="registered iNFTs"
           color="var(--green)"
         />
         <StatCard
           label="Disputes Filed"
-          value={s?.disputes ?? 0}
+          value={stats?.disputes ?? 0}
           sub="court cases opened"
           color="var(--red)"
         />
