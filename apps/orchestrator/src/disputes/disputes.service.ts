@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, BadGatewayException } from '@nestjs/common';
 import { ethers } from 'ethers';
+import { send } from '@aegis/axl-client';
+import { triggerWorkflow } from '@aegis/keeper-client';
 import type { VerifyResponse, Verdict } from '@aegis/types';
 
 const AEGIS_COURT_ABI = [
@@ -33,7 +35,7 @@ export class DisputesService {
     const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
     this.court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
     const verifierPort = process.env.AXL_VERIFIER_PORT ?? '9012';
-    this.verifierUrl = `http://localhost:${verifierPort}`;
+    this.verifierUrl = `http://127.0.0.1:${verifierPort}`;
   }
 
   async file(dto: FileDisputeDto): Promise<Record<string, unknown>> {
@@ -47,7 +49,14 @@ export class DisputesService {
     const submitTx = await this.court.submitDispute(rootHash32, dto.agentId, dto.reason);
     await submitTx.wait();
 
-    const verifyResponse = await fetch(`${this.verifierUrl}/send`, {
+    const verifierPeerId = process.env.AXL_VERIFIER_PEER_ID ?? '';
+    await send(this.verifierUrl, verifierPeerId, {
+      type: 'VERIFY_DECISION',
+      rootHash: dto.rootHash,
+      agentId: dto.agentId,
+    });
+
+    const verifyResponse = await fetch(`${this.verifierUrl}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,6 +76,14 @@ export class DisputesService {
 
     const recordTx = await this.court.recordVerdict(rootHash32, verdictUint, teeProofBytes);
     await recordTx.wait();
+
+    if (verification.verdict === 'FLAGGED' && process.env.KEEPERHUB_WORKFLOW_ID) {
+      await triggerWorkflow(process.env.KEEPERHUB_WORKFLOW_ID, {
+        rootHash: dto.rootHash,
+        agentId: dto.agentId,
+        verdict: verification.verdict,
+      }).catch(() => {});
+    }
 
     return {
       rootHash: dto.rootHash,
