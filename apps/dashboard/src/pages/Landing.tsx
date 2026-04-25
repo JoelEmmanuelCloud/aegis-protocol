@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import AegisLogo from '../components/AegisLogo';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
 
 function AnimatedMesh() {
   const nodes = [
@@ -12,14 +15,8 @@ function AnimatedMesh() {
     { x: 295, y: 190, label: '0G', sub: 'Storage', color: '#6b7280', r: 14 },
   ];
   const edges = [
-    [0, 4],
-    [1, 4],
-    [2, 4],
-    [3, 4],
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [3, 0],
+    [0, 4], [1, 4], [2, 4], [3, 4],
+    [0, 1], [1, 2], [2, 3], [3, 0],
   ];
 
   return (
@@ -31,8 +28,8 @@ function AnimatedMesh() {
     >
       <defs>
         <radialGradient id="bg" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ede9fe" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#f7f7f5" stopOpacity="0" />
+          <stop offset="0%" stopColor="#ede9fe" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="transparent" stopOpacity="0" />
         </radialGradient>
         <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="4" result="blur" />
@@ -52,7 +49,7 @@ function AnimatedMesh() {
           y1={nodes[a].y}
           x2={nodes[b].x}
           y2={nodes[b].y}
-          stroke={i < 4 ? nodes[a].color : '#d4d4d0'}
+          stroke={i < 4 ? nodes[a].color : 'var(--border-dark)'}
           strokeWidth={i < 4 ? '1.5' : '1'}
           strokeOpacity={i < 4 ? '0.35' : '0.6'}
           className="mesh-edge"
@@ -71,7 +68,7 @@ function AnimatedMesh() {
             cx={n.x}
             cy={n.y}
             r={n.r}
-            fill="white"
+            fill="var(--bg-surface)"
             stroke={n.color}
             strokeWidth="1.5"
             filter="url(#glow)"
@@ -84,7 +81,7 @@ function AnimatedMesh() {
             fontSize="11"
             fontWeight="700"
             fontFamily="Inter, sans-serif"
-            fill="#2a2a28"
+            fill="var(--text-primary)"
           >
             {n.label}
           </text>
@@ -94,7 +91,7 @@ function AnimatedMesh() {
             textAnchor="middle"
             fontSize="10"
             fontFamily="'JetBrains Mono', monospace"
-            fill="#6a6a66"
+            fill="var(--text-muted)"
           >
             {n.sub}
           </text>
@@ -102,72 +99,33 @@ function AnimatedMesh() {
       ))}
 
       <g className="float-card" style={{ animationDelay: '0.5s' }}>
-        <rect
-          x="6"
-          y="308"
-          width="180"
-          height="64"
-          rx="8"
-          fill="white"
-          stroke="#e2e2de"
-          strokeWidth="1"
-        />
+        <rect x="6" y="308" width="180" height="64" rx="8" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
         <circle cx="24" cy="324" r="6" fill="#22c55e" />
         <circle cx="24" cy="324" r="10" fill="#22c55e" opacity="0.15" />
-        <text
-          x="40"
-          y="329"
-          fontSize="11"
-          fontWeight="700"
-          fill="#1a1a18"
-          fontFamily="Inter, sans-serif"
-        >
+        <text x="40" y="329" fontSize="11" fontWeight="700" fill="var(--text-primary)" fontFamily="Inter, sans-serif">
           trading-bot.aegis.eth
         </text>
-        <text x="14" y="346" fontSize="10" fill="#6a6a66" fontFamily="monospace">
+        <text x="14" y="346" fontSize="10" fill="var(--text-muted)" fontFamily="monospace">
           0xabc123…d4f9
         </text>
         <rect x="14" y="354" width="56" height="13" rx="3" fill="#ede9fe" />
-        <text
-          x="18"
-          y="364"
-          fontSize="9.5"
-          fill="#7c3aed"
-          fontWeight="700"
-          fontFamily="Inter, sans-serif"
-        >
+        <text x="18" y="364" fontSize="9.5" fill="#7c3aed" fontWeight="700" fontFamily="Inter, sans-serif">
           CLEARED
         </text>
-        <text x="76" y="364" fontSize="9.5" fill="#6a6a66" fontFamily="Inter, sans-serif">
+        <text x="76" y="364" fontSize="9.5" fill="var(--text-muted)" fontFamily="Inter, sans-serif">
           2s ago
         </text>
       </g>
 
       <g className="float-card" style={{ animationDelay: '1.2s' }}>
-        <rect
-          x="326"
-          y="4"
-          width="166"
-          height="62"
-          rx="8"
-          fill="white"
-          stroke="#e2e2de"
-          strokeWidth="1"
-        />
-        <text
-          x="340"
-          y="22"
-          fontSize="11"
-          fontWeight="700"
-          fill="#1a1a18"
-          fontFamily="Inter, sans-serif"
-        >
+        <rect x="326" y="4" width="166" height="62" rx="8" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+        <text x="340" y="22" fontSize="11" fontWeight="700" fill="var(--text-primary)" fontFamily="Inter, sans-serif">
           AegisCourt.sol
         </text>
-        <text x="340" y="38" fontSize="10" fill="#6a6a66" fontFamily="monospace">
+        <text x="340" y="38" fontSize="10" fill="var(--text-muted)" fontFamily="monospace">
           0x3De27365…F734a
         </text>
-        <text x="340" y="54" fontSize="10" fill="#6a6a66" fontFamily="Inter, sans-serif">
+        <text x="340" y="54" fontSize="10" fill="var(--text-muted)" fontFamily="Inter, sans-serif">
           0G Galileo · chainId 16602
         </text>
       </g>
@@ -209,7 +167,7 @@ function LiveCounter({ label, end }: { label: string; end: number }) {
           fontSize: 38,
           fontWeight: 800,
           letterSpacing: '-0.04em',
-          color: '#0a0a08',
+          color: 'var(--text-primary)',
           lineHeight: 1,
           marginBottom: 8,
         }}
@@ -219,7 +177,7 @@ function LiveCounter({ label, end }: { label: string; end: number }) {
       <div
         style={{
           fontSize: 13,
-          color: '#6a6a66',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
           fontWeight: 600,
@@ -235,7 +193,32 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
   const { connect } = useConnect();
+  const { theme } = useTheme();
   const [connecting, setConnecting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const codeSnippet = `await fetch("http://localhost:9002/send", {
+  method: "POST",
+  headers: {
+    "X-Destination-Peer-Id":
+      AEGIS_WITNESS_PEER_ID
+  },
+  body: JSON.stringify({
+    type:      "ATTEST_DECISION",
+    agentId:   "trading-bot.aegis.eth",
+    inputs:    agent.lastInputs,
+    reasoning: agent.lastReasoning,
+    action:    agent.lastAction,
+    timestamp: Date.now()
+  })
+})`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeSnippet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (isConnected) navigate('/app');
@@ -250,8 +233,8 @@ export default function Landing() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#f7f7f5',
-        color: '#0a0a08',
+        background: 'var(--bg-base)',
+        color: 'var(--text-primary)',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -259,83 +242,49 @@ export default function Landing() {
       <nav
         className="landing-nav"
         style={{
-          height: 64,
-          borderBottom: '1px solid #e2e2de',
+          height: 76,
+          borderBottom: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 48px',
-          background: 'rgba(247,247,245,0.92)',
+          background: 'var(--nav-bg)',
           backdropFilter: 'blur(10px)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              background: '#0a0a08',
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                stroke="white"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.02em' }}>
-            aegis protocol
-          </span>
-        </div>
+        <a href="#about" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <AegisLogo variant={theme === 'dark' ? 'light' : 'dark'} size={40} showWordmark wordmarkColor="var(--text-primary)" />
+        </a>
 
         <div className="landing-nav-links" style={{ display: 'flex', gap: 32 }}>
-          {['About', 'Developers', 'The Protocol', 'Docs'].map((item) => (
-            <a key={item} href="#" className="nav-link" style={{ fontSize: 14 }}>
-              {item}
+          {[{ label: 'Builder', href: '#builder' }, { label: 'How it works', href: '#how' }].map((item) => (
+            <a key={item.label} href={item.href} className="nav-link" style={{ fontSize: 14 }}>
+              {item.label}
             </a>
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <ThemeToggle />
           <a
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
             rel="noopener noreferrer"
-            className="nav-link"
-            style={{ padding: '4px 0', fontSize: 14 }}
+            className="cta-primary"
+            style={{ fontSize: 14, padding: '8px 18px', textDecoration: 'none' }}
           >
             GitHub
           </a>
-          <button
-            onClick={handleConnect}
-            className="cta-primary"
-            style={{ fontSize: 14, padding: '8px 18px' }}
-          >
-            {connecting ? 'Connecting…' : 'Launch App'}
-          </button>
         </div>
       </nav>
 
       <section
+        id="about"
         className="landing-section"
-        style={{
-          padding: '80px 48px 60px',
-          maxWidth: 1200,
-          margin: '0 auto',
-          width: '100%',
-          position: 'relative',
-        }}
+        style={{ padding: '80px 48px 60px', maxWidth: 1200, margin: '0 auto', width: '100%', position: 'relative' }}
       >
         <div
           className="landing-dots"
@@ -358,8 +307,8 @@ export default function Landing() {
                   fontWeight: 600,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: '#6a6a66',
-                  border: '1px solid #d8d8d4',
+                  color: 'var(--text-muted)',
+                  border: '1px solid var(--border)',
                   padding: '6px 14px',
                   borderRadius: 4,
                 }}
@@ -376,7 +325,7 @@ export default function Landing() {
                 letterSpacing: '-0.045em',
                 lineHeight: 1.02,
                 marginBottom: 24,
-                color: '#0a0a08',
+                color: 'var(--text-primary)',
               }}
             >
               Prove every
@@ -388,7 +337,7 @@ export default function Landing() {
               className="animate-in-2"
               style={{
                 fontSize: 16,
-                color: '#3a3a38',
+                color: 'var(--text-secondary)',
                 lineHeight: 1.8,
                 maxWidth: 400,
                 marginBottom: 36,
@@ -400,16 +349,10 @@ export default function Landing() {
 
             <div
               className="animate-in-3"
-              style={{
-                display: 'flex',
-                gap: 12,
-                alignItems: 'center',
-                marginBottom: 52,
-                flexWrap: 'wrap',
-              }}
+              style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 52, flexWrap: 'wrap' }}
             >
               <button onClick={handleConnect} className="cta-primary">
-                {connecting ? 'Connecting…' : 'Connect Wallet'}
+                {connecting ? 'Connecting…' : 'Register Your Agent'}
                 <svg
                   className="cta-arrow"
                   width="15"
@@ -426,23 +369,18 @@ export default function Landing() {
                 </svg>
               </button>
               <button
-                onClick={() =>
-                  window.open('https://github.com/JoelEmmanuelCloud/aegis-protocol', '_blank')
-                }
+                onClick={() => window.open('https://github.com/JoelEmmanuelCloud/aegis-protocol', '_blank')}
                 className="cta-secondary"
               >
-                Docs
+                View Docs
               </button>
             </div>
 
-            <div
-              className="animate-in-4"
-              style={{ borderTop: '1px solid #e2e2de', paddingTop: 28 }}
-            >
+            <div className="animate-in-4" style={{ borderTop: '1px solid var(--border)', paddingTop: 28 }}>
               <div
                 style={{
                   fontSize: 12,
-                  color: '#6a6a66',
+                  color: 'var(--text-muted)',
                   marginBottom: 16,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -459,22 +397,15 @@ export default function Landing() {
                   { name: 'KeeperHub', desc: 'Enforcement' },
                 ].map((s) => (
                   <div key={s.name} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0a0a08' }}>{s.name}</div>
-                    <div style={{ fontSize: 12, color: '#6a6a66' }}>{s.desc}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.desc}</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingLeft: 32,
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', paddingLeft: 32 }}>
             <AnimatedMesh />
           </div>
         </div>
@@ -486,8 +417,8 @@ export default function Landing() {
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 1,
-            background: '#e2e2de',
-            border: '1px solid #e2e2de',
+            background: 'var(--border)',
+            border: '1px solid var(--border)',
             borderRadius: 12,
             overflow: 'hidden',
           }}
@@ -497,7 +428,7 @@ export default function Landing() {
             { label: 'Active Agents', end: 284 },
             { label: 'Verdicts Issued', end: 391 },
           ].map((stat) => (
-            <div key={stat.label} style={{ background: '#f7f7f5', padding: '36px' }}>
+            <div key={stat.label} style={{ background: 'var(--bg-base)', padding: '36px' }}>
               <LiveCounter label={stat.label} end={stat.end} />
             </div>
           ))}
@@ -508,7 +439,7 @@ export default function Landing() {
         id="how"
         className="landing-section"
         style={{
-          borderTop: '1px solid #e2e2de',
+          borderTop: '1px solid var(--border)',
           padding: '72px 48px',
           maxWidth: 1200,
           margin: '0 auto',
@@ -516,12 +447,7 @@ export default function Landing() {
         }}
       >
         <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 40,
-          }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40 }}
         >
           <div>
             <div
@@ -530,7 +456,7 @@ export default function Landing() {
                 fontWeight: 600,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: '#6a6a66',
+                color: 'var(--text-muted)',
                 marginBottom: 10,
               }}
             >
@@ -547,7 +473,7 @@ export default function Landing() {
 
         <div
           className="landing-steps"
-          style={{ border: '1px solid #e2e2de', borderRadius: 12, overflow: 'hidden' }}
+          style={{ border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}
         >
           {[
             {
@@ -576,29 +502,15 @@ export default function Landing() {
               key={step.num}
               style={{
                 padding: '36px 32px',
-                background: 'white',
-                borderRight: i < 2 ? '1px solid #e2e2de' : 'none',
+                background: 'var(--bg-surface)',
+                borderRight: i < 2 ? '1px solid var(--border)' : 'none',
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = '#fafaf8')}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'white')}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)'; }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 20,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: '#c8c8c4',
-                    letterSpacing: '0.04em',
-                  }}
-                >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--border-dark)', letterSpacing: '0.04em' }}>
                   {step.num}
                 </span>
                 <span
@@ -618,37 +530,32 @@ export default function Landing() {
                 </span>
               </div>
               <div
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  marginBottom: 14,
-                  color: '#0a0a08',
-                }}
+                style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 14, color: 'var(--text-primary)' }}
               >
                 {step.title}
               </div>
-              <div style={{ fontSize: 14, color: '#3a3a38', lineHeight: 1.75 }}>{step.desc}</div>
+              <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.75 }}>{step.desc}</div>
             </div>
           ))}
         </div>
       </section>
 
       <section
+        id="builder"
         className="landing-section landing-integration"
         style={{
           padding: '72px 48px',
           maxWidth: 1200,
           margin: '0 auto',
           width: '100%',
-          borderTop: '1px solid #e2e2de',
+          borderTop: '1px solid var(--border)',
         }}
       >
         <div>
           <div
             style={{
               fontSize: 12,
-              color: '#6a6a66',
+              color: 'var(--text-muted)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: 16,
@@ -657,27 +564,13 @@ export default function Landing() {
           >
             Builder Integration
           </div>
-          <h2
-            style={{
-              fontSize: 34,
-              fontWeight: 800,
-              letterSpacing: '-0.03em',
-              marginBottom: 18,
-              lineHeight: 1.1,
-            }}
-          >
+          <h2 style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 18, lineHeight: 1.1 }}>
             One call.
             <br />
             Full accountability.
           </h2>
           <p
-            style={{
-              fontSize: 15,
-              color: '#3a3a38',
-              lineHeight: 1.8,
-              marginBottom: 28,
-              maxWidth: 420,
-            }}
+            style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 28, maxWidth: 420 }}
           >
             Add a single AXL fetch after every agent decision. Storage, verification, court,
             reputation score, and ENS update — all handled automatically by Aegis.
@@ -696,14 +589,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div
-          style={{
-            background: '#0c0c10',
-            borderRadius: 12,
-            overflow: 'hidden',
-            border: '1px solid #1e1e28',
-          }}
-        >
+        <div style={{ background: '#0c0c10', borderRadius: 12, overflow: 'hidden', border: '1px solid #1e1e28' }}>
           <div
             style={{
               padding: '12px 16px',
@@ -721,6 +607,40 @@ export default function Landing() {
             <span style={{ fontSize: 12, color: '#4a4a60', fontFamily: 'monospace' }}>
               agent-integration.ts
             </span>
+            <button
+              onClick={handleCopy}
+              style={{
+                background: 'none',
+                border: '1px solid #2a2a38',
+                borderRadius: 5,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 10px',
+                fontSize: 11,
+                fontFamily: 'inherit',
+                color: copied ? '#22c55e' : '#6a6a80',
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
+            >
+              {copied ? (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Copied
+                </>
+              ) : (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
           </div>
           <pre
             style={{
@@ -732,22 +652,7 @@ export default function Landing() {
               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
               margin: 0,
             }}
-          >{`await fetch("http://localhost:9002/send", {
-  method: "POST",
-  headers: {
-    "X-Destination-Peer-Id":
-      AEGIS_WITNESS_PEER_ID
-  },
-  body: JSON.stringify({
-    type:      "ATTEST_DECISION",
-    agentId:   "trading-bot.aegis.eth",
-    inputs:    agent.lastInputs,
-    reasoning: agent.lastReasoning,
-    action:    agent.lastAction,
-    timestamp: Date.now()
-  })
-})
-// → { rootHash: "0xabc…", status: "COMMITTED" }`}</pre>
+          >{codeSnippet}</pre>
         </div>
       </section>
 
@@ -764,29 +669,8 @@ export default function Landing() {
           marginTop: 'auto',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              background: '#f7f7f5',
-              borderRadius: 4,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                stroke="#0a0a08"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#f7f7f5' }}>Aegis Protocol</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <AegisLogo variant="light" size={36} showWordmark wordmarkColor="#f7f7f5" />
           <span
             style={{
               fontSize: 12,
