@@ -1,6 +1,8 @@
 import { useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import AegisLogo from './AegisLogo';
+import ThemeToggle from './ThemeToggle';
 
 const NAV = [
   {
@@ -182,38 +184,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           }}
           onClick={() => navigate('/')}
         >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              background: 'var(--app-accent)',
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <div>
-            <div
-              style={{ fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2 }}
-            >
-              Aegis
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--app-text-muted)', letterSpacing: '0.04em' }}>
-              Protocol
-            </div>
-          </div>
+          <AegisLogo variant="purple" size={30} showWordmark wordmarkColor="var(--app-text)" />
         </div>
 
         <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
@@ -356,7 +327,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               )?.label ?? 'Dashboard'}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ThemeToggle />
             <div
               style={{
                 display: 'flex',
