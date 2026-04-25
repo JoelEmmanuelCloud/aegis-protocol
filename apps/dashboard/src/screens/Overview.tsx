@@ -40,7 +40,9 @@ export default function Overview() {
     <div className="flex flex-col gap-6 h-full">
       <div>
         <div className="text-xl font-bold mb-1">Dashboard</div>
-        <div className="text-[13px] text-aegis-muted">Aegis Protocol — AI agent accountability layer</div>
+        <div className="text-[13px] text-aegis-muted">
+          Aegis Protocol — AI agent accountability layer
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -127,9 +129,15 @@ export default function Overview() {
           </div>
           <div className="flex-1 overflow-y-auto">
             {demo ? (
-              demoAttestationEntries.slice(0, 6).map((entry) => (
-                <AttestationCard key={entry.rootHash} entry={entry} agentId="demo-alpha.aegis.eth" />
-              ))
+              demoAttestationEntries
+                .slice(0, 6)
+                .map((entry) => (
+                  <AttestationCard
+                    key={entry.rootHash}
+                    entry={entry}
+                    agentId="demo-alpha.aegis.eth"
+                  />
+                ))
             ) : (
               <div className="p-6 text-aegis-dim text-[13px] text-center">
                 Search for an agent in Attestations to see live feed

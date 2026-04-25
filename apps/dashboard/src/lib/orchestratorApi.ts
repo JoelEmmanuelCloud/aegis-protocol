@@ -34,7 +34,7 @@ export function fetchAgentsByOwner(address: string): Promise<AgentRecord[]> {
 export function fetchAttestations(
   agentId: string,
   cursor?: string,
-  limit?: number,
+  limit?: number
 ): Promise<AttestationListResponse> {
   const params = new URLSearchParams({ agentId });
   if (cursor) params.set('cursor', cursor);

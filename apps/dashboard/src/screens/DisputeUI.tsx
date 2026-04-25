@@ -18,7 +18,9 @@ export default function DisputeUI() {
   const [filedRootHash, setFiledRootHash] = useState<string | null>(null);
 
   const { mutate: file, isPending, error, data: result } = useDispute();
-  const { data: status } = useDisputeStatus(filedRootHash ?? (demo ? demoDisputes[0].rootHash : null));
+  const { data: status } = useDisputeStatus(
+    filedRootHash ?? (demo ? demoDisputes[0].rootHash : null)
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

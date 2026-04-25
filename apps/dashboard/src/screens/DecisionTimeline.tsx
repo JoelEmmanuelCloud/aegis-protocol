@@ -17,7 +17,9 @@ export default function DecisionTimeline() {
     <div className="flex flex-col gap-6">
       <div>
         <div className="text-xl font-bold mb-1">Decision Timeline</div>
-        <div className="text-[13px] text-aegis-muted">Paginated history of all attested decisions</div>
+        <div className="text-[13px] text-aegis-muted">
+          Paginated history of all attested decisions
+        </div>
       </div>
 
       {!demo && (
@@ -47,15 +49,23 @@ export default function DecisionTimeline() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={3} className="px-4 py-3 text-[13px] border-b border-aegis-border text-center text-aegis-dim">
+                <td
+                  colSpan={3}
+                  className="px-4 py-3 text-[13px] border-b border-aegis-border text-center text-aegis-dim"
+                >
                   Loading…
                 </td>
               </tr>
             )}
             {!isLoading && entries.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-10 text-[13px] border-b border-aegis-border text-center text-aegis-dim">
-                  {agentId || demo ? 'No decisions found' : 'Select an agent to view their decision timeline'}
+                <td
+                  colSpan={3}
+                  className="px-4 py-10 text-[13px] border-b border-aegis-border text-center text-aegis-dim"
+                >
+                  {agentId || demo
+                    ? 'No decisions found'
+                    : 'Select an agent to view their decision timeline'}
                 </td>
               </tr>
             )}

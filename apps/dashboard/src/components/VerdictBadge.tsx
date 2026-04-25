@@ -9,7 +9,9 @@ const config: Record<Verdict, { className: string; label: string }> = {
 export default function VerdictBadge({ verdict }: { verdict: Verdict }) {
   const { className, label } = config[verdict];
   return (
-    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide ${className}`}>
+    <span
+      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide ${className}`}
+    >
       {label}
     </span>
   );

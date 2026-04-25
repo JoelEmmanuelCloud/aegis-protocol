@@ -16,11 +16,11 @@ export default function AttestationFeed() {
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xl font-bold mb-1">Attestation Feed</div>
-          <div className="text-[13px] text-aegis-muted">Live decision stream — refreshes every 5 seconds</div>
+          <div className="text-[13px] text-aegis-muted">
+            Live decision stream — refreshes every 5 seconds
+          </div>
         </div>
-        {isFetching && !isLoading && (
-          <div className="text-xs text-aegis-dim pt-1">Refreshing…</div>
-        )}
+        {isFetching && !isLoading && <div className="text-xs text-aegis-dim pt-1">Refreshing…</div>}
       </div>
 
       {!demo && <AgentSearch onSearch={setAgentId} />}
@@ -35,9 +35,7 @@ export default function AttestationFeed() {
           />
         </div>
 
-        {isLoading && (
-          <div className="p-8 text-center text-aegis-dim text-[13px]">Loading…</div>
-        )}
+        {isLoading && <div className="p-8 text-center text-aegis-dim text-[13px]">Loading…</div>}
 
         {!isLoading && entries.length === 0 && (
           <div className="p-12 text-center text-aegis-dim text-[13px]">

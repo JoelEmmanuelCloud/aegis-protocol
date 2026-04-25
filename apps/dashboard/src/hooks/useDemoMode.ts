@@ -12,6 +12,6 @@ export const useDemoMode = create<DemoModeStore>()(
       enabled: false,
       toggle: () => set((s) => ({ enabled: !s.enabled })),
     }),
-    { name: 'aegis-demo-mode' },
-  ),
+    { name: 'aegis-demo-mode' }
+  )
 );

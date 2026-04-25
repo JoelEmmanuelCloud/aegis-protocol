@@ -19,7 +19,9 @@ export default function AttestationCard({ entry, agentId }: Props) {
     <div className="px-4 py-3 border-b border-aegis-border flex items-center justify-between gap-3">
       <div className="flex flex-col gap-1 min-w-0">
         {agentId && (
-          <div className="text-[13px] font-semibold text-aegis-purple-light truncate">{agentId}</div>
+          <div className="text-[13px] font-semibold text-aegis-purple-light truncate">
+            {agentId}
+          </div>
         )}
         <TxHashLink hash={entry.rootHash} />
       </div>

@@ -99,7 +99,9 @@ export default function Register() {
                     onChange={(e) => setBuilderAddress(e.target.value)}
                     placeholder={address ?? '0x…'}
                   />
-                  <div className="text-xs text-aegis-dim mt-1">Leave empty to use your connected wallet</div>
+                  <div className="text-xs text-aegis-dim mt-1">
+                    Leave empty to use your connected wallet
+                  </div>
                 </div>
 
                 <div>
@@ -160,8 +162,9 @@ export default function Register() {
 
           <div className="bg-aegis-purple-dim border border-[rgba(124,58,237,0.3)] rounded-xl px-6 py-5">
             <div className="text-[13px] text-aegis-purple-light leading-relaxed">
-              Minting creates an ERC-7857 iNFT on 0G Galileo Testnet, issues an aegis.eth ENS subname via
-              NameWrapper, and sets initial reputation text records on the Public Resolver.
+              Minting creates an ERC-7857 iNFT on 0G Galileo Testnet, issues an aegis.eth ENS
+              subname via NameWrapper, and sets initial reputation text records on the Public
+              Resolver.
             </div>
           </div>
         </div>

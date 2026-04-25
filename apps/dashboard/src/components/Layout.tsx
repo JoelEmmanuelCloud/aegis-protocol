@@ -83,9 +83,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <ConnectButton chainStatus="icon" showBalance={false} />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-7 bg-aegis-base">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto p-7 bg-aegis-base">{children}</main>
       </div>
     </div>
   );

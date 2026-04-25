@@ -70,7 +70,7 @@ export default function AgentProfile() {
           if (typeof val === 'string') acc[key] = val;
           return acc;
         },
-        {} as Record<string, string>,
+        {} as Record<string, string>
       );
 
   const score = parseInt(ensRecords['aegis.reputation'] ?? '0', 10);
@@ -83,14 +83,14 @@ export default function AgentProfile() {
     <div className="flex flex-col gap-6">
       <div>
         <div className="text-xl font-bold mb-1">Agent Profile</div>
-        <div className="text-[13px] text-aegis-muted">ENS identity and reputation for any registered agent</div>
+        <div className="text-[13px] text-aegis-muted">
+          ENS identity and reputation for any registered agent
+        </div>
       </div>
 
       <AgentSearch onSearch={handleSearch} />
 
-      {agentLoading && !demo && (
-        <div className="text-aegis-muted text-[13px]">Loading…</div>
-      )}
+      {agentLoading && !demo && <div className="text-aegis-muted text-[13px]">Loading…</div>}
 
       {(displayAgent || demo) && (
         <div className="grid grid-cols-[280px_1fr] gap-4">
@@ -99,7 +99,9 @@ export default function AgentProfile() {
               <ReputationScore score={demo ? demoReputation.score : score} />
               <div className="text-center">
                 <div className="font-semibold text-sm">{displayAgent?.ensName ?? ensName}</div>
-                <div className="text-xs text-aegis-muted mt-0.5">Token #{displayAgent?.tokenId ?? '—'}</div>
+                <div className="text-xs text-aegis-muted mt-0.5">
+                  Token #{displayAgent?.tokenId ?? '—'}
+                </div>
               </div>
               <span
                 className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${
@@ -116,11 +118,15 @@ export default function AgentProfile() {
               <div className="text-[13px] font-semibold mb-3">Split</div>
               <div className="flex justify-between text-[13px] mb-1.5">
                 <span className="text-aegis-muted">User</span>
-                <span className="text-aegis-purple-light font-semibold">{displayAgent?.userPercent ?? '—'}%</span>
+                <span className="text-aegis-purple-light font-semibold">
+                  {displayAgent?.userPercent ?? '—'}%
+                </span>
               </div>
               <div className="flex justify-between text-[13px]">
                 <span className="text-aegis-muted">Builder</span>
-                <span className="text-aegis-text font-semibold">{displayAgent?.builderPercent ?? '—'}%</span>
+                <span className="text-aegis-text font-semibold">
+                  {displayAgent?.builderPercent ?? '—'}%
+                </span>
               </div>
             </div>
           </div>

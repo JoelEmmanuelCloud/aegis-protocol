@@ -26,14 +26,13 @@ export default function KeeperAuditTrail() {
             KeeperHub workflow runs for automated onchain remedy execution
           </div>
         </div>
-        {workflowId && (
-          <div className="text-xs text-aegis-dim font-mono">{workflowId}</div>
-        )}
+        {workflowId && <div className="text-xs text-aegis-dim font-mono">{workflowId}</div>}
       </div>
 
       {!workflowId && !demo && (
         <div className="bg-aegis-amber-dim border border-[rgba(245,158,11,0.25)] rounded-xl px-4 py-3 text-[13px] text-aegis-amber">
-          Set <code className="font-mono">VITE_KEEPERHUB_WORKFLOW_ID</code> in your .env to see live audit data, or enable Demo Mode.
+          Set <code className="font-mono">VITE_KEEPERHUB_WORKFLOW_ID</code> in your .env to see live
+          audit data, or enable Demo Mode.
         </div>
       )}
 
@@ -51,21 +50,27 @@ export default function KeeperAuditTrail() {
                   >
                     {h}
                   </th>
-                ),
+                )
               )}
             </tr>
           </thead>
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={7} className="px-4 py-3 text-[13px] border-b border-aegis-border text-center text-aegis-dim">
+                <td
+                  colSpan={7}
+                  className="px-4 py-3 text-[13px] border-b border-aegis-border text-center text-aegis-dim"
+                >
                   Loading…
                 </td>
               </tr>
             )}
             {!isLoading && displayRuns.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-[13px] border-b border-aegis-border text-center text-aegis-dim">
+                <td
+                  colSpan={7}
+                  className="px-4 py-10 text-[13px] border-b border-aegis-border text-center text-aegis-dim"
+                >
                   No workflow runs found
                 </td>
               </tr>
@@ -78,7 +83,9 @@ export default function KeeperAuditTrail() {
                     {run.runId}
                   </td>
                   <td className="px-4 py-3 text-[13px] border-b border-aegis-border align-middle">
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${sc}`}>
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${sc}`}
+                    >
                       {run.status}
                     </span>
                   </td>
