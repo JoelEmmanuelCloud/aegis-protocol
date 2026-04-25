@@ -1,15 +1,15 @@
-import { KvClient, Batcher } from '@0gfoundation/0g-ts-sdk';
+import { KvClient, Batcher, Indexer, getFlowContract } from '@0gfoundation/0g-ts-sdk';
 import { ethers } from 'ethers';
 
 const ZG_KV_ENDPOINT = process.env.ZG_KV_ENDPOINT!;
 const ZG_RPC_URL = process.env.ZG_RPC_URL!;
+const ZG_INDEXER_RPC = process.env.ZG_INDEXER_RPC!;
 const ZG_PRIVATE_KEY = process.env.ZG_PRIVATE_KEY!;
 
-function getStreamId(): Uint8Array {
+function getStreamId(): string {
   const wallet = new ethers.Wallet(ZG_PRIVATE_KEY);
   const hex = wallet.address.toLowerCase().replace('0x', '');
-  const padded = '0'.repeat(24) + hex;
-  return Buffer.from(padded, 'hex');
+  return '0'.repeat(24) + hex;
 }
 
 function getSigner(): ethers.Wallet {
@@ -17,28 +17,40 @@ function getSigner(): ethers.Wallet {
   return new ethers.Wallet(ZG_PRIVATE_KEY, provider);
 }
 
-export async function writeKV(key: string, value: string): Promise<void> {
-  const signer = getSigner();
-  const streamId = getStreamId();
-  const batcher = await Batcher.newBatcher(signer, [], signer.provider!, ZG_KV_ENDPOINT);
+async function createBatcher(): Promise<Batcher> {
+  const indexer = new Indexer(ZG_INDEXER_RPC);
+  const [clients, err] = await indexer.selectNodes(1);
+  if (err) throw new Error(`Failed to select storage nodes: ${err}`);
 
-  await batcher.setValue(
+  const status = await clients[0].getStatus();
+  const signer = getSigner();
+  const flow = getFlowContract(status.networkIdentity.flowAddress, signer);
+
+  return new Batcher(0, clients, flow, ZG_RPC_URL);
+}
+
+export async function writeKV(key: string, value: string): Promise<void> {
+  const streamId = getStreamId();
+  const batcher = await createBatcher();
+
+  batcher.streamDataBuilder.set(
     streamId,
     Buffer.from(key, 'utf-8'),
     Buffer.from(value, 'utf-8')
   );
 
-  await batcher.exec();
+  const [, err] = await batcher.exec();
+  if (err) throw new Error(`KV write failed: ${err}`);
 }
 
 export async function readKV(key: string): Promise<string | null> {
   const kvClient = new KvClient(ZG_KV_ENDPOINT);
   const streamId = getStreamId();
 
-  const result = await kvClient.getValue(streamId, Buffer.from(key, 'utf-8'), 0, 8192);
-
+  const result = await kvClient.getValue(streamId, Buffer.from(key, 'utf-8'));
   if (!result) return null;
-  return Buffer.from(result).toString('utf-8');
+
+  return Buffer.from(result.data, 'base64').toString('utf-8');
 }
 
 export async function writeKVObject(key: string, value: unknown): Promise<void> {

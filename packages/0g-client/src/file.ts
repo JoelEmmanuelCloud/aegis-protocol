@@ -15,20 +15,19 @@ export async function uploadObject(data: unknown): Promise<string> {
   const encoded = Buffer.from(JSON.stringify(data));
   const memData = new MemData(encoded);
 
-  const [trees, treeErr] = await memData.merkleTree();
-  if (treeErr) throw new Error(`Merkle tree error: ${treeErr}`);
-
   const indexer = new Indexer(ZG_INDEXER_RPC);
-  const [, uploadErr] = await indexer.upload(memData, ZG_RPC_URL, signer);
-  if (uploadErr) throw new Error(`Upload error: ${uploadErr}`);
+  const [result, err] = await indexer.upload(memData, ZG_RPC_URL, signer);
+  if (err) throw new Error(`Upload failed: ${err}`);
 
-  return trees!.rootHash().hex();
+  const res = result as { rootHash: string };
+  return res.rootHash;
 }
 
 export async function downloadObject<T>(rootHash: string): Promise<T> {
   const indexer = new Indexer(ZG_INDEXER_RPC);
-  const [data, err] = await indexer.download(rootHash, true);
-  if (err) throw new Error(`Download error: ${err}`);
+  const [blob, err] = await indexer.downloadToBlob(rootHash);
+  if (err) throw new Error(`Download failed: ${err}`);
 
-  return JSON.parse(Buffer.from(data!).toString('utf-8')) as T;
+  const text = await blob.text();
+  return JSON.parse(text) as T;
 }
