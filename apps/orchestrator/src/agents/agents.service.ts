@@ -21,16 +21,15 @@ export interface RegisterAgentDto {
 
 @Injectable()
 export class AgentsService {
-  private readonly registry: ethers.Contract;
+  private _registry: ethers.Contract | null = null;
 
-  constructor() {
-    const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
-    const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
-    this.registry = new ethers.Contract(
-      process.env.AGENT_REGISTRY_ADDRESS!,
-      AGENT_REGISTRY_ABI,
-      signer
-    );
+  private get registry(): ethers.Contract {
+    if (!this._registry) {
+      const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
+      const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
+      this._registry = new ethers.Contract(process.env.AGENT_REGISTRY_ADDRESS!, AGENT_REGISTRY_ABI, signer);
+    }
+    return this._registry;
   }
 
   async register(

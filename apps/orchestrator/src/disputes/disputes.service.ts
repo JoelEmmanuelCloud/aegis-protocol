@@ -27,16 +27,22 @@ export interface FileDisputeDto {
 
 @Injectable()
 export class DisputesService {
-  private readonly court: ethers.Contract;
+  private _court: ethers.Contract | null = null;
   private readonly verifierUrl: string;
 
   constructor() {
-    const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
-    const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
-    this.court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
     const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
     this.verifierUrl =
       process.env.VERIFIER_MGMT_URL ?? `http://localhost:${verifierAxlPort + 1000}`;
+  }
+
+  private get court(): ethers.Contract {
+    if (!this._court) {
+      const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
+      const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
+      this._court = new ethers.Contract(process.env.AEGIS_COURT_ADDRESS!, AEGIS_COURT_ABI, signer);
+    }
+    return this._court;
   }
 
   async file(dto: FileDisputeDto): Promise<Record<string, unknown>> {
