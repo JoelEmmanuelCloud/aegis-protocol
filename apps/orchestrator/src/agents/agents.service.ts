@@ -22,6 +22,7 @@ export interface RegisterAgentDto {
 @Injectable()
 export class AgentsService {
   private _registry: ethers.Contract | null = null;
+  private _readRegistry: ethers.Contract | null = null;
 
   private get registry(): ethers.Contract {
     if (!this._registry) {
@@ -30,6 +31,14 @@ export class AgentsService {
       this._registry = new ethers.Contract(process.env.AGENT_REGISTRY_ADDRESS!, AGENT_REGISTRY_ABI, signer);
     }
     return this._registry;
+  }
+
+  private get readRegistry(): ethers.Contract {
+    if (!this._readRegistry) {
+      const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
+      this._readRegistry = new ethers.Contract(process.env.AGENT_REGISTRY_ADDRESS!, AGENT_REGISTRY_ABI, provider);
+    }
+    return this._readRegistry;
   }
 
   async register(
@@ -72,10 +81,10 @@ export class AgentsService {
   }
 
   async getByLabel(label: string): Promise<Record<string, unknown>> {
-    const tokenId: bigint = await this.registry.getTokenByEnsLabel(label);
+    const tokenId: bigint = await this.readRegistry.getTokenByEnsLabel(label);
     if (tokenId === 0n) throw new NotFoundException(`Agent '${label}' not found`);
 
-    const record = await this.registry.getAgent(tokenId);
+    const record = await this.readRegistry.getAgent(tokenId);
     return {
       tokenId: tokenId.toString(),
       ensName: record.ensName,
@@ -89,10 +98,10 @@ export class AgentsService {
   }
 
   async getByOwner(ownerAddress: string): Promise<Record<string, unknown>[]> {
-    const tokenIds: bigint[] = await this.registry.getOwnerTokenIds(ownerAddress);
+    const tokenIds: bigint[] = await this.readRegistry.getOwnerTokenIds(ownerAddress);
     const agents = await Promise.all(
       tokenIds.map(async (id) => {
-        const record = await this.registry.getAgent(id);
+        const record = await this.readRegistry.getAgent(id);
         return {
           tokenId: id.toString(),
           ensName: record.ensName,
