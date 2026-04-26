@@ -7,6 +7,7 @@ const ZG_INDEXER_RPC = process.env.ZG_INDEXER_RPC!;
 const ZG_PRIVATE_KEY = process.env.ZG_PRIVATE_KEY!;
 
 function getStreamId(): string {
+  if (!ZG_PRIVATE_KEY) throw new Error('ZG_PRIVATE_KEY is required for 0G KV operations');
   const wallet = new ethers.Wallet(ZG_PRIVATE_KEY);
   const hex = wallet.address.toLowerCase().replace('0x', '');
   return '0'.repeat(24) + hex;
@@ -40,6 +41,7 @@ export async function writeKV(key: string, value: string): Promise<void> {
 }
 
 export async function readKV(key: string): Promise<string | null> {
+  if (!ZG_PRIVATE_KEY) return null;
   const kvClient = new KvClient(ZG_KV_ENDPOINT);
   const streamId = getStreamId();
 
