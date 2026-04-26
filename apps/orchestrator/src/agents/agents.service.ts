@@ -81,6 +81,7 @@ export class AgentsService {
       throw err;
     }
     const receipt = await tx.wait();
+    if (!receipt) throw new Error('Transaction dropped — no receipt returned');
 
     const log = receipt.logs
       .map((l: ethers.Log) => {
