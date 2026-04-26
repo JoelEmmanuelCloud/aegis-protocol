@@ -19,19 +19,58 @@ const REGISTRY_ABI = [
 
 const REGISTRY = (import.meta.env.VITE_AGENT_REGISTRY_ADDRESS ?? '0x0') as `0x${string}`;
 
+function isValidEthAddress(val: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(val);
+}
+
+function FieldError({ msg }: { msg: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--app-red)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span style={{ fontSize: 11, color: 'var(--app-red)' }}>{msg}</span>
+    </div>
+  );
+}
+
 export default function Register() {
   const { address } = useAccount();
   const [label, setLabel] = useState('');
   const [builder, setBuilder] = useState('');
   const [userPct, setUserPct] = useState(60);
+  const [touched, setTouched] = useState({ label: false, builder: false });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
   const { isSuccess, isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
 
-  const valid =
-    label.trim().length > 0 && /^[a-z0-9-]+$/.test(label) && userPct + (100 - userPct) === 100;
+  const labelError = (() => {
+    if (!label.trim()) return 'Agent label is required';
+    if (label.length < 3) return 'Label must be at least 3 characters';
+    if (!/^[a-z0-9-]+$/.test(label)) return 'Only lowercase letters, numbers, and hyphens';
+    if (label.startsWith('-') || label.endsWith('-')) return 'Label cannot start or end with a hyphen';
+    return '';
+  })();
+
+  const builderError = (() => {
+    if (!builder.trim()) return '';
+    if (!isValidEthAddress(builder)) return 'Must be a valid Ethereum address (0x + 40 hex chars)';
+    return '';
+  })();
+
+  const showLabelError = (touched.label || submitAttempted) && !!labelError;
+  const showBuilderError = (touched.builder || submitAttempted) && !!builderError;
+  const formValid = !labelError && !builderError;
+
+  const touch = (field: keyof typeof touched) =>
+    setTouched((prev) => ({ ...prev, [field]: true }));
 
   const handleMint = () => {
-    if (!address || !valid) return;
+    setSubmitAttempted(true);
+    setTouched({ label: true, builder: true });
+    if (!address || !formValid) return;
     writeContract({
       address: REGISTRY,
       abi: REGISTRY_ABI,
@@ -83,21 +122,26 @@ export default function Register() {
               marginBottom: 8,
             }}
           >
-            ENS Label
+            ENS Label <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
             <input
               className="app-input"
-              style={{ borderRadius: '8px 0 0 8px', borderRight: 'none' }}
+              style={{
+                borderRadius: '8px 0 0 8px',
+                borderRight: 'none',
+                borderColor: showLabelError ? 'var(--app-red)' : undefined,
+              }}
               placeholder="trading-bot"
               value={label}
               onChange={(e) => setLabel(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+              onBlur={() => touch('label')}
             />
             <div
               style={{
                 padding: '0 14px',
                 background: 'var(--app-elevated)',
-                border: '1px solid var(--border-bright)',
+                border: `1px solid ${showLabelError ? 'var(--app-red)' : 'var(--border-bright)'}`,
                 borderRadius: '0 8px 8px 0',
                 fontSize: 13,
                 color: 'var(--app-text-muted)',
@@ -111,9 +155,10 @@ export default function Register() {
               .aegis.eth
             </div>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-            Lowercase letters, numbers, and hyphens only
-          </div>
+          {showLabelError
+            ? <FieldError msg={labelError} />
+            : <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>Lowercase letters, numbers, and hyphens only</div>
+          }
         </div>
 
         <div>
@@ -131,13 +176,16 @@ export default function Register() {
           </label>
           <input
             className="app-input"
+            style={{ borderColor: showBuilderError ? 'var(--app-red)' : undefined }}
             placeholder={address ?? '0x...'}
             value={builder}
             onChange={(e) => setBuilder(e.target.value)}
+            onBlur={() => touch('builder')}
           />
-          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-            Leave blank to use your connected wallet
-          </div>
+          {showBuilderError
+            ? <FieldError msg={builderError} />
+            : <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>Leave blank to use your connected wallet</div>
+          }
         </div>
 
         <div>
@@ -203,19 +251,19 @@ export default function Register() {
               color: 'var(--app-red)',
             }}
           >
-            {error.message.slice(0, 120)}
+            {error.message.slice(0, 160)}
           </div>
         )}
 
         <button
           className="app-btn-primary"
           onClick={handleMint}
-          disabled={!valid || isPending || confirming}
+          disabled={isPending || confirming}
           style={{
             width: '100%',
             padding: '12px',
-            opacity: !valid || isPending || confirming ? 0.5 : 1,
-            cursor: !valid || isPending || confirming ? 'not-allowed' : 'pointer',
+            opacity: isPending || confirming ? 0.5 : 1,
+            cursor: isPending || confirming ? 'not-allowed' : 'pointer',
           }}
         >
           {isPending ? 'Confirm in wallet…' : confirming ? 'Confirming on-chain…' : 'Mint iNFT'}
