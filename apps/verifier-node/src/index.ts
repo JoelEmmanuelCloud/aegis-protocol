@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -28,9 +28,23 @@ const nodeConfig = {
   private_key_path: path.join(CONFIG_DIR, 'verifier.pem'),
   peers: [`http://${PEER_HOST}:${PROPAGATOR_PORT}`],
 };
+function freePort(port: number): void {
+  try {
+    if (process.platform === 'win32') {
+      execSync(
+        `powershell -Command "Get-NetTCPConnection -LocalPort ${port} -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"`,
+        { stdio: 'ignore' }
+      );
+    } else {
+      execSync(`fuser -k ${port}/tcp`, { stdio: 'ignore' });
+    }
+  } catch {}
+}
+
 const CONFIG_PATH = path.join(os.tmpdir(), 'axl-verifier.json');
 fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
 
+freePort(PORT);
 const axl = spawn(BINARY, ['-config', CONFIG_PATH], { stdio: ['ignore', 'pipe', 'pipe'] });
 
 axl.stdout.on('data', (d: Buffer) => process.stdout.write(d));
