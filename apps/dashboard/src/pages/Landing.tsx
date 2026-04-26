@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
-import { useConnectModal } from '@rainbow-me/rainbowkit';
 import AegisLogo from '../components/AegisLogo';
 import ThemeToggle from '../components/ThemeToggle';
 import { useDemoMode } from '../context/DemoContext';
@@ -237,7 +236,6 @@ function LiveCounter({ label, end }: { label: string; end: number }) {
 export default function Landing() {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const { openConnectModal } = useConnectModal();
   const { enableDemo } = useDemoMode();
   const [copied, setCopied] = useState(false);
 
@@ -268,7 +266,7 @@ export default function Landing() {
     if (isConnected) navigate('/app');
   }, [isConnected, navigate]);
 
-  const handleConnect = () => openConnectModal?.();
+  const handleConnect = () => navigate('/app');
 
   const handleDemo = () => {
     enableDemo();
