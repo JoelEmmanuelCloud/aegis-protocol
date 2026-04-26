@@ -5,16 +5,13 @@ import * as path from 'path';
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  const nameWrapper = process.env.ENS_NAME_WRAPPER_ADDRESS ?? deployer.address;
-  const publicResolver = process.env.ENS_PUBLIC_RESOLVER_ADDRESS ?? deployer.address;
-
   const AegisCourt = await ethers.getContractFactory('AegisCourt');
   const court = await AegisCourt.deploy(deployer.address);
   await court.waitForDeployment();
   const courtAddress = await court.getAddress();
 
   const AgentRegistry = await ethers.getContractFactory('AgentRegistry');
-  const registry = await AgentRegistry.deploy(nameWrapper, publicResolver);
+  const registry = await AgentRegistry.deploy();
   await registry.waitForDeployment();
   const registryAddress = await registry.getAddress();
 
