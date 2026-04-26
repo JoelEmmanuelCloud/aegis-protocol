@@ -59,14 +59,32 @@ KeeperHub Workflow ──────────────────── 
 
 Four AXL nodes, four distinct ed25519 keys, communicating over the Yggdrasil mesh. No central coordinator.
 
-### AXL Node Peer IDs
+Each node runs its own `axl-node` binary with a unique `api_port` (HTTP API), `tcp_port` (internal gVisor TCP), and connects to peers via `tls://` URIs. The Propagator also opens a dedicated TLS listen port (`9120`) so the other three nodes can peer to it directly on localhost in addition to joining the public Gensyn bootstrap overlay.
 
-| Node       | Port | Management | Peer ID                                                            |
-| ---------- | ---- | ---------- | ------------------------------------------------------------------ |
-| Witness    | 9002 | 10002      | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
-| Verifier   | 9012 | 10012      | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
-| Propagator | 9022 | 10022      | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
-| Memory     | 9032 | 10032      | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
+### AXL Node Port Map
+
+| Node       | api\_port | tcp\_port | Management | TLS Listen | Peer ID                                                            |
+| ---------- | --------- | --------- | ---------- | ---------- | ------------------------------------------------------------------ |
+| Propagator | 9022      | 7022      | 10022      | 9120       | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
+| Witness    | 9002      | 7002      | 10002      | —          | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
+| Verifier   | 9012      | 7012      | 10012      | —          | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
+| Memory     | 9032      | 7032      | 10032      | —          | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
+
+### AXL Config Format
+
+Each node writes a runtime config using the correct AXL field names before spawning the binary:
+
+```json
+{
+  "PrivateKeyPath": "axl-configs/<node>.pem",
+  "Peers": ["tls://127.0.0.1:9120", "tls://34.46.48.224:9001", "tls://136.111.135.206:9001"],
+  "Listen": ["tls://0.0.0.0:9120"],
+  "api_port": 9022,
+  "tcp_port": 7022
+}
+```
+
+The `Peers` list combines the local propagator TLS address (for low-latency intra-machine routing) with the public Gensyn bootstrap nodes (for overlay network participation).
 
 ---
 
@@ -120,10 +138,26 @@ KEEPERHUB_API_KEY=...your_key_here
 
 The following are already set correctly and do not need to change:
 
-- All `AXL_*_PEER_ID` values (derived from keys in `axl-configs/`)
 - All contract addresses (`AEGIS_COURT_ADDRESS`, `AGENT_REGISTRY_ADDRESS`)
 - All ENS addresses (registry, name wrapper, resolver)
 - All 0G endpoints
+- All AXL port values (`AXL_PROPAGATOR_PORT`, `AXL_WITNESS_PORT`, etc.)
+
+**One value to copy manually after starting the Propagator:**
+
+When the Propagator starts it prints its peer ID:
+
+```
+[node] Our Public Key: 946df8c6...
+```
+
+Copy that value into `.env`:
+
+```bash
+AXL_PROPAGATOR_PEER_ID=946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f
+```
+
+Then start Witness, Verifier, and Memory. They use this peer ID to address AXL messages to the Propagator.
 
 ---
 
@@ -156,37 +190,69 @@ Open **5 separate terminal windows**
 
 ```bash
 npx ts-node apps/propagator-node/src/index.ts
-# Expected: "AXL node started — peer 946df8c6... port 9022"
 ```
+
+Wait until you see:
+
+```
+propagator management server on port 10022
+[node] Gensyn Node Started!
+[node] Our Public Key: 946df8c6...
+Listening on 127.0.0.1:9022
+```
+
+Copy the public key into `.env` as `AXL_PROPAGATOR_PEER_ID=946df8c6...` before starting the other nodes.
 
 **Terminal 2 — Witness**
 
 ```bash
 npx ts-node apps/witness-node/src/index.ts
-# Expected: "AXL node started — peer 23fb5c41... port 9002"
-# Expected: "Connected to peer: 946df8c6... (Propagator)"
+```
+
+Expected:
+
+```
+witness management server on port 10002
+[node] Gensyn Node Started!
+[node] Our Public Key: 23fb5c41...
+Listening on 127.0.0.1:9002
 ```
 
 **Terminal 3 — Verifier**
 
 ```bash
 npx ts-node apps/verifier-node/src/index.ts
-# Expected: "AXL node started — peer 7c60360e... port 9012"
-# Expected: "Connected to peer: 946df8c6... (Propagator)"
+```
+
+Expected:
+
+```
+verifier management server on port 10012
+[node] Gensyn Node Started!
+[node] Our Public Key: 7c60360e...
+Listening on 127.0.0.1:9012
 ```
 
 **Terminal 4 — Memory**
 
 ```bash
 npx ts-node apps/memory-node/src/index.ts
-# Expected: "AXL node started — peer 87a69f08... port 9032"
-# Expected: "Connected to peer: 946df8c6... (Propagator)"
+```
+
+Expected:
+
+```
+memory management server on port 10032
+[node] Gensyn Node Started!
+[node] Our Public Key: 87a69f08...
+Listening on 127.0.0.1:9032
 ```
 
 **Terminal 5 — Orchestrator**
 
 ```bash
 npx ts-node -r tsconfig-paths/register apps/orchestrator/src/main.ts
+# Expected: "[Nest] LOG [NestFactory] Starting Nest application..."
 # Expected: "Listening on port 3000"
 ```
 
@@ -648,19 +714,34 @@ GET  /keeperhub/audit?workflowId=aegis.execute_remedy
 
 ## 12. Troubleshooting
 
-**AXL node fails to start**
+**AXL node fails to start / port already in use**
+
+Each node kills any existing process on its `api_port` before spawning the binary. If you still see a bind error, free the port manually:
 
 ```bash
-# Check the AXL binary is present and executable
-ls -la bin/
-chmod +x bin/axl
+# Windows — find and kill process on a port (e.g. 9022)
+netstat -ano | findstr :9022
+taskkill /PID <pid> /F
+
+# Linux/macOS
+fuser -k 9022/tcp
 ```
 
-**"Cannot connect to peer" in node logs**
+**AXL binary is missing or not executable**
 
-- Always start Propagator first — it is the bootstrap peer
-- Witness, Verifier, and Memory all connect to Propagator on startup
-- Wait for Propagator to log its peer ID before starting the others
+```bash
+# Check the binary is present
+ls bin/
+# Linux/macOS — make it executable
+chmod +x bin/axl-node
+```
+
+**"Cannot connect to peer" / nodes not finding each other**
+
+- Always start **Propagator first** — it opens the TLS listen port (`9120`) that other nodes peer to
+- Copy the Propagator's `Our Public Key` output into `.env` as `AXL_PROPAGATOR_PEER_ID` before starting the other three nodes
+- Each node also connects to the public Gensyn bootstrap overlay (`tls://34.46.48.224:9001`) — an internet connection is required for bootstrap peering
+- Each node uses a unique `api_port` and `tcp_port`; confirm no other service is using ports 9002, 9012, 9022, 9032, 7002, 7012, 7022, 7032, or 9120
 
 **MetaMask shows wrong network**
 
