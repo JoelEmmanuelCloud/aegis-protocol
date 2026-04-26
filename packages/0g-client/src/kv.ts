@@ -40,8 +40,12 @@ export async function writeKV(key: string, value: string): Promise<void> {
   if (err) throw new Error(`KV write failed: ${err}`);
 }
 
+function isValidPrivateKey(key: string): boolean {
+  return /^(0x)?[0-9a-fA-F]{64}$/.test(key);
+}
+
 export async function readKV(key: string): Promise<string | null> {
-  if (!ZG_PRIVATE_KEY) return null;
+  if (!ZG_PRIVATE_KEY || !isValidPrivateKey(ZG_PRIVATE_KEY)) return null;
   const kvClient = new KvClient(ZG_KV_ENDPOINT);
   const streamId = getStreamId();
 
