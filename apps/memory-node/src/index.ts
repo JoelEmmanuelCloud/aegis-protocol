@@ -50,7 +50,7 @@ const CONFIG_PATH = path.join(os.tmpdir(), 'axl-memory.json');
 fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
 
 freePort(PORT);
-const axl = spawn(BINARY, ['-config', CONFIG_PATH, '-listen', `127.0.0.1:${PORT}`], { stdio: ['ignore', 'pipe', 'pipe'] });
+const axl = spawn(BINARY, ['-config', CONFIG_PATH, '-listen', `http://127.0.0.1:${PORT}`], { stdio: ['ignore', 'pipe', 'pipe'] });
 
 axl.stdout.on('data', (d: Buffer) => process.stdout.write(d));
 axl.stderr.on('data', (d: Buffer) => process.stderr.write(d));
