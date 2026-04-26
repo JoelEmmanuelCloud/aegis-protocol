@@ -43,8 +43,13 @@ export default function Register() {
   const [userPct, setUserPct] = useState(60);
   const [touched, setTouched] = useState({ label: false, builder: false });
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const { writeContract, data: txHash, isPending, error } = useWriteContract();
-  const { isSuccess, isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
+  const { writeContract, data: txHash, isPending, error: submitError, reset } = useWriteContract();
+  const {
+    isSuccess,
+    isLoading: confirming,
+    isError: txFailed,
+    error: txError,
+  } = useWaitForTransactionReceipt({ hash: txHash });
 
   const labelError = (() => {
     if (!label.trim()) return 'Agent label is required';
@@ -71,6 +76,7 @@ export default function Register() {
     setSubmitAttempted(true);
     setTouched({ label: true, builder: true });
     if (!address || !formValid) return;
+    reset();
     writeContract({
       address: REGISTRY,
       abi: REGISTRY_ABI,
@@ -240,18 +246,45 @@ export default function Register() {
           </div>
         </div>
 
-        {error && (
+        {txFailed && (
           <div
             style={{
-              padding: '12px 16px',
+              padding: '14px 16px',
               background: 'var(--app-red-dim)',
-              border: '1px solid rgba(239,68,68,0.2)',
+              border: '1px solid rgba(239,68,68,0.25)',
               borderRadius: 8,
-              fontSize: 12,
-              color: 'var(--app-red)',
             }}
           >
-            {error.message.slice(0, 160)}
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}>
+              Transaction failed
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>
+              {txError?.message?.includes('revert')
+                ? 'The contract rejected the mint — this label may already be registered.'
+                : 'The on-chain transaction was rejected. Make sure your wallet has 0G testnet tokens.'}
+            </div>
+          </div>
+        )}
+
+        {submitError && !txFailed && (
+          <div
+            style={{
+              padding: '14px 16px',
+              background: 'var(--app-red-dim)',
+              border: '1px solid rgba(239,68,68,0.25)',
+              borderRadius: 8,
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}>
+              {submitError.message.includes('rejected') || submitError.message.includes('denied')
+                ? 'Transaction rejected'
+                : 'Failed to submit transaction'}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>
+              {submitError.message.includes('rejected') || submitError.message.includes('denied')
+                ? 'You cancelled the transaction in your wallet.'
+                : submitError.message.slice(0, 160)}
+            </div>
           </div>
         )}
 
@@ -266,7 +299,13 @@ export default function Register() {
             cursor: isPending || confirming ? 'not-allowed' : 'pointer',
           }}
         >
-          {isPending ? 'Confirm in wallet…' : confirming ? 'Confirming on-chain…' : 'Mint iNFT'}
+          {isPending
+            ? 'Confirm in wallet…'
+            : confirming
+              ? 'Confirming on-chain…'
+              : txFailed
+                ? 'Try Again'
+                : 'Mint iNFT'}
         </button>
       </div>
     </div>
