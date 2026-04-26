@@ -150,7 +150,7 @@ dashboard        | Local: http://localhost:4000
 
 ### Option B — Local terminals (recommended for development / visible peer IDs)
 
-Open **5 separate terminal windows** — this is what judges need to see during the demo.
+Open **5 separate terminal windows**
 
 **Terminal 1 — Propagator (start first)**
 
