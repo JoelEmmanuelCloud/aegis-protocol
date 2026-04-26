@@ -87,7 +87,7 @@ export default function Register() {
     ? (() => {
         const msg = String(error instanceof Error ? error.message : error);
         if (msg.includes('503')) return 'Registry not configured on the orchestrator — contact the protocol admin.';
-        if (msg.includes('EnsNameTaken') || msg.includes('a8791367') || msg.includes('already')) return 'This label is already registered — choose a different name.';
+        if (msg.includes('409') || msg.includes('already registered') || msg.includes('EnsNameTaken') || msg.includes('a8791367')) return 'That label is already registered — choose a different name.';
         if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f')) return 'Invalid accountability split — percentages must total 100.';
         return msg.slice(0, 200);
       })()

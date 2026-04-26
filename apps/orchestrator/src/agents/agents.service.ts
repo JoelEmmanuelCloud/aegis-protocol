@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, ServiceUnavailableException } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import type { NetworkStats } from '@aegis/types';
@@ -64,13 +64,22 @@ export class AgentsService {
       throw new BadRequestException('userPercent + builderPercent must equal 100');
     }
 
-    const tx = await this.registry.mint(
-      dto.agentOwner,
-      dto.builderAddress,
-      dto.label,
-      dto.userPercent,
-      dto.builderPercent
-    );
+    let tx: ethers.ContractTransactionResponse;
+    try {
+      tx = await this.registry.mint(
+        dto.agentOwner,
+        dto.builderAddress,
+        dto.label,
+        dto.userPercent,
+        dto.builderPercent
+      );
+    } catch (err) {
+      const decoded = this.decodeContractError(err);
+      if (decoded === 'EnsNameTaken') {
+        throw new ConflictException(`The label "${dto.label}" is already registered`);
+      }
+      throw err;
+    }
     const receipt = await tx.wait();
 
     const log = receipt.logs
@@ -151,5 +160,18 @@ export class AgentsService {
       flaggedCount
     );
     await tx.wait();
+  }
+
+  private decodeContractError(err: unknown): string | null {
+    try {
+      const data: string =
+        (err as { data?: string })?.data ??
+        (err as { error?: { data?: string } })?.error?.data ??
+        '';
+      if (!data) return null;
+      return this.registry.interface.parseError(data)?.name ?? null;
+    } catch {
+      return null;
+    }
   }
 }
