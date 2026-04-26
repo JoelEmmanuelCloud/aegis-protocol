@@ -46,6 +46,9 @@ axl.on('exit', (code) => {
   process.exit(1);
 });
 
+process.on('SIGINT', () => { axl.kill(); process.exit(0); });
+process.on('SIGTERM', () => { axl.kill(); process.exit(0); });
+
 async function handleAttestDecision(body: AttestationRequest): Promise<AttestationResponse> {
   const record: DecisionRecord = {
     agentId: body.agentId,
