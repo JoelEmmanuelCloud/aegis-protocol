@@ -32,7 +32,7 @@ const nodeConfig = {
   listen_addr: `0.0.0.0:${PORT}`,
   http_port: PORT,
   private_key_path: path.join(CONFIG_DIR, 'witness.pem'),
-  peers: [`${PEER_HOST}:${PROPAGATOR_PORT}`],
+  peers: [`http://${PEER_HOST}:${PROPAGATOR_PORT}`],
 };
 const CONFIG_PATH = path.join(os.tmpdir(), 'axl-witness.json');
 fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
