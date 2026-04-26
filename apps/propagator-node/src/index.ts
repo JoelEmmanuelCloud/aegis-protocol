@@ -9,7 +9,7 @@ import type { PropagateMessage } from '@aegis/types';
 const PORT = parseInt(process.env.AXL_PROPAGATOR_PORT ?? '9022', 10);
 const MGMT_PORT = PORT + 1000;
 const MEMORY_PEER_ID = process.env.AXL_MEMORY_PEER_ID ?? '';
-const AXL_BASE_URL = `http://127.0.0.1:${PORT}`;
+const AXL_BASE_URL = 'http://127.0.0.1:9002';
 const CONFIG_DIR = path.resolve(__dirname, '../../../axl-configs');
 const BINARY = path.resolve(
   __dirname,
@@ -41,7 +41,7 @@ const CONFIG_PATH = path.join(os.tmpdir(), 'axl-propagator.json');
 fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
 
 freePort(PORT);
-const axl = spawn(BINARY, ['-config', CONFIG_PATH, '-listen', `http://127.0.0.1:${PORT}`], { stdio: ['ignore', 'pipe', 'pipe'] });
+const axl = spawn(BINARY, ['-config', CONFIG_PATH], { stdio: ['ignore', 'pipe', 'pipe'] });
 
 axl.stdout.on('data', (d: Buffer) => process.stdout.write(d));
 axl.stderr.on('data', (d: Buffer) => process.stderr.write(d));
