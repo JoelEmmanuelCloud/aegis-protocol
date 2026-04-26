@@ -95,7 +95,7 @@ export default function Register() {
             />
             <div
               style={{
-                padding: '10px 14px',
+                padding: '0 14px',
                 background: 'var(--app-elevated)',
                 border: '1px solid var(--border-bright)',
                 borderRadius: '0 8px 8px 0',
@@ -103,6 +103,9 @@ export default function Register() {
                 color: 'var(--app-text-muted)',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
+                alignSelf: 'stretch',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
               .aegis.eth
