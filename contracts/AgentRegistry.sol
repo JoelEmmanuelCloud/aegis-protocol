@@ -95,7 +95,10 @@ contract AgentRegistry is ERC721, Ownable {
 
         _safeMint(agentOwner, tokenId);
 
-        bytes32 subnode = NAME_WRAPPER.setSubnodeRecord(
+        string memory ensName = string(abi.encodePacked(label, ".aegis.eth"));
+        bytes32 subnode = bytes32(0);
+
+        try NAME_WRAPPER.setSubnodeRecord(
             AEGIS_NODE,
             label,
             address(this),
@@ -103,17 +106,16 @@ contract AgentRegistry is ERC721, Ownable {
             0,
             0,
             uint64(block.timestamp + 365 days)
-        );
-
-        string memory ensName = string(abi.encodePacked(label, ".aegis.eth"));
-
-        PUBLIC_RESOLVER.setText(subnode, "agent.registry", _toHexString(address(this)));
-        PUBLIC_RESOLVER.setText(subnode, "agent.id", _uint256ToHex(tokenId));
-        PUBLIC_RESOLVER.setText(subnode, "aegis.reputation", "100");
-        PUBLIC_RESOLVER.setText(subnode, "aegis.totalDecisions", "0");
-        PUBLIC_RESOLVER.setText(subnode, "aegis.lastVerdict", "CLEARED");
-        PUBLIC_RESOLVER.setText(subnode, "aegis.flaggedCount", "0");
-        PUBLIC_RESOLVER.setText(subnode, "aegis.registry", "aegis.eth");
+        ) returns (bytes32 node) {
+            subnode = node;
+            try PUBLIC_RESOLVER.setText(subnode, "agent.registry", _toHexString(address(this))) {} catch {}
+            try PUBLIC_RESOLVER.setText(subnode, "agent.id", _uint256ToHex(tokenId)) {} catch {}
+            try PUBLIC_RESOLVER.setText(subnode, "aegis.reputation", "100") {} catch {}
+            try PUBLIC_RESOLVER.setText(subnode, "aegis.totalDecisions", "0") {} catch {}
+            try PUBLIC_RESOLVER.setText(subnode, "aegis.lastVerdict", "CLEARED") {} catch {}
+            try PUBLIC_RESOLVER.setText(subnode, "aegis.flaggedCount", "0") {} catch {}
+            try PUBLIC_RESOLVER.setText(subnode, "aegis.registry", "aegis.eth") {} catch {}
+        } catch {}
 
         _agents[tokenId] = AgentRecord({
             ensName: ensName,
@@ -135,7 +137,7 @@ contract AgentRegistry is ERC721, Ownable {
         if (!_exists(tokenId)) revert TokenNotFound();
         _agents[tokenId].storageRoot = storageRoot;
 
-        PUBLIC_RESOLVER.setText(_agents[tokenId].ensNode, "aegis.storageIndex", storageRoot);
+        try PUBLIC_RESOLVER.setText(_agents[tokenId].ensNode, "aegis.storageIndex", storageRoot) {} catch {}
 
         emit StorageRootUpdated(tokenId, storageRoot);
     }
@@ -150,10 +152,10 @@ contract AgentRegistry is ERC721, Ownable {
         if (!_exists(tokenId)) revert TokenNotFound();
         bytes32 node = _agents[tokenId].ensNode;
 
-        PUBLIC_RESOLVER.setText(node, "aegis.reputation", reputation);
-        PUBLIC_RESOLVER.setText(node, "aegis.totalDecisions", totalDecisions);
-        PUBLIC_RESOLVER.setText(node, "aegis.lastVerdict", lastVerdict);
-        PUBLIC_RESOLVER.setText(node, "aegis.flaggedCount", flaggedCount);
+        try PUBLIC_RESOLVER.setText(node, "aegis.reputation", reputation) {} catch {}
+        try PUBLIC_RESOLVER.setText(node, "aegis.totalDecisions", totalDecisions) {} catch {}
+        try PUBLIC_RESOLVER.setText(node, "aegis.lastVerdict", lastVerdict) {} catch {}
+        try PUBLIC_RESOLVER.setText(node, "aegis.flaggedCount", flaggedCount) {} catch {}
     }
 
     function suspendAgent(uint256 tokenId) external onlyOwner {
