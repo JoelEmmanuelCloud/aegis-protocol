@@ -1,23 +1,8 @@
 import { useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-
-const REGISTRY_ABI = [
-  {
-    name: 'mint',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'agentOwner', type: 'address' },
-      { name: 'builderAddress', type: 'address' },
-      { name: 'label', type: 'string' },
-      { name: 'userPercent', type: 'uint8' },
-      { name: 'builderPercent', type: 'uint8' },
-    ],
-    outputs: [{ name: 'tokenId', type: 'uint256' }],
-  },
-] as const;
-
-const REGISTRY = (import.meta.env.VITE_AGENT_REGISTRY_ADDRESS ?? '0x0') as `0x${string}`;
+import { useMutation } from '@tanstack/react-query';
+import { useAccount } from 'wagmi';
+import { registerAgent } from '../lib/orchestratorApi';
+import { useDemoMode } from '../context/DemoContext';
 
 function isValidEthAddress(val: string): boolean {
   return /^0x[0-9a-fA-F]{40}$/.test(val);
@@ -38,18 +23,29 @@ function FieldError({ msg }: { msg: string }) {
 
 export default function Register() {
   const { address } = useAccount();
+  const { isDemoMode } = useDemoMode();
   const [label, setLabel] = useState('');
   const [builder, setBuilder] = useState('');
   const [userPct, setUserPct] = useState(60);
   const [touched, setTouched] = useState({ label: false, builder: false });
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const { writeContract, data: txHash, isPending, error: submitError, reset } = useWriteContract();
-  const {
-    isSuccess,
-    isLoading: confirming,
-    isError: txFailed,
-    error: txError,
-  } = useWaitForTransactionReceipt({ hash: txHash });
+
+  const { mutate, isPending, isSuccess, error, data, reset } = useMutation({
+    mutationFn: (vars: {
+      agentOwner: string;
+      builderAddress: string;
+      label: string;
+      userPercent: number;
+      builderPercent: number;
+    }) =>
+      isDemoMode
+        ? Promise.resolve({
+            tokenId: String(Math.floor(Math.random() * 900) + 43),
+            ensName: `${vars.label}.aegis.eth`,
+            txHash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+          })
+        : registerAgent(vars),
+  });
 
   const labelError = (() => {
     if (!label.trim()) return 'Agent label is required';
@@ -75,15 +71,27 @@ export default function Register() {
   const handleMint = () => {
     setSubmitAttempted(true);
     setTouched({ label: true, builder: true });
-    if (!address || !formValid) return;
+    if (!isDemoMode && !address) return;
+    if (!formValid) return;
     reset();
-    writeContract({
-      address: REGISTRY,
-      abi: REGISTRY_ABI,
-      functionName: 'mint',
-      args: [address, (builder as `0x${string}`) || address, label, userPct, 100 - userPct],
+    mutate({
+      agentOwner: address ?? '0x0000000000000000000000000000000000000000',
+      builderAddress: builder || address ?? '0x0000000000000000000000000000000000000000',
+      label,
+      userPercent: userPct,
+      builderPercent: 100 - userPct,
     });
   };
+
+  const errorMessage = error
+    ? (() => {
+        const msg = String(error instanceof Error ? error.message : error);
+        if (msg.includes('503')) return 'Registry not configured on the orchestrator — contact the protocol admin.';
+        if (msg.includes('EnsNameTaken') || msg.includes('already')) return 'This label is already registered. Choose a different name.';
+        if (msg.includes('InvalidSplit')) return 'Invalid accountability split — percentages must total 100.';
+        return msg.slice(0, 200);
+      })()
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
@@ -96,7 +104,22 @@ export default function Register() {
         </p>
       </div>
 
-      {isSuccess && (
+      {!isDemoMode && !address && (
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'var(--app-elevated)',
+            border: '1px solid var(--app-border)',
+            borderRadius: 8,
+            fontSize: 13,
+            color: 'var(--app-text-muted)',
+          }}
+        >
+          Connect your wallet to register an agent.
+        </div>
+      )}
+
+      {isSuccess && data && (
         <div
           style={{
             padding: '16px 20px',
@@ -105,11 +128,21 @@ export default function Register() {
             borderRadius: 10,
           }}
         >
-          <div style={{ fontWeight: 600, color: 'var(--app-green)', marginBottom: 4 }}>
+          <div style={{ fontWeight: 600, color: 'var(--app-green)', marginBottom: 8 }}>
             Agent registered
           </div>
-          <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
-            {label}.aegis.eth issued
+          <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace', marginBottom: 4 }}>
+            {data.ensName} · Token #{data.tokenId}
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--app-text-muted)',
+              fontFamily: 'monospace',
+              wordBreak: 'break-all',
+            }}
+          >
+            tx: {data.txHash}
           </div>
         </div>
       )}
@@ -246,7 +279,7 @@ export default function Register() {
           </div>
         </div>
 
-        {txFailed && (
+        {errorMessage && (
           <div
             style={{
               padding: '14px 16px',
@@ -256,34 +289,10 @@ export default function Register() {
             }}
           >
             <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}>
-              Transaction failed
+              Registration failed
             </div>
             <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>
-              {txError?.message?.includes('revert')
-                ? 'The contract rejected the mint — this label may already be registered.'
-                : 'The on-chain transaction was rejected. Make sure your wallet has 0G testnet tokens.'}
-            </div>
-          </div>
-        )}
-
-        {submitError && !txFailed && (
-          <div
-            style={{
-              padding: '14px 16px',
-              background: 'var(--app-red-dim)',
-              border: '1px solid rgba(239,68,68,0.25)',
-              borderRadius: 8,
-            }}
-          >
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}>
-              {submitError.message.includes('rejected') || submitError.message.includes('denied')
-                ? 'Transaction rejected'
-                : 'Failed to submit transaction'}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>
-              {submitError.message.includes('rejected') || submitError.message.includes('denied')
-                ? 'You cancelled the transaction in your wallet.'
-                : submitError.message.slice(0, 160)}
+              {errorMessage}
             </div>
           </div>
         )}
@@ -291,21 +300,15 @@ export default function Register() {
         <button
           className="app-btn-primary"
           onClick={handleMint}
-          disabled={isPending || confirming}
+          disabled={isPending || (!isDemoMode && !address)}
           style={{
             width: '100%',
             padding: '12px',
-            opacity: isPending || confirming ? 0.5 : 1,
-            cursor: isPending || confirming ? 'not-allowed' : 'pointer',
+            opacity: isPending || (!isDemoMode && !address) ? 0.5 : 1,
+            cursor: isPending || (!isDemoMode && !address) ? 'not-allowed' : 'pointer',
           }}
         >
-          {isPending
-            ? 'Confirm in wallet…'
-            : confirming
-              ? 'Confirming on-chain…'
-              : txFailed
-                ? 'Try Again'
-                : 'Mint iNFT'}
+          {isPending ? 'Registering…' : error ? 'Try Again' : 'Mint iNFT'}
         </button>
       </div>
     </div>
