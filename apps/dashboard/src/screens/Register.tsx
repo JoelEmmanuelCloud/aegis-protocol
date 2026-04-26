@@ -76,7 +76,7 @@ export default function Register() {
     reset();
     mutate({
       agentOwner: address ?? '0x0000000000000000000000000000000000000000',
-      builderAddress: builder || address ?? '0x0000000000000000000000000000000000000000',
+      builderAddress: builder || (address ?? '0x0000000000000000000000000000000000000000'),
       label,
       userPercent: userPct,
       builderPercent: 100 - userPct,
@@ -87,8 +87,8 @@ export default function Register() {
     ? (() => {
         const msg = String(error instanceof Error ? error.message : error);
         if (msg.includes('503')) return 'Registry not configured on the orchestrator — contact the protocol admin.';
-        if (msg.includes('EnsNameTaken') || msg.includes('already')) return 'This label is already registered. Choose a different name.';
-        if (msg.includes('InvalidSplit')) return 'Invalid accountability split — percentages must total 100.';
+        if (msg.includes('EnsNameTaken') || msg.includes('a8791367') || msg.includes('already')) return 'This label is already registered — choose a different name.';
+        if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f')) return 'Invalid accountability split — percentages must total 100.';
         return msg.slice(0, 200);
       })()
     : null;

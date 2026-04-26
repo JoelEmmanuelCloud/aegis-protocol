@@ -9,6 +9,10 @@ const AGENT_REGISTRY_ABI = [
   'function getTokenByEnsLabel(string label) view returns (uint256 tokenId)',
   'function updateReputation(uint256 tokenId, string reputation, string totalDecisions, string lastVerdict, string flaggedCount)',
   'function getOwnerTokenIds(address agentOwner) view returns (uint256[])',
+  'event AgentMinted(uint256 indexed tokenId, address indexed owner, string ensName, bytes32 ensNode, uint8 userPercent, uint8 builderPercent)',
+  'error InvalidSplit()',
+  'error EnsNameTaken()',
+  'error TokenNotFound()',
 ];
 
 export interface RegisterAgentDto {
