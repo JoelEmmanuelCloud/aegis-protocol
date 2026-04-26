@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import type { NetworkStats } from '@aegis/types';
@@ -26,17 +26,29 @@ export class AgentsService {
 
   private get registry(): ethers.Contract {
     if (!this._registry) {
+      const address = process.env.AGENT_REGISTRY_ADDRESS;
+      if (!address || !ethers.isAddress(address)) {
+        throw new ServiceUnavailableException(
+          'AGENT_REGISTRY_ADDRESS is not configured — set it in .env to 0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc'
+        );
+      }
       const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
       const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
-      this._registry = new ethers.Contract(process.env.AGENT_REGISTRY_ADDRESS!, AGENT_REGISTRY_ABI, signer);
+      this._registry = new ethers.Contract(address, AGENT_REGISTRY_ABI, signer);
     }
     return this._registry;
   }
 
   private get readRegistry(): ethers.Contract {
     if (!this._readRegistry) {
+      const address = process.env.AGENT_REGISTRY_ADDRESS;
+      if (!address || !ethers.isAddress(address)) {
+        throw new ServiceUnavailableException(
+          'AGENT_REGISTRY_ADDRESS is not configured — set it in .env to 0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc'
+        );
+      }
       const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
-      this._readRegistry = new ethers.Contract(process.env.AGENT_REGISTRY_ADDRESS!, AGENT_REGISTRY_ABI, provider);
+      this._readRegistry = new ethers.Contract(address, AGENT_REGISTRY_ABI, provider);
     }
     return this._readRegistry;
   }
