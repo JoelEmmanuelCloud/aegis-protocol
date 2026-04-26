@@ -8,8 +8,10 @@ import type { PropagateMessage } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_PROPAGATOR_PORT ?? '9022', 10);
 const MGMT_PORT = PORT + 1000;
+const TCP_PORT = parseInt(process.env.AXL_PROPAGATOR_TCP_PORT ?? '7022', 10);
+const TLS_PORT = parseInt(process.env.AXL_PROPAGATOR_TLS_PORT ?? '9120', 10);
 const MEMORY_PEER_ID = process.env.AXL_MEMORY_PEER_ID ?? '';
-const AXL_BASE_URL = 'http://127.0.0.1:9002';
+const AXL_BASE_URL = `http://127.0.0.1:${PORT}`;
 const CONFIG_DIR = path.resolve(__dirname, '../../../axl-configs');
 const BINARY = path.resolve(
   __dirname,
@@ -18,12 +20,13 @@ const BINARY = path.resolve(
 );
 
 const nodeConfig = {
-  node_name: 'aegis-propagator',
-  listen_addr: `0.0.0.0:${PORT}`,
-  http_port: PORT,
-  private_key_path: path.join(CONFIG_DIR, 'propagator.pem'),
-  peers: [],
+  PrivateKeyPath: path.join(CONFIG_DIR, 'propagator.pem').replace(/\\/g, '/'),
+  Peers: ['tls://34.46.48.224:9001', 'tls://136.111.135.206:9001'],
+  Listen: [`tls://0.0.0.0:${TLS_PORT}`],
+  api_port: PORT,
+  tcp_port: TCP_PORT,
 };
+
 function freePort(port: number): void {
   try {
     if (process.platform === 'win32') {
