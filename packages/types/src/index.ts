@@ -44,6 +44,7 @@ export interface PropagateMessage {
   agentId: string;
   verdict: Verdict;
   timestamp: number;
+  [key: string]: unknown;
 }
 
 export interface ReputationRecord {

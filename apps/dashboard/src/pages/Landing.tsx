@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useConnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import AegisLogo from '../components/AegisLogo';
 import ThemeToggle from '../components/ThemeToggle';
+import { useDemoMode } from '../context/DemoContext';
 
 function AnimatedMesh() {
   const nodes = [
@@ -236,8 +237,9 @@ function LiveCounter({ label, end }: { label: string; end: number }) {
 export default function Landing() {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const { connect } = useConnect();
-  const [connecting, setConnecting] = useState(false);
+  const { openConnectModal } = useConnectModal();
+  const { enableDemo } = useDemoMode();
+  const [noWallet, setNoWallet] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const codeSnippet = `await fetch("http://localhost:9002/send", {
@@ -268,8 +270,17 @@ export default function Landing() {
   }, [isConnected, navigate]);
 
   const handleConnect = () => {
-    setConnecting(true);
-    connect({ connector: injected() }, { onSettled: () => setConnecting(false) });
+    if (!(window as Window & { ethereum?: unknown }).ethereum) {
+      setNoWallet(true);
+      return;
+    }
+    setNoWallet(false);
+    openConnectModal?.();
+  };
+
+  const handleDemo = () => {
+    enableDemo();
+    navigate('/app');
   };
 
   return (
@@ -313,17 +324,24 @@ export default function Landing() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <ThemeToggle />
           <a
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
             rel="noopener noreferrer"
-            className="cta-primary"
-            style={{ fontSize: 14, padding: '8px 18px', textDecoration: 'none' }}
+            className="cta-secondary"
+            style={{ fontSize: 13, padding: '7px 16px', textDecoration: 'none' }}
           >
             GitHub
           </a>
+          <button
+            onClick={handleConnect}
+            className="cta-primary"
+            style={{ fontSize: 13, padding: '7px 18px' }}
+          >
+            Connect Wallet
+          </button>
         </div>
       </nav>
 
@@ -408,6 +426,57 @@ export default function Landing() {
               why it decided it, and face consequences if it was wrong.
             </p>
 
+            {noWallet && (
+              <div
+                className="animate-in-3"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 16px',
+                  borderRadius: 8,
+                  background: 'rgba(212,148,26,0.08)',
+                  border: '1px solid rgba(212,148,26,0.3)',
+                  marginBottom: 16,
+                  fontSize: 13,
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#d4941a"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ flexShrink: 0 }}
+                >
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <span>No wallet found.&nbsp;</span>
+                <button
+                  onClick={handleDemo}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#d4941a',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: 3,
+                  }}
+                >
+                  Try the demo instead
+                </button>
+              </div>
+            )}
+
             <div
               className="animate-in-3"
               style={{
@@ -419,7 +488,7 @@ export default function Landing() {
               }}
             >
               <button onClick={handleConnect} className="cta-primary">
-                {connecting ? 'Connecting…' : 'Register Your Agent'}
+                Connect Wallet
                 <svg
                   className="cta-arrow"
                   width="15"
@@ -435,13 +504,8 @@ export default function Landing() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
-              <button
-                onClick={() =>
-                  window.open('https://github.com/JoelEmmanuelCloud/aegis-protocol', '_blank')
-                }
-                className="cta-secondary"
-              >
-                View Docs
+              <button onClick={handleDemo} className="cta-secondary">
+                Try Demo
               </button>
             </div>
 
@@ -553,7 +617,7 @@ export default function Landing() {
             </h2>
           </div>
           <button onClick={handleConnect} className="cta-secondary">
-            Start Building
+            Connect Wallet
           </button>
         </div>
 
@@ -703,15 +767,11 @@ export default function Landing() {
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={handleConnect} className="cta-primary">
-              Register Your Agent
+              Connect Wallet
             </button>
-            <a
-              href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <button className="cta-secondary">View Docs</button>
-            </a>
+            <button onClick={handleDemo} className="cta-secondary">
+              Try Demo
+            </button>
           </div>
         </div>
 

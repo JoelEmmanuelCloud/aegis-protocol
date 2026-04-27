@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@aegis/*": ["packages/*/src"]
+    }
+  },
+  "include": ["apps/**/*", "packages/**/*"]
+}

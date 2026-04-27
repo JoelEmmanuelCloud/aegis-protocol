@@ -1,5 +1,16 @@
+import { useAccount } from 'wagmi';
 import { useNetworkStats } from '../hooks/useNetworkStats';
 import { useAttestations } from '../hooks/useAttestations';
+import { useMyAgents } from '../hooks/useMyAgents';
+
+const REGISTRY_ADDRESS = import.meta.env.VITE_AGENT_REGISTRY_ADDRESS as string | undefined;
+const COURT_ADDRESS = import.meta.env.VITE_AEGIS_COURT_ADDRESS as string | undefined;
+const EXPLORER_URL =
+  (import.meta.env.VITE_0G_EXPLORER_URL as string | undefined) ?? 'https://chainscan-galileo.0g.ai';
+
+function truncate(addr: string): string {
+  return `${addr.slice(0, 10)}…${addr.slice(-6)}`;
+}
 
 function StatCard({
   label,
@@ -49,8 +60,10 @@ function VerdictBadge({ verdict }: { verdict: string }) {
 }
 
 export default function Overview() {
+  const { address } = useAccount();
   const { data: stats } = useNetworkStats();
   const { data: attestations } = useAttestations();
+  const { data: myAgents } = useMyAgents();
 
   const feed = (attestations?.items ?? []) as Array<{
     agentId: string;
@@ -77,7 +90,7 @@ export default function Overview() {
         />
         <StatCard
           label="Active Agents"
-          value={stats?.activeAgents ?? 0}
+          value={(myAgents ?? []).filter((a) => a.active).length}
           sub="registered iNFTs"
           color="var(--green)"
         />
@@ -216,8 +229,8 @@ export default function Overview() {
         <div className="app-card" style={{ padding: '20px' }}>
           <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>Deployed Contracts</div>
           {[
-            { label: 'AegisCourt.sol', addr: '0x3De27365…0F734a' },
-            { label: 'AgentRegistry.sol', addr: '0x65cB34BC…a22bbc' },
+            { label: 'AegisCourt.sol', addr: COURT_ADDRESS },
+            { label: 'AgentRegistry.sol', addr: REGISTRY_ADDRESS },
           ].map(({ label, addr }, i) => (
             <div
               key={label}
@@ -230,13 +243,13 @@ export default function Overview() {
                 {label}
               </div>
               <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--app-text-2)' }}>
-                {addr}
+                {addr ? truncate(addr) : '—'}
               </div>
             </div>
           ))}
           <div style={{ marginTop: 16 }}>
             <a
-              href="https://chainscan-galileo.0g.ai"
+              href={EXPLORER_URL}
               target="_blank"
               rel="noopener noreferrer"
               style={{ fontSize: 12, color: 'var(--app-accent)' }}
@@ -246,6 +259,68 @@ export default function Overview() {
           </div>
         </div>
       </div>
+
+      {(address || (myAgents && myAgents.length > 0)) && (
+        <div className="app-card" style={{ padding: '20px' }}>
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>My Agents</div>
+          {!myAgents || myAgents.length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--app-text-muted)', padding: '12px 0' }}>
+              No agents registered to this wallet yet.
+            </div>
+          ) : (
+            myAgents.map((agent, i) => (
+              <div
+                key={agent.tokenId}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  padding: '12px 0',
+                  borderBottom: i < myAgents.length - 1 ? '1px solid var(--app-border)' : 'none',
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    background: 'var(--accent-dim)',
+                    border: '1px solid rgba(212,148,26,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: 'var(--app-accent-light)',
+                  }}
+                >
+                  {agent.ensName?.[0]?.toUpperCase() ?? 'A'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--app-text)',
+                      marginBottom: 2,
+                    }}
+                  >
+                    {agent.ensName}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                    Token #{agent.tokenId} · {agent.userPercent}% user / {agent.builderPercent}%
+                    builder
+                  </div>
+                </div>
+                <span className={agent.active ? 'badge-cleared' : 'badge-flagged'}>
+                  {agent.active ? 'Active' : 'Suspended'}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

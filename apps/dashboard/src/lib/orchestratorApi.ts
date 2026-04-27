@@ -68,3 +68,13 @@ export function fetchKeeperAudit(workflowId: string, limit?: number): Promise<Wo
   if (limit !== undefined) params.set('limit', String(limit));
   return apiFetch<WorkflowRun[]>(`/keeperhub/audit?${params}`);
 }
+
+export function registerAgent(body: {
+  agentOwner: string;
+  builderAddress: string;
+  label: string;
+  userPercent: number;
+  builderPercent: number;
+}): Promise<{ tokenId: string; ensName: string; txHash: string }> {
+  return apiFetch('/agents', { method: 'POST', body: JSON.stringify(body) });
+}

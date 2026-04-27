@@ -1,44 +1,120 @@
 import { useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useMutation } from '@tanstack/react-query';
+import { useAccount } from 'wagmi';
+import { registerAgent } from '../lib/orchestratorApi';
+import { useDemoMode } from '../context/DemoContext';
 
-const REGISTRY_ABI = [
-  {
-    name: 'mint',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'agentOwner', type: 'address' },
-      { name: 'builderAddress', type: 'address' },
-      { name: 'label', type: 'string' },
-      { name: 'userPercent', type: 'uint8' },
-      { name: 'builderPercent', type: 'uint8' },
-    ],
-    outputs: [{ name: 'tokenId', type: 'uint256' }],
-  },
-] as const;
+function isValidEthAddress(val: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(val);
+}
 
-const REGISTRY = (import.meta.env.VITE_AGENT_REGISTRY_ADDRESS ?? '0x0') as `0x${string}`;
+function FieldError({ msg }: { msg: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--app-red)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ flexShrink: 0 }}
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span style={{ fontSize: 11, color: 'var(--app-red)' }}>{msg}</span>
+    </div>
+  );
+}
 
 export default function Register() {
   const { address } = useAccount();
+  const { isDemoMode } = useDemoMode();
   const [label, setLabel] = useState('');
   const [builder, setBuilder] = useState('');
   const [userPct, setUserPct] = useState(60);
-  const { writeContract, data: txHash, isPending, error } = useWriteContract();
-  const { isSuccess, isLoading: confirming } = useWaitForTransactionReceipt({ hash: txHash });
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [touched, setTouched] = useState({ label: false, builder: false });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  const valid =
-    label.trim().length > 0 && /^[a-z0-9-]+$/.test(label) && userPct + (100 - userPct) === 100;
+  const { mutate, isPending, isSuccess, error, data, reset } = useMutation({
+    mutationFn: (vars: {
+      agentOwner: string;
+      builderAddress: string;
+      label: string;
+      userPercent: number;
+      builderPercent: number;
+    }) =>
+      isDemoMode
+        ? Promise.resolve({
+            tokenId: String(Math.floor(Math.random() * 900) + 43),
+            ensName: `${vars.label}.aegis.eth`,
+            txHash:
+              '0x' +
+              Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(
+                ''
+              ),
+          })
+        : registerAgent(vars),
+  });
+
+  const labelError = (() => {
+    if (!label.trim()) return 'Agent label is required';
+    if (label.length < 3) return 'Label must be at least 3 characters';
+    if (!/^[a-z0-9-]+$/.test(label)) return 'Only lowercase letters, numbers, and hyphens';
+    if (label.startsWith('-') || label.endsWith('-'))
+      return 'Label cannot start or end with a hyphen';
+    return '';
+  })();
+
+  const builderError = (() => {
+    if (!builder.trim()) return '';
+    if (!isValidEthAddress(builder)) return 'Must be a valid Ethereum address (0x + 40 hex chars)';
+    return '';
+  })();
+
+  const showLabelError = (touched.label || submitAttempted) && !!labelError;
+  const showBuilderError = (touched.builder || submitAttempted) && !!builderError;
+  const formValid = !labelError && !builderError;
+
+  const touch = (field: keyof typeof touched) => setTouched((prev) => ({ ...prev, [field]: true }));
 
   const handleMint = () => {
-    if (!address || !valid) return;
-    writeContract({
-      address: REGISTRY,
-      abi: REGISTRY_ABI,
-      functionName: 'mint',
-      args: [address, (builder as `0x${string}`) || address, label, userPct, 100 - userPct],
+    setSubmitAttempted(true);
+    setTouched({ label: true, builder: true });
+    if (!isDemoMode && !address) return;
+    if (!formValid) return;
+    reset();
+    mutate({
+      agentOwner: address ?? '0x0000000000000000000000000000000000000000',
+      builderAddress: builder || (address ?? '0x0000000000000000000000000000000000000000'),
+      label,
+      userPercent: userPct,
+      builderPercent: 100 - userPct,
     });
   };
+
+  const errorMessage = error
+    ? (() => {
+        const msg = String(error instanceof Error ? error.message : error);
+        if (msg.includes('503'))
+          return 'Registry not configured on the orchestrator — contact the protocol admin.';
+        if (
+          msg.includes('409') ||
+          msg.includes('already registered') ||
+          msg.includes('EnsNameTaken') ||
+          msg.includes('a8791367')
+        )
+          return 'That label is already registered — choose a different name.';
+        if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f'))
+          return 'Invalid accountability split — percentages must total 100.';
+        return msg.slice(0, 200);
+      })()
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
@@ -51,7 +127,22 @@ export default function Register() {
         </p>
       </div>
 
-      {isSuccess && (
+      {!isDemoMode && !address && (
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'var(--app-elevated)',
+            border: '1px solid var(--app-border)',
+            borderRadius: 8,
+            fontSize: 13,
+            color: 'var(--app-text-muted)',
+          }}
+        >
+          Connect your wallet to register an agent.
+        </div>
+      )}
+
+      {isSuccess && data && (
         <div
           style={{
             padding: '16px 20px',
@@ -60,11 +151,28 @@ export default function Register() {
             borderRadius: 10,
           }}
         >
-          <div style={{ fontWeight: 600, color: 'var(--app-green)', marginBottom: 4 }}>
+          <div style={{ fontWeight: 600, color: 'var(--app-green)', marginBottom: 8 }}>
             Agent registered
           </div>
-          <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
-            {label}.aegis.eth issued
+          <div
+            style={{
+              fontSize: 12,
+              color: 'var(--app-text-2)',
+              fontFamily: 'monospace',
+              marginBottom: 4,
+            }}
+          >
+            {data.ensName} · Token #{data.tokenId}
+          </div>
+          <div
+            style={{
+              fontSize: 11,
+              color: 'var(--app-text-muted)',
+              fontFamily: 'monospace',
+              wordBreak: 'break-all',
+            }}
+          >
+            tx: {data.txHash}
           </div>
         </div>
       )}
@@ -83,59 +191,115 @@ export default function Register() {
               marginBottom: 8,
             }}
           >
-            ENS Label
+            ENS Label <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
           </label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
             <input
               className="app-input"
-              style={{ borderRadius: '8px 0 0 8px', borderRight: 'none' }}
+              style={{
+                borderRadius: '8px 0 0 8px',
+                borderRight: 'none',
+                borderColor: showLabelError ? 'var(--app-red)' : undefined,
+              }}
               placeholder="trading-bot"
               value={label}
               onChange={(e) => setLabel(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+              onBlur={() => touch('label')}
             />
             <div
               style={{
-                padding: '10px 14px',
+                padding: '0 14px',
                 background: 'var(--app-elevated)',
-                border: '1px solid var(--border-bright)',
+                border: `1px solid ${showLabelError ? 'var(--app-red)' : 'var(--border-bright)'}`,
                 borderRadius: '0 8px 8px 0',
                 fontSize: 13,
                 color: 'var(--app-text-muted)',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
+                alignSelf: 'stretch',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
               .aegis.eth
             </div>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-            Lowercase letters, numbers, and hyphens only
-          </div>
+          {showLabelError ? (
+            <FieldError msg={labelError} />
+          ) : (
+            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+              Lowercase letters, numbers, and hyphens only
+            </div>
+          )}
         </div>
 
-        <div>
-          <label
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12,
+            color: 'var(--app-text-muted)',
+            width: 'fit-content',
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--app-text-2)',
-              display: 'block',
-              marginBottom: 8,
+              transform: showAdvanced ? 'rotate(90deg)' : 'none',
+              transition: 'transform 0.15s',
             }}
           >
-            Builder Address{' '}
-            <span style={{ color: 'var(--app-text-muted)', fontWeight: 400 }}>(optional)</span>
-          </label>
-          <input
-            className="app-input"
-            placeholder={address ?? '0x...'}
-            value={builder}
-            onChange={(e) => setBuilder(e.target.value)}
-          />
-          <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-            Leave blank to use your connected wallet
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          Advanced
+        </button>
+
+        {showAdvanced && (
+          <div>
+            <label
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--app-text-2)',
+                display: 'block',
+                marginBottom: 8,
+              }}
+            >
+              Builder Address{' '}
+              <span style={{ color: 'var(--app-text-muted)', fontWeight: 400 }}>(optional)</span>
+            </label>
+            <input
+              className="app-input"
+              style={{ borderColor: showBuilderError ? 'var(--app-red)' : undefined }}
+              placeholder={address ?? '0x...'}
+              value={builder}
+              onChange={(e) => setBuilder(e.target.value)}
+              onBlur={() => touch('builder')}
+            />
+            {showBuilderError ? (
+              <FieldError msg={builderError} />
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+                Defaults to your connected wallet. Set a different address if the builder is a
+                separate entity.
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         <div>
           <label
@@ -189,33 +353,38 @@ export default function Register() {
           </div>
         </div>
 
-        {error && (
+        {errorMessage && (
           <div
             style={{
-              padding: '12px 16px',
+              padding: '14px 16px',
               background: 'var(--app-red-dim)',
-              border: '1px solid rgba(239,68,68,0.2)',
+              border: '1px solid rgba(239,68,68,0.25)',
               borderRadius: 8,
-              fontSize: 12,
-              color: 'var(--app-red)',
             }}
           >
-            {error.message.slice(0, 120)}
+            <div
+              style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}
+            >
+              Registration failed
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>
+              {errorMessage}
+            </div>
           </div>
         )}
 
         <button
           className="app-btn-primary"
           onClick={handleMint}
-          disabled={!valid || isPending || confirming}
+          disabled={isPending || (!isDemoMode && !address)}
           style={{
             width: '100%',
             padding: '12px',
-            opacity: !valid || isPending || confirming ? 0.5 : 1,
-            cursor: !valid || isPending || confirming ? 'not-allowed' : 'pointer',
+            opacity: isPending || (!isDemoMode && !address) ? 0.5 : 1,
+            cursor: isPending || (!isDemoMode && !address) ? 'not-allowed' : 'pointer',
           }}
         >
-          {isPending ? 'Confirm in wallet…' : confirming ? 'Confirming on-chain…' : 'Mint iNFT'}
+          {isPending ? 'Registering…' : error ? 'Try Again' : 'Mint iNFT'}
         </button>
       </div>
     </div>

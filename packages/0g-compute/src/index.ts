@@ -1,10 +1,17 @@
 import OpenAI from 'openai';
 import type { Verdict } from '@aegis/types';
 
-const client = new OpenAI({
-  baseURL: process.env.ZG_COMPUTE_BASE_URL!,
-  apiKey: process.env.ZG_COMPUTE_API_KEY!,
-});
+let client: OpenAI | null = null;
+
+function getClient(): OpenAI {
+  if (!client) {
+    client = new OpenAI({
+      baseURL: process.env.ZG_COMPUTE_BASE_URL!,
+      apiKey: process.env.ZG_COMPUTE_API_KEY!,
+    });
+  }
+  return client;
+}
 
 const MODEL = process.env.ZG_COMPUTE_MODEL ?? 'qwen/qwen-2.5-7b-instruct';
 
@@ -20,7 +27,7 @@ export async function replayDecision(
 ): Promise<ReplayResult> {
   const prompt = JSON.stringify(originalInputs);
 
-  const response = await client.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: MODEL,
     messages: [{ role: 'user', content: prompt }],
   });

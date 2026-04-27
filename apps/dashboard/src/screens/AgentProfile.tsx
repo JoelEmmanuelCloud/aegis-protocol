@@ -120,9 +120,14 @@ function Row({ label, value }: { label: string; value?: string }) {
 export default function AgentProfile() {
   const [label, setLabel] = useState<string | null>(null);
   const [input, setInput] = useState('');
+  const [inputTouched, setInputTouched] = useState(false);
+  const [searchAttempted, setSearchAttempted] = useState(false);
+
+  const inputError = !input.trim() ? 'Enter an agent label or ENS name to look up' : '';
+  const showInputError = (inputTouched || searchAttempted) && !!inputError;
 
   const ensName = label ? `${label}.aegis.eth` : null;
-  const { data: agent, isLoading } = useAgent(label);
+  const { data: agent, isLoading, isError } = useAgent(label);
 
   const { data: ensData } = useReadContracts({
     contracts: ENS_TEXT_KEYS.map((key) => ({
@@ -147,8 +152,11 @@ export default function AgentProfile() {
   const score = parseInt(ensRecords['aegis.reputation'] ?? '0', 10);
 
   const handleSearch = () => {
-    const cleaned = input.replace('.aegis.eth', '').trim();
-    if (cleaned) setLabel(cleaned);
+    setSearchAttempted(true);
+    setInputTouched(true);
+    const cleaned = input.replace(/\.aegis\.eth$/, '').trim();
+    if (!cleaned) return;
+    setLabel(cleaned);
   };
 
   return (
@@ -162,22 +170,73 @@ export default function AgentProfile() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          className="app-input"
-          style={{ flex: 1 }}
-          placeholder="trading-bot or trading-bot.aegis.eth"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        <button
-          className="app-btn-primary"
-          onClick={handleSearch}
-          style={{ flexShrink: 0, padding: '10px 20px' }}
-        >
-          Lookup
-        </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            className="app-input"
+            style={{
+              flex: 1,
+              borderColor: showInputError ? 'var(--app-red)' : undefined,
+            }}
+            placeholder="trading-bot or trading-bot.aegis.eth"
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setSearchAttempted(false);
+            }}
+            onBlur={() => setInputTouched(true)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <button
+            className="app-btn-primary"
+            onClick={handleSearch}
+            style={{ flexShrink: 0, padding: '10px 20px' }}
+          >
+            Lookup
+          </button>
+        </div>
+        {showInputError && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--app-red)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span style={{ fontSize: 11, color: 'var(--app-red)' }}>{inputError}</span>
+          </div>
+        )}
+        {isError && label && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--app-red)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span style={{ fontSize: 11, color: 'var(--app-red)' }}>
+              No agent found for &ldquo;{label}.aegis.eth&rdquo; — check the label and try again
+            </span>
+          </div>
+        )}
       </div>
 
       {isLoading && (

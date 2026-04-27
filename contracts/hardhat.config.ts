@@ -1,5 +1,12 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
+import path from 'path';
+
+try {
+  (process as NodeJS.Process & { loadEnvFile?: (p: string) => void }).loadEnvFile?.(
+    path.resolve(__dirname, '../.env')
+  );
+} catch {}
 
 const config: HardhatUserConfig = {
   solidity: {
