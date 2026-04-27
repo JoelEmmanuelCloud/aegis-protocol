@@ -27,6 +27,7 @@ export default function Register() {
   const [label, setLabel] = useState('');
   const [builder, setBuilder] = useState('');
   const [userPct, setUserPct] = useState(60);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [touched, setTouched] = useState({ label: false, builder: false });
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
@@ -200,32 +201,66 @@ export default function Register() {
           }
         </div>
 
-        <div>
-          <label
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--app-text-2)',
-              display: 'block',
-              marginBottom: 8,
-            }}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12,
+            color: 'var(--app-text-muted)',
+            width: 'fit-content',
+          }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ transform: showAdvanced ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
           >
-            Builder Address{' '}
-            <span style={{ color: 'var(--app-text-muted)', fontWeight: 400 }}>(optional)</span>
-          </label>
-          <input
-            className="app-input"
-            style={{ borderColor: showBuilderError ? 'var(--app-red)' : undefined }}
-            placeholder={address ?? '0x...'}
-            value={builder}
-            onChange={(e) => setBuilder(e.target.value)}
-            onBlur={() => touch('builder')}
-          />
-          {showBuilderError
-            ? <FieldError msg={builderError} />
-            : <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>Leave blank to use your connected wallet</div>
-          }
-        </div>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          Advanced
+        </button>
+
+        {showAdvanced && (
+          <div>
+            <label
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--app-text-2)',
+                display: 'block',
+                marginBottom: 8,
+              }}
+            >
+              Builder Address{' '}
+              <span style={{ color: 'var(--app-text-muted)', fontWeight: 400 }}>(optional)</span>
+            </label>
+            <input
+              className="app-input"
+              style={{ borderColor: showBuilderError ? 'var(--app-red)' : undefined }}
+              placeholder={address ?? '0x...'}
+              value={builder}
+              onChange={(e) => setBuilder(e.target.value)}
+              onBlur={() => touch('builder')}
+            />
+            {showBuilderError
+              ? <FieldError msg={builderError} />
+              : <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>Defaults to your connected wallet. Set a different address if the builder is a separate entity.</div>
+            }
+          </div>
+        )}
 
         <div>
           <label
