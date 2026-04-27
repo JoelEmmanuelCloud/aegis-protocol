@@ -13,81 +13,81 @@ const navItems = [
   { path: '/register', label: 'Register', icon: '⊕' },
 ];
 
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-    >
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  );
-}
-
 export default function Layout({ children }: { children: ReactNode }) {
   const { address } = useAccount();
   const [open, setOpen] = useState(true);
   const displayName = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : null;
 
   return (
-    <div className="flex h-dvh w-screen overflow-hidden">
+    <div style={{ display: 'flex', height: '100dvh', width: '100vw', overflow: 'hidden' }}>
       <aside
         style={{
           width: open ? 220 : 52,
-          transition: 'width 0.2s ease',
           flexShrink: 0,
           background: 'var(--app-surface)',
           borderRight: '1px solid var(--app-border)',
           display: 'flex',
           flexDirection: 'column',
-          padding: '24px 0',
+          padding: '20px 0',
           overflow: 'hidden',
+          transition: 'width 0.2s ease',
         }}
       >
         <div
-          className="pb-7 flex items-center"
-          style={{ padding: open ? '0 12px 28px 20px' : '0 0 28px 0', justifyContent: open ? 'space-between' : 'center' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: open ? 'space-between' : 'center',
+            padding: open ? '0 10px 24px 16px' : '0 0 24px 0',
+            minHeight: 40,
+          }}
         >
           {open && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--app-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: '#0a0a08', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 7,
+                  background: 'var(--app-accent)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: '#0a0a08',
+                  flexShrink: 0,
+                }}
+              >
                 A
               </div>
-              <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--app-text)', whiteSpace: 'nowrap' }}>Aegis</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--app-text)', whiteSpace: 'nowrap' }}>
+                Aegis
+              </span>
             </div>
           )}
+
           <button
             onClick={() => setOpen((v) => !v)}
             style={{
               width: 28,
               height: 28,
               borderRadius: 6,
-              border: 'none',
-              background: 'transparent',
+              border: '1px solid var(--app-border)',
+              background: 'var(--app-elevated)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--app-text-muted)',
               cursor: 'pointer',
               flexShrink: 0,
+              color: 'var(--app-text)',
+              fontSize: 13,
+              lineHeight: 1,
+              userSelect: 'none',
             }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = 'var(--app-text)';
-              (e.currentTarget as HTMLButtonElement).style.background = 'var(--app-elevated)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = 'var(--app-text-muted)';
-              (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-            }}
+            title={open ? 'Collapse sidebar' : 'Expand sidebar'}
           >
-            <ChevronIcon open={open} />
+            {open ? '‹' : '›'}
           </button>
         </div>
 
@@ -113,25 +113,42 @@ export default function Layout({ children }: { children: ReactNode }) {
                 textDecoration: 'none',
               })}
             >
-              <span style={{ fontSize: 16, width: 18, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ fontSize: 16, width: 18, textAlign: 'center', flexShrink: 0 }}>
+                {item.icon}
+              </span>
               {open && <span style={{ whiteSpace: 'nowrap' }}>{item.label}</span>}
             </NavLink>
           ))}
         </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header style={{ height: 64, flexShrink: 0, borderBottom: '1px solid var(--app-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', background: 'var(--app-surface)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <header
+          style={{
+            height: 64,
+            flexShrink: 0,
+            borderBottom: '1px solid var(--app-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 28px',
+            background: 'var(--app-surface)',
+          }}
+        >
           <div>
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--app-text)' }}>
               {displayName ? `Hello, ${displayName}` : 'Hello'}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>Monitor and manage your AI agents</div>
+            <div style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>
+              Monitor and manage your AI agents
+            </div>
           </div>
           <ConnectButton chainStatus="icon" showBalance={false} />
         </header>
 
-        <main style={{ flex: 1, overflowY: 'auto', padding: 28, background: 'var(--app-bg)' }}>{children}</main>
+        <main style={{ flex: 1, overflowY: 'auto', padding: 28, background: 'var(--app-bg)' }}>
+          {children}
+        </main>
       </div>
     </div>
   );
