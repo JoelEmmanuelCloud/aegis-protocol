@@ -263,77 +263,79 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {open && <div
-          style={{
-            padding: '12px 10px',
-            borderTop: '1px solid var(--app-border)',
-            flexShrink: 0,
-          }}
-        >
+        {open && (
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 12px',
-              background: 'var(--app-elevated)',
-              borderRadius: 8,
-              border: '1px solid var(--app-border)',
+              padding: '12px 10px',
+              borderTop: '1px solid var(--app-border)',
+              flexShrink: 0,
             }}
           >
             <div
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #d4941a 0%, #b8780e 100%)',
-                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                background: 'var(--app-elevated)',
+                borderRadius: 8,
+                border: '1px solid var(--app-border)',
               }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            >
               <div
                 style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--app-text)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #d4941a 0%, #b8780e 100%)',
+                  flexShrink: 0,
                 }}
-              >
-                {short}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: 'var(--app-text)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {short}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--app-text-muted)' }}>0G Galileo</div>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--app-text-muted)' }}>0G Galileo</div>
-            </div>
-            <button
-              onClick={() => disconnect()}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--app-text-muted)',
-                padding: 2,
-                flexShrink: 0,
-              }}
-              title="Disconnect"
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <button
+                onClick={() => disconnect()}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--app-text-muted)',
+                  padding: 2,
+                  flexShrink: 0,
+                }}
+                title="Disconnect"
               >
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-            </button>
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>}
+        )}
       </aside>
 
       <div

@@ -11,7 +11,17 @@ function isValidEthAddress(val: string): boolean {
 function FieldError({ msg }: { msg: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--app-red)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="var(--app-red)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ flexShrink: 0 }}
+      >
         <circle cx="12" cy="12" r="10" />
         <line x1="12" y1="8" x2="12" y2="12" />
         <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -43,7 +53,11 @@ export default function Register() {
         ? Promise.resolve({
             tokenId: String(Math.floor(Math.random() * 900) + 43),
             ensName: `${vars.label}.aegis.eth`,
-            txHash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+            txHash:
+              '0x' +
+              Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(
+                ''
+              ),
           })
         : registerAgent(vars),
   });
@@ -52,7 +66,8 @@ export default function Register() {
     if (!label.trim()) return 'Agent label is required';
     if (label.length < 3) return 'Label must be at least 3 characters';
     if (!/^[a-z0-9-]+$/.test(label)) return 'Only lowercase letters, numbers, and hyphens';
-    if (label.startsWith('-') || label.endsWith('-')) return 'Label cannot start or end with a hyphen';
+    if (label.startsWith('-') || label.endsWith('-'))
+      return 'Label cannot start or end with a hyphen';
     return '';
   })();
 
@@ -66,8 +81,7 @@ export default function Register() {
   const showBuilderError = (touched.builder || submitAttempted) && !!builderError;
   const formValid = !labelError && !builderError;
 
-  const touch = (field: keyof typeof touched) =>
-    setTouched((prev) => ({ ...prev, [field]: true }));
+  const touch = (field: keyof typeof touched) => setTouched((prev) => ({ ...prev, [field]: true }));
 
   const handleMint = () => {
     setSubmitAttempted(true);
@@ -87,9 +101,17 @@ export default function Register() {
   const errorMessage = error
     ? (() => {
         const msg = String(error instanceof Error ? error.message : error);
-        if (msg.includes('503')) return 'Registry not configured on the orchestrator — contact the protocol admin.';
-        if (msg.includes('409') || msg.includes('already registered') || msg.includes('EnsNameTaken') || msg.includes('a8791367')) return 'That label is already registered — choose a different name.';
-        if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f')) return 'Invalid accountability split — percentages must total 100.';
+        if (msg.includes('503'))
+          return 'Registry not configured on the orchestrator — contact the protocol admin.';
+        if (
+          msg.includes('409') ||
+          msg.includes('already registered') ||
+          msg.includes('EnsNameTaken') ||
+          msg.includes('a8791367')
+        )
+          return 'That label is already registered — choose a different name.';
+        if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f'))
+          return 'Invalid accountability split — percentages must total 100.';
         return msg.slice(0, 200);
       })()
     : null;
@@ -132,7 +154,14 @@ export default function Register() {
           <div style={{ fontWeight: 600, color: 'var(--app-green)', marginBottom: 8 }}>
             Agent registered
           </div>
-          <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace', marginBottom: 4 }}>
+          <div
+            style={{
+              fontSize: 12,
+              color: 'var(--app-text-2)',
+              fontFamily: 'monospace',
+              marginBottom: 4,
+            }}
+          >
             {data.ensName} · Token #{data.tokenId}
           </div>
           <div
@@ -195,10 +224,13 @@ export default function Register() {
               .aegis.eth
             </div>
           </div>
-          {showLabelError
-            ? <FieldError msg={labelError} />
-            : <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>Lowercase letters, numbers, and hyphens only</div>
-          }
+          {showLabelError ? (
+            <FieldError msg={labelError} />
+          ) : (
+            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+              Lowercase letters, numbers, and hyphens only
+            </div>
+          )}
         </div>
 
         <button
@@ -226,7 +258,10 @@ export default function Register() {
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ transform: showAdvanced ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
+            style={{
+              transform: showAdvanced ? 'rotate(90deg)' : 'none',
+              transition: 'transform 0.15s',
+            }}
           >
             <polyline points="9 18 15 12 9 6" />
           </svg>
@@ -255,10 +290,14 @@ export default function Register() {
               onChange={(e) => setBuilder(e.target.value)}
               onBlur={() => touch('builder')}
             />
-            {showBuilderError
-              ? <FieldError msg={builderError} />
-              : <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>Defaults to your connected wallet. Set a different address if the builder is a separate entity.</div>
-            }
+            {showBuilderError ? (
+              <FieldError msg={builderError} />
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+                Defaults to your connected wallet. Set a different address if the builder is a
+                separate entity.
+              </div>
+            )}
           </div>
         )}
 
@@ -323,7 +362,9 @@ export default function Register() {
               borderRadius: 8,
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}>
+            <div
+              style={{ fontWeight: 600, fontSize: 13, color: 'var(--app-red)', marginBottom: 4 }}
+            >
               Registration failed
             </div>
             <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>

@@ -10,9 +10,7 @@ export function useMyAgents() {
   const { isDemoMode } = useDemoMode();
   return useQuery<AgentRecord[]>({
     queryKey: ['my-agents', isDemoMode ? 'demo' : address],
-    queryFn: isDemoMode
-      ? () => Promise.resolve([demoAgent])
-      : () => fetchAgentsByOwner(address!),
+    queryFn: isDemoMode ? () => Promise.resolve([demoAgent]) : () => fetchAgentsByOwner(address!),
     enabled: isDemoMode ? true : !!address,
     staleTime: 30_000,
   });

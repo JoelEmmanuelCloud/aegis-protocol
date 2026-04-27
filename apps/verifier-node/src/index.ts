@@ -60,8 +60,14 @@ axl.on('exit', (code) => {
   process.exit(1);
 });
 
-process.on('SIGINT', () => { axl.kill(); process.exit(0); });
-process.on('SIGTERM', () => { axl.kill(); process.exit(0); });
+process.on('SIGINT', () => {
+  axl.kill();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  axl.kill();
+  process.exit(0);
+});
 
 async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse> {
   const record = await downloadObject<DecisionRecord>(body.rootHash);

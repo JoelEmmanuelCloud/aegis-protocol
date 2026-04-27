@@ -10,7 +10,7 @@ export class AttestationsController {
   list(
     @Query('agentId') agentId?: string,
     @Query('cursor') cursor?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.attestationsService.list(agentId, cursor, limit ? parseInt(limit, 10) : undefined);
   }

@@ -61,7 +61,14 @@ export default function Layout({ children }: { children: ReactNode }) {
               >
                 A
               </div>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--app-text)', whiteSpace: 'nowrap' }}>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: 'var(--app-text)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 Aegis
               </span>
             </div>
@@ -91,7 +98,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
         </div>
 
-        <nav style={{ flex: 1, padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav
+          style={{ flex: 1, padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 2 }}
+        >
           {navItems.map((item) => (
             <NavLink
               key={item.path}

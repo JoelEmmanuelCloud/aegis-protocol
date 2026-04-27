@@ -63,12 +63,12 @@ Each node runs its own `axl-node` binary with a unique `api_port` (HTTP API), `t
 
 ### AXL Node Port Map
 
-| Node       | api\_port | tcp\_port | Management | TLS Listen | Peer ID                                                            |
-| ---------- | --------- | --------- | ---------- | ---------- | ------------------------------------------------------------------ |
-| Propagator | 9022      | 7022      | 10022      | 9120       | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
-| Witness    | 9002      | 7002      | 10002      | —          | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
-| Verifier   | 9012      | 7012      | 10012      | —          | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
-| Memory     | 9032      | 7032      | 10032      | —          | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
+| Node       | api_port | tcp_port | Management | TLS Listen | Peer ID                                                            |
+| ---------- | -------- | -------- | ---------- | ---------- | ------------------------------------------------------------------ |
+| Propagator | 9022     | 7022     | 10022      | 9120       | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
+| Witness    | 9002     | 7002     | 10002      | —          | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
+| Verifier   | 9012     | 7012     | 10012      | —          | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
+| Memory     | 9032     | 7032     | 10032      | —          | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
 
 ### AXL Config Format
 
@@ -237,6 +237,7 @@ This is the full story from a user's perspective — starting at the browser, en
 Open `http://localhost:4000`.
 
 The landing page shows:
+
 - **Animated mesh** of 4 nodes (Witness :9002, Verifier :9012, Propagator :9022, Memory :9032) connected to 0G Storage at the center
 - **Live counters** — Total Attestations, Active Agents, Verdicts Issued — animating on scroll
 - A floating attestation card showing `trading-bot.aegis.eth · CLEARED · 2s ago`
@@ -268,14 +269,16 @@ You see a registration form with three fields:
 **ENS Label** — type your bot's name, e.g. `trading-bot`
 
 The preview below updates live:
+
 ```
 trading-bot.aegis.eth
 Owner: 0xYourWallet…
 ```
 
-**Builder Address** *(optional)* — if a developer built the bot, paste their wallet address here. Leave blank to use your own.
+**Builder Address** _(optional)_ — if a developer built the bot, paste their wallet address here. Leave blank to use your own.
 
 **Accountability Split** — drag the slider to set who is accountable if the bot is ever flagged:
+
 - 100% / 0% — you take full responsibility
 - 60% / 40% — you and the builder share it (recommended if using a third-party bot)
 - 0% / 100% — the builder is fully accountable
@@ -296,6 +299,7 @@ trading-bot.aegis.eth issued
 ```
 
 What just happened behind the scenes:
+
 - `AgentRegistry.sol` minted an ERC-7857 iNFT linked to your wallet
 - The contract called the ENS Name Wrapper and auto-issued `trading-bot.aegis.eth`
 - ENSIP-25 text records (`agent.registry` and `agent.id`) were written to the ENS name
@@ -318,6 +322,7 @@ Verdict:   PENDING
 ```
 
 The attestation has been:
+
 1. Committed to **0G Storage** permanently (the root hash is the cryptographic receipt)
 2. Propagated across the AXL mesh (Witness → Propagator → Memory)
 3. Stored in **0G KV** under `aegis:trading-bot.aegis.eth:history`
@@ -390,6 +395,7 @@ AegisCourt tx: 0x...
 ```
 
 What happened:
+
 - The Verifier fetched the original decision record from 0G Storage by root hash
 - It ran the exact same model (`qwen/qwen-2.5-7b-instruct`) with the exact same inputs in a 0G Compute TEE
 - The model's output did not match what the agent actually did → **FLAGGED**
@@ -452,18 +458,18 @@ Any DeFi protocol that resolves `trading-bot.aegis.eth` now sees this score — 
 
 ### The Full Loop in 60 Seconds
 
-| What the user does | What Aegis does |
-|---|---|
-| Opens dashboard at `http://localhost:4000` | Landing page loads with live mesh animation |
-| Clicks **Register Your Agent**, connects MetaMask | Wallet connects, redirected to `/app` |
+| What the user does                                          | What Aegis does                                                                        |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Opens dashboard at `http://localhost:4000`                  | Landing page loads with live mesh animation                                            |
+| Clicks **Register Your Agent**, connects MetaMask           | Wallet connects, redirected to `/app`                                                  |
 | Types `trading-bot`, sets 60/40 split, clicks **Mint iNFT** | iNFT minted on 0G chain, `trading-bot.aegis.eth` auto-issued, ENSIP-25 records written |
-| Bot makes a decision | One AXL call → 0G Storage commit → AXL mesh propagation → ENS text records updated |
-| Views **Attestation Feed** | Live card: root hash, verdict badge, timestamp |
-| Views **Agent Profile** → types `trading-bot` | ENS text records loaded live, ENSIP-25 verified |
-| Opens **File Dispute**, pastes root hash, submits | Verifier replays via 0G Compute TEE, verdict returned, AegisCourt.sol records it |
-| KeeperHub fires | `aegis.execute_remedy` runs automatically, tx lands, audit trail appears |
-| Views **KeeperHub Audit** | tx hash, gas used (47,823), retries (0), status: Completed |
-| Views **Agent Profile** again | Score dropped from 100 → 90, `aegis.lastVerdict = FLAGGED` |
+| Bot makes a decision                                        | One AXL call → 0G Storage commit → AXL mesh propagation → ENS text records updated     |
+| Views **Attestation Feed**                                  | Live card: root hash, verdict badge, timestamp                                         |
+| Views **Agent Profile** → types `trading-bot`               | ENS text records loaded live, ENSIP-25 verified                                        |
+| Opens **File Dispute**, pastes root hash, submits           | Verifier replays via 0G Compute TEE, verdict returned, AegisCourt.sol records it       |
+| KeeperHub fires                                             | `aegis.execute_remedy` runs automatically, tx lands, audit trail appears               |
+| Views **KeeperHub Audit**                                   | tx hash, gas used (47,823), retries (0), status: Completed                             |
+| Views **Agent Profile** again                               | Score dropped from 100 → 90, `aegis.lastVerdict = FLAGGED`                             |
 
 ---
 
@@ -474,24 +480,24 @@ Aegis works with any agent framework. Add one call after every decision. That is
 ### JavaScript / TypeScript (Claude, LangChain.js, OpenClaw)
 
 ```typescript
-const AEGIS_WITNESS_URL = "http://localhost:9002";
-const AEGIS_WITNESS_PEER_ID = "23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1";
+const AEGIS_WITNESS_URL = 'http://localhost:9002';
+const AEGIS_WITNESS_PEER_ID = '23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1';
 
 async function attestToAegis(agentId: string, inputs: unknown, reasoning: string, action: unknown) {
   await fetch(`${AEGIS_WITNESS_URL}/send`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      "X-Destination-Peer-Id": AEGIS_WITNESS_PEER_ID
+      'Content-Type': 'application/json',
+      'X-Destination-Peer-Id': AEGIS_WITNESS_PEER_ID,
     },
     body: JSON.stringify({
-      type:      "ATTEST_DECISION",
+      type: 'ATTEST_DECISION',
       agentId,
       inputs,
       reasoning,
       action,
-      timestamp: Date.now()
-    })
+      timestamp: Date.now(),
+    }),
   });
 }
 ```
@@ -502,10 +508,10 @@ async function attestToAegis(agentId: string, inputs: unknown, reasoning: string
 const result = await agent.invoke({ input: userMessage });
 
 await attestToAegis(
-  "trading-bot.aegis.eth",
+  'trading-bot.aegis.eth',
   { userMessage, context: agent.memory.chatHistory },
-  result.intermediateSteps.map(s => s.observation).join("\n"),
-  { type: "llm_response", output: result.output }
+  result.intermediateSteps.map((s) => s.observation).join('\n'),
+  { type: 'llm_response', output: result.output }
 );
 ```
 
@@ -593,6 +599,7 @@ The attestation call is fire-and-forget. If Aegis is unreachable, the agent cont
 ## 9. Demo Video Script (3 min)
 
 **Setup before recording:**
+
 - All 5 terminals open and visible (tiled layout)
 - Browser at `http://localhost:4000`
 - MetaMask unlocked with funded 0G testnet wallet
@@ -612,6 +619,7 @@ The attestation call is fire-and-forget. If Aegis is unreachable, the agent cont
 > "A user goes to the dashboard and registers their trading bot in under a minute."
 
 **Do:**
+
 1. Click **Register Your Agent** — MetaMask opens, connect wallet
 2. Navigate to **Register Agent** (`/app/register`)
 3. Type `trading-bot` in the ENS label field — show the live preview: `trading-bot.aegis.eth`
@@ -630,6 +638,7 @@ The attestation call is fire-and-forget. If Aegis is unreachable, the agent cont
 **Show in terminal:** The Witness Node receiving and logging the attestation.
 
 **Switch to dashboard → Attestation Feed** — new card appears:
+
 ```
 trading-bot.aegis.eth · swap 100 USDC → ETH · 0xabc123… · PENDING · 2s ago
 ```
@@ -643,6 +652,7 @@ trading-bot.aegis.eth · swap 100 USDC → ETH · 0xabc123… · PENDING · 2s a
 > "Four separate processes. Four distinct ed25519 identity keys. Real encrypted messages over Yggdrasil."
 
 **Pan across all 4 terminal windows.** Point to each peer ID:
+
 - Propagator: `946df8c6...`
 - Witness: `23fb5c41...`
 - Verifier: `7c60360e...`
@@ -659,6 +669,7 @@ trading-bot.aegis.eth · swap 100 USDC → ETH · 0xabc123… · PENDING · 2s a
 **Do:** Go to **File Dispute** (`/app/disputes`). Type `trading-bot.aegis.eth`. Paste the root hash. Write a reason. Click **Submit Dispute**.
 
 **Show dashboard progress:**
+
 ```
 Fetching from 0G Storage…
 Replaying via 0G Compute TEE…
@@ -677,6 +688,7 @@ Recording on AegisCourt.sol…
 > "The moment AegisCourt emitted the verdict event, KeeperHub fired the remedy automatically."
 
 **Show → KeeperHub Audit** (`/app/audit`):
+
 ```
 aegis.execute_remedy · Completed · gas 47,823 · retries 0 · tx: 0x…
 ```
@@ -692,6 +704,7 @@ aegis.execute_remedy · Completed · gas 47,823 · retries 0 · tx: 0x…
 **Go to Agent Profile** (`/app/agents`). Type `trading-bot`. Click **Lookup**.
 
 **Show:**
+
 - Score ring: dropped from 100
 - `aegis.lastVerdict = FLAGGED`
 - `aegis.flaggedCount = 1`

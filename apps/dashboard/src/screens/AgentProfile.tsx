@@ -180,7 +180,10 @@ export default function AgentProfile() {
             }}
             placeholder="trading-bot or trading-bot.aegis.eth"
             value={input}
-            onChange={(e) => { setInput(e.target.value); setSearchAttempted(false); }}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setSearchAttempted(false);
+            }}
             onBlur={() => setInputTouched(true)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
@@ -194,7 +197,17 @@ export default function AgentProfile() {
         </div>
         {showInputError && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--app-red)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--app-red)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -204,7 +217,17 @@ export default function AgentProfile() {
         )}
         {isError && label && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--app-red)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--app-red)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />

@@ -5,7 +5,8 @@ import { useMyAgents } from '../hooks/useMyAgents';
 
 const REGISTRY_ADDRESS = import.meta.env.VITE_AGENT_REGISTRY_ADDRESS as string | undefined;
 const COURT_ADDRESS = import.meta.env.VITE_AEGIS_COURT_ADDRESS as string | undefined;
-const EXPLORER_URL = (import.meta.env.VITE_0G_EXPLORER_URL as string | undefined) ?? 'https://chainscan-galileo.0g.ai';
+const EXPLORER_URL =
+  (import.meta.env.VITE_0G_EXPLORER_URL as string | undefined) ?? 'https://chainscan-galileo.0g.ai';
 
 function truncate(addr: string): string {
   return `${addr.slice(0, 10)}…${addr.slice(-6)}`;
@@ -297,11 +298,19 @@ export default function Overview() {
                   {agent.ensName?.[0]?.toUpperCase() ?? 'A'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)', marginBottom: 2 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--app-text)',
+                      marginBottom: 2,
+                    }}
+                  >
                     {agent.ensName}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
-                    Token #{agent.tokenId} · {agent.userPercent}% user / {agent.builderPercent}% builder
+                    Token #{agent.tokenId} · {agent.userPercent}% user / {agent.builderPercent}%
+                    builder
                   </div>
                 </div>
                 <span className={agent.active ? 'badge-cleared' : 'badge-flagged'}>
