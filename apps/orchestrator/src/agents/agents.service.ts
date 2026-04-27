@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, ServiceUnavailableException, OnModuleInit } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import type { NetworkStats } from '@aegis/types';
@@ -24,9 +24,10 @@ export interface RegisterAgentDto {
 }
 
 @Injectable()
-export class AgentsService {
+export class AgentsService implements OnModuleInit {
   private _registry: ethers.Contract | null = null;
   private _readRegistry: ethers.Contract | null = null;
+  private _activeAgentCount = 0;
 
   private get registry(): ethers.Contract {
     if (!this._registry) {
@@ -55,6 +56,20 @@ export class AgentsService {
       this._readRegistry = new ethers.Contract(address, AGENT_REGISTRY_ABI, provider);
     }
     return this._readRegistry;
+  }
+
+  async onModuleInit(): Promise<void> {
+    try {
+      const filter = this.readRegistry.filters.AgentMinted();
+      const events = await this.readRegistry.queryFilter(filter, 0, 'latest');
+      this._activeAgentCount = events.length;
+    } catch {
+      this._activeAgentCount = 0;
+    }
+  }
+
+  getActiveAgentCount(): number {
+    return this._activeAgentCount;
   }
 
   async register(
@@ -96,11 +111,12 @@ export class AgentsService {
     const tokenId: bigint = log?.args.tokenId ?? 0n;
     const ensName = `${dto.label}.aegis.eth`;
 
+    this._activeAgentCount++;
     const stats = await readKVObject<NetworkStats>('aegis:network:stats');
     await writeKVObject('aegis:network:stats', {
       totalAttestations: stats?.totalAttestations ?? 0,
       disputes: stats?.disputes ?? 0,
-      activeAgents: (stats?.activeAgents ?? 0) + 1,
+      activeAgents: this._activeAgentCount,
     }).catch(() => {});
 
     return { tokenId: tokenId.toString(), ensName, txHash: receipt.hash };
