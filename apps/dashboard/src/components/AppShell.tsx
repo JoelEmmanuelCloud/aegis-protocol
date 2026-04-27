@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -157,6 +158,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { isDemoMode, enableDemo, disableDemo } = useDemoMode();
+  const [open, setOpen] = React.useState(true);
 
   const short = isDemoMode
     ? 'Demo Mode'
@@ -168,13 +170,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <aside
         style={{
-          width: 220,
+          width: open ? 220 : 52,
           flexShrink: 0,
           background: 'var(--app-surface)',
           borderRight: '1px solid var(--app-border)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          transition: 'width 0.2s ease',
         }}
       >
         <div
@@ -183,17 +186,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             borderBottom: '1px solid var(--app-border)',
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
-            padding: '0 20px',
+            justifyContent: open ? 'space-between' : 'center',
+            padding: open ? '0 10px 0 16px' : '0',
             flexShrink: 0,
-            cursor: 'pointer',
+            gap: 8,
           }}
-          onClick={() => navigate('/')}
         >
-          <AegisLogo variant="gold" size={30} showWordmark wordmarkColor="var(--app-text)" />
+          {open && (
+            <div style={{ cursor: 'pointer', flexShrink: 0 }} onClick={() => navigate('/')}>
+              <AegisLogo variant="gold" size={30} showWordmark wordmarkColor="var(--app-text)" />
+            </div>
+          )}
+          <button
+            onClick={() => setOpen((v) => !v)}
+            title={open ? 'Collapse sidebar' : 'Expand sidebar'}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              border: '1px solid var(--app-border)',
+              background: 'var(--app-elevated)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              color: 'var(--app-text)',
+              fontSize: 14,
+              lineHeight: 1,
+              userSelect: 'none',
+            }}
+          >
+            {open ? '‹' : '›'}
+          </button>
         </div>
 
-        <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+        <nav style={{ flex: 1, padding: '12px 6px', overflowY: 'auto' }}>
           {NAV.map((item) => {
             const active =
               item.path === '/app'
@@ -203,11 +231,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <NavLink
                 key={item.path}
                 to={item.path}
+                title={!open ? item.label : undefined}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: open ? 'flex-start' : 'center',
                   gap: 10,
-                  padding: '9px 12px',
+                  padding: open ? '9px 12px' : '9px 0',
                   borderRadius: 8,
                   marginBottom: 2,
                   fontSize: 13,
@@ -227,13 +257,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   {item.icon}
                 </span>
-                {item.label}
+                {open && item.label}
               </NavLink>
             );
           })}
         </nav>
 
-        <div
+        {open && <div
           style={{
             padding: '12px 10px',
             borderTop: '1px solid var(--app-border)',
@@ -303,7 +333,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </svg>
             </button>
           </div>
-        </div>
+        </div>}
       </aside>
 
       <div
