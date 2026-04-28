@@ -122,7 +122,8 @@ async function handleAttestDecision(body: AttestationRequest): Promise<Attestati
 }
 
 setInterval(async () => {
-  const messages = await recv(AXL_BASE_URL).catch(() => []);
+  const raw = await recv(AXL_BASE_URL).catch(() => []);
+  const messages = Array.isArray(raw) ? raw : [];
   for (const msg of messages) {
     if (msg.body.type === 'ATTEST_DECISION') {
       await handleAttestDecision(msg.body as unknown as AttestationRequest).catch(() => {});
