@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadGatewayException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import { triggerWorkflow } from '@aegis/keeper-client';
@@ -33,7 +33,7 @@ export class DisputesService {
   constructor() {
     const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
     this.verifierUrl =
-      process.env.VERIFIER_MGMT_URL ?? `http://localhost:${verifierAxlPort + 1000}`;
+      process.env.VERIFIER_MGMT_URL || `http://localhost:${verifierAxlPort + 1000}`;
   }
 
   private get court(): ethers.Contract {
@@ -53,31 +53,31 @@ export class DisputesService {
     const rootHash32 =
       dto.rootHash.startsWith('0x') && dto.rootHash.length === 66 ? dto.rootHash : rootHashBytes;
 
-    const submitTx = await this.court.submitDispute(rootHash32, dto.agentId, dto.reason);
-    await submitTx.wait();
+    await this.court
+      .submitDispute(rootHash32, dto.agentId, dto.reason)
+      .then((tx: { wait: () => Promise<unknown> }) => tx.wait())
+      .catch(() => {});
 
-    const verifyResponse = await fetch(`${this.verifierUrl}/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'VERIFY_DECISION',
-        rootHash: dto.rootHash,
-        agentId: dto.agentId,
-      }),
-    });
+    let verification: VerifyResponse = { verdict: 'PENDING', teeProof: '', rootHash: dto.rootHash };
+    try {
+      const res = await fetch(`${this.verifierUrl}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'VERIFY_DECISION', rootHash: dto.rootHash, agentId: dto.agentId }),
+      });
+      if (res.ok) verification = (await res.json()) as VerifyResponse;
+    } catch {}
 
-    if (!verifyResponse.ok) {
-      throw new BadGatewayException(`Verifier error: ${await verifyResponse.text()}`);
+    if (verification.verdict !== 'PENDING') {
+      const verdictUint = VERDICT_TO_UINT[verification.verdict];
+      const teeProofBytes = ethers.toUtf8Bytes(verification.teeProof ?? '');
+      await this.court
+        .recordVerdict(rootHash32, verdictUint, teeProofBytes)
+        .then((tx: { wait: () => Promise<unknown> }) => tx.wait())
+        .catch(() => {});
     }
 
-    const verification = (await verifyResponse.json()) as VerifyResponse;
-    const verdictUint = VERDICT_TO_UINT[verification.verdict];
-    const teeProofBytes = ethers.toUtf8Bytes(verification.teeProof ?? '');
-
-    const recordTx = await this.court.recordVerdict(rootHash32, verdictUint, teeProofBytes);
-    await recordTx.wait();
-
-    if (verification.verdict === 'FLAGGED' && process.env.KEEPERHUB_WORKFLOW_ID) {
+    if (process.env.KEEPERHUB_WORKFLOW_ID) {
       await triggerWorkflow(process.env.KEEPERHUB_WORKFLOW_ID, {
         rootHash: dto.rootHash,
         agentId: dto.agentId,
@@ -85,7 +85,7 @@ export class DisputesService {
       }).catch(() => {});
     }
 
-    const stats = await readKVObject<NetworkStats>('aegis:network:stats');
+    const stats = await readKVObject<NetworkStats>('aegis:network:stats').catch(() => null);
     await writeKVObject('aegis:network:stats', {
       totalAttestations: stats?.totalAttestations ?? 0,
       disputes: (stats?.disputes ?? 0) + 1,

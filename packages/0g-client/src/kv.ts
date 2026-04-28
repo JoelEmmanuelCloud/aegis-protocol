@@ -5,6 +5,16 @@ const ZG_KV_ENDPOINT = process.env.ZG_KV_ENDPOINT!;
 const ZG_RPC_URL = process.env.ZG_RPC_URL!;
 const ZG_INDEXER_RPC = process.env.ZG_INDEXER_RPC!;
 const ZG_PRIVATE_KEY = process.env.ZG_PRIVATE_KEY!;
+const KV_TIMEOUT_MS = 500;
+
+function withKVTimeout<T>(p: Promise<T>): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('KV operation timed out')), KV_TIMEOUT_MS)
+    ),
+  ]);
+}
 
 function getStreamId(): string {
   if (!ZG_PRIVATE_KEY) throw new Error('ZG_PRIVATE_KEY is required for 0G KV operations');
@@ -20,10 +30,10 @@ function getSigner(): ethers.Wallet {
 
 async function createBatcher(): Promise<Batcher> {
   const indexer = new Indexer(ZG_INDEXER_RPC);
-  const [clients, err] = await indexer.selectNodes(1);
+  const [clients, err] = await withKVTimeout(indexer.selectNodes(1));
   if (err) throw new Error(`Failed to select storage nodes: ${err}`);
 
-  const status = await clients[0].getStatus();
+  const status = await withKVTimeout(clients[0].getStatus());
   const signer = getSigner();
   const flow = getFlowContract(status.networkIdentity.flowAddress, signer);
 
@@ -36,7 +46,7 @@ export async function writeKV(key: string, value: string): Promise<void> {
 
   batcher.streamDataBuilder.set(streamId, Buffer.from(key, 'utf-8'), Buffer.from(value, 'utf-8'));
 
-  const [, err] = await batcher.exec();
+  const [, err] = await withKVTimeout(batcher.exec());
   if (err) throw new Error(`KV write failed: ${err}`);
 }
 
@@ -49,7 +59,7 @@ export async function readKV(key: string): Promise<string | null> {
   const kvClient = new KvClient(ZG_KV_ENDPOINT);
   const streamId = getStreamId();
 
-  const result = await kvClient.getValue(streamId, Buffer.from(key, 'utf-8'));
+  const result = await withKVTimeout(kvClient.getValue(streamId, Buffer.from(key, 'utf-8')));
   if (!result) return null;
 
   return Buffer.from(result.data, 'base64').toString('utf-8');

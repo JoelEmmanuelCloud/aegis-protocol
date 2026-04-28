@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 const ZG_INDEXER_RPC = process.env.ZG_INDEXER_RPC!;
 const ZG_RPC_URL = process.env.ZG_RPC_URL!;
 const ZG_PRIVATE_KEY = process.env.ZG_PRIVATE_KEY!;
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 3_000;
 
 function getSigner(): ethers.Wallet {
   const provider = new ethers.JsonRpcProvider(ZG_RPC_URL);
