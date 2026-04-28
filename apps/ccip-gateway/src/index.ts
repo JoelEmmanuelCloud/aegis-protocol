@@ -1,5 +1,12 @@
+import path from 'path';
 import express, { Request, Response } from 'express';
 import { ethers } from 'ethers';
+
+try {
+  (process as NodeJS.Process & { loadEnvFile?: (p: string) => void }).loadEnvFile?.(
+    path.resolve(__dirname, '../../../.env')
+  );
+} catch {}
 
 const PORT = parseInt(process.env.CCIP_GATEWAY_PORT ?? '8080', 10);
 
@@ -42,20 +49,23 @@ app.get('/:sender/:calldata', async (req: Request, res: Response): Promise<void>
     const registry = getRegistry();
 
     if (selector === SEL_TEXT) {
-      const [node, key] = ethers.AbiCoder.defaultAbiCoder().decode(
+      const decoded = ethers.AbiCoder.defaultAbiCoder().decode(
         ['bytes32', 'string'],
         '0x' + calldata.slice(8)
-      ) as [string, string];
+      );
+      const node = decoded[0] as string;
+      const key = decoded[1] as string;
       const value: string = await registry.text(node, key);
       res.json({ data: encodeResponse(['string'], [value]) });
       return;
     }
 
     if (selector === SEL_ADDR) {
-      const [node] = ethers.AbiCoder.defaultAbiCoder().decode(
+      const decoded = ethers.AbiCoder.defaultAbiCoder().decode(
         ['bytes32'],
         '0x' + calldata.slice(8)
-      ) as [string];
+      );
+      const node = decoded[0] as string;
       const owner: string = await registry.ownerOfNode(node);
       res.json({ data: encodeResponse(['address'], [owner]) });
       return;
