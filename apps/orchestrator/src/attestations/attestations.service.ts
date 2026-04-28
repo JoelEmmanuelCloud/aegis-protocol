@@ -1,23 +1,5 @@
 import { Injectable, BadGatewayException } from '@nestjs/common';
-import { readKVObject } from '@aegis/0g-client';
-import type { AttestationRequest, AttestationResponse } from '@aegis/types';
-
-interface AgentHistoryEntry {
-  rootHash: string;
-  verdict: 'PENDING' | 'CLEARED' | 'FLAGGED';
-  timestamp: number;
-}
-
-interface AgentHistory {
-  agentId: string;
-  entries: AgentHistoryEntry[];
-  lastUpdated: number;
-}
-
-interface AttestationListResponse {
-  items: AgentHistoryEntry[];
-  nextCursor: string | null;
-}
+import type { AttestationRequest, AttestationResponse, AttestationListResponse } from '@aegis/types';
 
 @Injectable()
 export class AttestationsService {
@@ -44,18 +26,14 @@ export class AttestationsService {
   }
 
   async list(agentId?: string, cursor?: string, limit = 20): Promise<AttestationListResponse> {
-    if (!agentId) {
-      return { items: [], nextCursor: null };
-    }
+    const params = new URLSearchParams();
+    if (agentId) params.set('agentId', agentId);
+    if (cursor) params.set('cursor', cursor);
+    params.set('limit', String(limit));
 
-    const history = await readKVObject<AgentHistory>(`aegis:${agentId}:history`);
-    const entries = history?.entries ?? [];
+    const response = await fetch(`${this.witnessUrl}/attestations?${params}`).catch(() => null);
+    if (!response || !response.ok) return { items: [], nextCursor: null };
 
-    const startIdx = cursor ? entries.findIndex((e) => e.rootHash === cursor) + 1 : 0;
-    const page = entries.slice(startIdx, startIdx + limit);
-    const hasMore = startIdx + limit < entries.length;
-    const nextCursor = hasMore ? (page[page.length - 1]?.rootHash ?? null) : null;
-
-    return { items: page, nextCursor };
+    return response.json() as Promise<AttestationListResponse>;
   }
 }

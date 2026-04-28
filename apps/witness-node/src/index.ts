@@ -9,6 +9,7 @@ import { send, recv } from '@aegis/axl-client';
 import type {
   AttestationRequest,
   AttestationResponse,
+  AttestationItem,
   DecisionRecord,
   ReputationRecord,
   LatestRecord,
@@ -54,6 +55,8 @@ function freePort(port: number): void {
   } catch {}
 }
 
+const attestationLog: AttestationItem[] = [];
+
 const CONFIG_PATH = path.join(os.tmpdir(), 'axl-witness.json');
 fs.writeFileSync(CONFIG_PATH, JSON.stringify(nodeConfig));
 
@@ -88,6 +91,9 @@ async function handleAttestDecision(body: AttestationRequest): Promise<Attestati
   };
 
   const rootHash = await uploadObject(record);
+
+  attestationLog.unshift({ agentId: record.agentId, rootHash, verdict: record.verdict, timestamp: record.timestamp });
+  if (attestationLog.length > 500) attestationLog.pop();
 
   const latest: LatestRecord = { rootHash, timestamp: record.timestamp, verdict: record.verdict };
   await writeKVObject(`aegis:${record.agentId}:latest`, latest).catch(() => {});
@@ -141,6 +147,16 @@ app.post('/attest', async (req: Request, res: Response): Promise<void> => {
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }
+});
+
+app.get('/attestations', (req: Request, res: Response): void => {
+  const { agentId, cursor, limit } = req.query as Record<string, string | undefined>;
+  let items = agentId ? attestationLog.filter((a) => a.agentId === agentId) : attestationLog;
+  const pageSize = limit ? parseInt(limit, 10) : 20;
+  const startIdx = cursor ? items.findIndex((a) => a.rootHash === cursor) + 1 : 0;
+  const page = items.slice(startIdx, startIdx + pageSize);
+  const hasMore = startIdx + pageSize < items.length;
+  res.json({ items: page, nextCursor: hasMore ? (page[page.length - 1]?.rootHash ?? null) : null });
 });
 
 app.get('/health', (_req: Request, res: Response): void => {
