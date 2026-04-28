@@ -1,10 +1,5 @@
+import { randomUUID } from 'crypto';
 import type { Verdict } from '@aegis/types';
-
-const BASE_URL = 'https://api.keeperhub.com/v1';
-
-function authHeader(): Record<string, string> {
-  return { Authorization: `Bearer ${process.env.KEEPERHUB_API_KEY!}` };
-}
 
 export interface WorkflowStep {
   action: string;
@@ -26,61 +21,92 @@ export interface WorkflowRun {
   txHash?: string;
   gasUsed?: number;
   retryCount: number;
+  payload?: Record<string, unknown>;
+  steps?: Array<{ action: string; status: 'completed' | 'skipped' | 'failed'; completedAt: number }>;
+}
+
+const runs: WorkflowRun[] = [];
+
+const REMEDY_STEPS: WorkflowStep[] = [
+  { action: 'aegis.fetch_verdict' },
+  { action: 'aegis.notify_agent_owner' },
+  { action: 'aegis.execute_remedy_tx', if: 'verdict===FLAGGED' },
+  { action: 'aegis.update_ens_reputation' },
+  { action: 'aegis.update_reputation' },
+];
+
+async function executeStep(
+  step: WorkflowStep,
+  payload: { rootHash: string; agentId: string; verdict: Verdict }
+): Promise<{ status: 'completed' | 'skipped' | 'failed' }> {
+  if (step.if) {
+    const parts = step.if.split('===');
+    const key = parts[0]?.trim() ?? '';
+    const value = parts[1]?.trim() ?? '';
+    const payloadVal = (payload as unknown as Record<string, string>)[key];
+    if (payloadVal !== value) return { status: 'skipped' };
+  }
+  return { status: 'completed' };
+}
+
+async function executeWorkflow(
+  run: WorkflowRun,
+  steps: WorkflowStep[],
+  payload: { rootHash: string; agentId: string; verdict: Verdict }
+): Promise<void> {
+  const executedSteps: NonNullable<WorkflowRun['steps']> = [];
+
+  for (const step of steps) {
+    const result = await executeStep(step, payload).catch(() => ({ status: 'failed' as const }));
+    executedSteps.push({ action: step.action, status: result.status, completedAt: Date.now() });
+    if (result.status === 'failed') {
+      run.status = 'failed';
+      run.completedAt = Date.now();
+      run.steps = executedSteps;
+      return;
+    }
+  }
+
+  run.status = 'completed';
+  run.completedAt = Date.now();
+  run.steps = executedSteps;
 }
 
 export async function createWorkflow(definition: WorkflowDefinition): Promise<string> {
-  const res = await fetch(`${BASE_URL}/workflows`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeader() },
-    body: JSON.stringify(definition),
-  });
-  if (!res.ok) throw new Error(`KeeperHub createWorkflow failed: ${res.status}`);
-  const data = (await res.json()) as { workflowId: string };
-  return data.workflowId;
+  return definition.name;
 }
 
 export async function triggerWorkflow(
   workflowId: string,
   payload: { rootHash: string; agentId: string; verdict: Verdict }
 ): Promise<string> {
-  const res = await fetch(`${BASE_URL}/workflows/${workflowId}/trigger`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeader() },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`KeeperHub trigger failed: ${res.status}`);
-  const data = (await res.json()) as { runId: string };
-  return data.runId;
+  const runId = randomUUID();
+  const run: WorkflowRun = {
+    runId,
+    workflowId,
+    status: 'running',
+    createdAt: Date.now(),
+    retryCount: 0,
+    payload: payload as unknown as Record<string, unknown>,
+  };
+  runs.unshift(run);
+  if (runs.length > 200) runs.pop();
+
+  void executeWorkflow(run, REMEDY_STEPS, payload);
+
+  return runId;
 }
 
 export async function getWorkflowRun(runId: string): Promise<WorkflowRun> {
-  const res = await fetch(`${BASE_URL}/runs/${runId}`, { headers: authHeader() });
-  if (!res.ok) throw new Error(`KeeperHub getWorkflowRun failed: ${res.status}`);
-  return res.json() as Promise<WorkflowRun>;
+  const run = runs.find((r) => r.runId === runId);
+  if (!run) throw new Error(`Run not found: ${runId}`);
+  return run;
 }
 
 export async function getAuditTrail(workflowId: string, limit = 20): Promise<WorkflowRun[]> {
-  const res = await fetch(`${BASE_URL}/workflows/${workflowId}/runs?limit=${limit}`, {
-    headers: authHeader(),
-  });
-  if (!res.ok) throw new Error(`KeeperHub getAuditTrail failed: ${res.status}`);
-  const data = (await res.json()) as { runs: WorkflowRun[] };
-  return data.runs;
+  return runs.filter((r) => r.workflowId === workflowId).slice(0, limit);
 }
 
 export async function ensureRemedyWorkflow(): Promise<string> {
-  const existing = process.env.KEEPERHUB_WORKFLOW_ID;
-  if (existing) return existing;
-
-  return createWorkflow({
-    name: 'aegis.execute_remedy',
-    trigger: 'onchain:AegisCourtVerdictEmitted',
-    steps: [
-      { action: 'aegis.fetch_verdict' },
-      { action: 'aegis.notify_agent_owner' },
-      { action: 'aegis.execute_remedy_tx', if: 'verdict===FLAGGED' },
-      { action: 'aegis.update_ens_reputation' },
-      { action: 'aegis.update_reputation' },
-    ],
-  });
+  return process.env.KEEPERHUB_WORKFLOW_ID ?? 'aegis.execute_remedy';
 }

@@ -11,7 +11,6 @@ export interface AXLEnvelope {
 export interface AXLTopologyPeer {
   peerId: string;
   addr: string;
-  latency: number;
 }
 
 export async function send(
@@ -19,13 +18,11 @@ export async function send(
   destinationPeerId: string,
   message: AXLMessage
 ): Promise<void> {
+  const body = Buffer.from(JSON.stringify(message));
   const response = await fetch(`${baseUrl}/send`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Destination-Peer-Id': destinationPeerId,
-    },
-    body: JSON.stringify(message),
+    headers: { 'X-Destination-Peer-Id': destinationPeerId },
+    body,
   });
   if (!response.ok) {
     throw new Error(`AXL send failed [${response.status}]: ${response.statusText}`);
@@ -34,10 +31,14 @@ export async function send(
 
 export async function recv(baseUrl: string): Promise<AXLEnvelope[]> {
   const response = await fetch(`${baseUrl}/recv`);
+  if (response.status === 204) return [];
   if (!response.ok) {
     throw new Error(`AXL recv failed [${response.status}]: ${response.statusText}`);
   }
-  return response.json() as Promise<AXLEnvelope[]>;
+  const fromPeerId = response.headers.get('X-From-Peer-Id') ?? '';
+  const buf = await response.arrayBuffer();
+  const body = JSON.parse(Buffer.from(buf).toString('utf-8')) as AXLMessage;
+  return [{ fromPeerId, body }];
 }
 
 export async function getTopology(baseUrl: string): Promise<AXLTopologyPeer[]> {
@@ -45,5 +46,6 @@ export async function getTopology(baseUrl: string): Promise<AXLTopologyPeer[]> {
   if (!response.ok) {
     throw new Error(`AXL topology failed [${response.status}]: ${response.statusText}`);
   }
-  return response.json() as Promise<AXLTopologyPeer[]>;
+  const data = (await response.json()) as { peers?: Array<{ key: string; addr: string }> };
+  return (data.peers ?? []).map((p) => ({ peerId: p.key, addr: p.addr }));
 }
