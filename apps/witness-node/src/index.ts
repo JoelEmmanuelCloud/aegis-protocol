@@ -90,16 +90,16 @@ async function handleAttestDecision(body: AttestationRequest): Promise<Attestati
   const rootHash = await uploadObject(record);
 
   const latest: LatestRecord = { rootHash, timestamp: record.timestamp, verdict: record.verdict };
-  await writeKVObject(`aegis:${record.agentId}:latest`, latest);
+  await writeKVObject(`aegis:${record.agentId}:latest`, latest).catch(() => {});
 
-  const existing = await readKVObject<ReputationRecord>(`aegis:${record.agentId}:reputation`);
+  const existing = await readKVObject<ReputationRecord>(`aegis:${record.agentId}:reputation`).catch(() => null);
   const reputation: ReputationRecord = {
     score: existing?.score ?? 100,
     totalDecisions: (existing?.totalDecisions ?? 0) + 1,
     flagged: existing?.flagged ?? 0,
     lastVerified: Date.now(),
   };
-  await writeKVObject(`aegis:${record.agentId}:reputation`, reputation);
+  await writeKVObject(`aegis:${record.agentId}:reputation`, reputation).catch(() => {});
 
   if (PROPAGATOR_PEER_ID) {
     await send(AXL_BASE_URL, PROPAGATOR_PEER_ID, {
@@ -111,7 +111,7 @@ async function handleAttestDecision(body: AttestationRequest): Promise<Attestati
     }).catch(() => {});
   }
 
-  const stats = await readKVObject<NetworkStats>('aegis:network:stats');
+  const stats = await readKVObject<NetworkStats>('aegis:network:stats').catch(() => null);
   await writeKVObject('aegis:network:stats', {
     totalAttestations: (stats?.totalAttestations ?? 0) + 1,
     disputes: stats?.disputes ?? 0,
