@@ -20,6 +20,7 @@ The accountability layer for AI agents. Any agent can prove what it decided, why
 10. [Contracts](#10-contracts)
 11. [Orchestrator API Reference](#11-orchestrator-api-reference)
 12. [Troubleshooting](#12-troubleshooting)
+13. [Repository Structure](#13-repository-structure)
 
 ---
 
@@ -30,7 +31,7 @@ Aegis sits beside any AI agent framework as a witness, verifier, and court:
 1. **Witness** — agent submits a decision via AXL. Witness uploads it to 0G Storage, returns a root hash receipt.
 2. **Verifier** — when disputed, replays the decision via 0G Compute TEE. Produces a cryptographic verdict (CLEARED or FLAGGED).
 3. **Court** — AegisCourt.sol records the verdict onchain. KeeperHub fires the remedy transaction automatically.
-4. **ENS Identity** — every agent gets a subname (`trading-bot.aegis.eth`). Live reputation is stored as ENS text records — queryable by any app without touching the Aegis backend.
+4. **ENS Identity** — every agent gets a subname (`trading-bot.aegis.eth`). Live reputation is stored as text records in AegisNameRegistry on 0G testnet, resolved from Ethereum via EIP-3668 CCIP-read — queryable by any ENS-aware app without touching the Aegis backend.
 
 ---
 
@@ -46,7 +47,7 @@ Witness Node :9002 ──────────────────── 
 Propagator Node :9022 ───────────────── mesh broadcast to peers
      │  AXL → PROPAGATE_ATTESTATION
      ▼
-Memory Node :9032 ───────────────────── 0G KV write + ENS text record update
+Memory Node :9032 ───────────────────── 0G KV write + AegisNameRegistry text record update
 
 Dispute filed via dashboard
      │  AXL → VERIFY_DECISION
@@ -55,32 +56,47 @@ Verifier Node :9012 ─────────────────── 0G
      │  verdict → AegisCourt.sol
      ▼
 KeeperHub Workflow ──────────────────── onchain remedy + ENS reputation update
+
+
+ENS Resolution (EIP-3668 CCIP-read)
+     │  resolve("trading-bot.aegis.eth")
+     ▼
+AegisCCIPResolver (Ethereum Sepolia) ── OffchainLookup revert
+     │  HTTP → CCIP Gateway :8080
+     ▼
+CCIP Gateway ────────────────────────── AegisNameRegistry (0G testnet)
+     │  returns encoded text record / address
+     ▼
+Any ENS-aware app receives live agent reputation data
 ```
 
 Four AXL nodes, four distinct ed25519 keys, communicating over the Yggdrasil mesh. No central coordinator.
 
-Each node runs its own `axl-node` binary with a unique `api_port` (HTTP API), `tcp_port` (internal gVisor TCP), and connects to peers via `tls://` URIs. The Propagator opens a dedicated TLS listen port (`9120`) so the other three nodes can peer to it directly in addition to joining the public Gensyn bootstrap overlay.
+### ENS Architecture — EIP-3668 CCIP-read
+
+`aegis.eth` is registered on Ethereum Sepolia with `AegisCCIPResolver` set as its resolver. When any ENS-aware app resolves a `*.aegis.eth` subname, the resolver reverts with `OffchainLookup` (EIP-3668), directing the client to the CCIP gateway. The gateway queries `AegisNameRegistry` on 0G testnet and returns the encoded result. This allows the full agent reputation stored on 0G to be readable from Ethereum with no bridge and no manual sync.
+
+```
+aegis.eth  (Ethereum Sepolia — owned by deployer)
+  └─ resolver → AegisCCIPResolver.sol
+       └─ OffchainLookup → CCIP Gateway → AegisNameRegistry (0G testnet)
+            └─ trading-bot.aegis.eth text records:
+                  aegis.reputation      = "100"
+                  aegis.totalDecisions  = "5"
+                  aegis.lastVerdict     = "CLEARED"
+                  aegis.flaggedCount    = "0"
+                  agent.registry        = "0xC1476f6..."
+                  agent.id              = "1"
+```
 
 ### AXL Node Port Map
 
-| Node       | api_port | tcp_port | Management | TLS Listen | Peer ID                                                            |
-| ---------- | -------- | -------- | ---------- | ---------- | ------------------------------------------------------------------ |
-| Propagator | 9022     | 7022     | 10022      | 9120       | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
-| Witness    | 9002     | 7002     | 10002      | —          | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
-| Verifier   | 9012     | 7012     | 10012      | —          | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
-| Memory     | 9032     | 7032     | 10032      | —          | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
-
-### AXL Config Format
-
-```json
-{
-  "PrivateKeyPath": "axl-configs/<node>.pem",
-  "Peers": ["tls://127.0.0.1:9120", "tls://34.46.48.224:9001", "tls://136.111.135.206:9001"],
-  "Listen": ["tls://0.0.0.0:9120"],
-  "api_port": 9022,
-  "tcp_port": 7022
-}
-```
+| Node       | api_port | tcp_port | TLS Listen | Peer ID                                                            |
+| ---------- | -------- | -------- | ---------- | ------------------------------------------------------------------ |
+| Propagator | 9022     | 7022     | 9120       | `946df8c688343d09d1600388a08582b4fa6cf8b30a01d493851428f03e78bc6f` |
+| Witness    | 9002     | 7002     | —          | `23fb5c412a421117459c2160906f26ccf260cc38cb9e3407fc159ab79e5752b1` |
+| Verifier   | 9012     | 7012     | —          | `7c60360ef2c5e4d236d56c413db50054bbc3dcfecb190968d0324a1a40a7f0f1` |
+| Memory     | 9032     | 7032     | —          | `87a69f086122c7232d9dbca90797d5d47836c2c83869cf4a93f5148b962aa6c4` |
 
 ---
 
@@ -93,6 +109,7 @@ Each node runs its own `axl-node` binary with a unique `api_port` (HTTP API), `t
 | Docker + Docker Compose | latest  | `docker -v`                          |
 | MetaMask                | any     | browser extension installed          |
 | 0G testnet wallet       | funded  | [faucet.0g.ai](https://faucet.0g.ai) |
+| Sepolia ETH             | ≥0.05   | [Google faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) |
 
 **Fund your wallet before starting.** You need testnet OG tokens for:
 
@@ -100,7 +117,9 @@ Each node runs its own `axl-node` binary with a unique `api_port` (HTTP API), `t
 - Filing a dispute on AegisCourt.sol
 - KeeperHub remedy transaction
 
-Get tokens at [faucet.0g.ai](https://faucet.0g.ai) — paste your wallet address, receive 0.1 OG.
+Get 0G tokens at [faucet.0g.ai](https://faucet.0g.ai) — paste your wallet address, receive 0.1 OG.
+
+Sepolia ETH is required only if you need to redeploy the ENS resolver. The contracts are already deployed (see [Section 10](#10-contracts)).
 
 ---
 
@@ -113,14 +132,16 @@ npm install
 cp .env.example .env
 ```
 
-Open `.env` and fill in these four values — everything else is pre-configured:
+Open `.env` and fill in these values — everything else is pre-configured:
 
 ```bash
 ZG_PRIVATE_KEY=0x...your_64_hex_char_private_key
 ZG_COMPUTE_API_KEY=app-sk-...your_key_here
-ENS_PRIVATE_KEY=0x...your_private_key_here
+ENS_PRIVATE_KEY=0x...your_sepolia_wallet_private_key
 KEEPERHUB_API_KEY=...your_key_here
 ```
+
+All contract addresses, RPC URLs, port numbers, and AXL peer IDs are pre-filled in `.env.example`.
 
 **One value to copy manually after starting the Propagator:**
 
@@ -156,10 +177,11 @@ axl-witness      | AXL node started — peer 23fb5c41...  port 9002
 axl-verifier     | AXL node started — peer 7c60360e...  port 9012
 axl-memory       | AXL node started — peer 87a69f08...  port 9032
 orchestrator     | Listening on port 3000
+ccip-gateway     | ccip-gateway on port 8080
 dashboard        | Local: http://localhost:4000
 ```
 
-### Option B — Local terminals (5 windows)
+### Option B — Local terminals (7 windows)
 
 **Terminal 1 — Propagator (start first)**
 
@@ -201,13 +223,45 @@ npx ts-node apps/memory-node/src/index.ts
 npx ts-node -r tsconfig-paths/register apps/orchestrator/src/main.ts
 ```
 
-**Terminal 6 — Dashboard**
+**Terminal 6 — CCIP Gateway**
+
+```bash
+cd apps/ccip-gateway
+../../node_modules/.bin/ts-node src/index.ts
+```
+
+The gateway runs on port `8080` (configurable via `CCIP_GATEWAY_PORT`). For ENS resolution to work from Ethereum, this port must be publicly reachable. Use localtunnel or ngrok:
+
+```bash
+npx localtunnel --port 8080
+# Prints: your url is: https://xxxx.loca.lt
+# Set CCIP_GATEWAY_URL=https://xxxx.loca.lt in .env
+```
+
+**Terminal 7 — Dashboard**
 
 ```bash
 cd apps/dashboard && npm run dev
 ```
 
 Open `http://localhost:4000` in your browser.
+
+### ENS Setup (one-time, per gateway URL)
+
+After the CCIP gateway is publicly exposed and `CCIP_GATEWAY_URL` is set in `.env`, deploy the resolver and register `aegis.eth` on Sepolia in one command:
+
+```bash
+cd contracts
+npm run setup:ens-sepolia
+```
+
+This script:
+1. Checks Sepolia ETH balance (requires ≥0.05 ETH)
+2. Registers `aegis.eth` on Sepolia if not already registered
+3. Deploys a fresh `AegisCCIPResolver` pointing at `CCIP_GATEWAY_URL`
+4. Sets it as the resolver for `aegis.eth` on the ENS registry
+
+The resolver is already deployed (see [Section 10](#10-contracts)) and does not need to be redeployed unless the gateway URL changes.
 
 ---
 
@@ -219,6 +273,7 @@ curl http://localhost:10012/health   # Verifier
 curl http://localhost:10022/health   # Propagator
 curl http://localhost:10032/health   # Memory
 curl http://localhost:3000/network/stats
+curl http://localhost:8080/health    # CCIP Gateway
 curl -s -o /dev/null -w "%{http_code}" http://localhost:4000
 ```
 
@@ -301,9 +356,9 @@ trading-bot.aegis.eth issued
 What just happened behind the scenes:
 
 - `AgentRegistry.sol` minted an ERC-7857 iNFT linked to your wallet
-- The contract called the ENS Name Wrapper and auto-issued `trading-bot.aegis.eth`
-- ENSIP-25 text records (`agent.registry` and `agent.id`) were written to the ENS name
-- Your agent now has a permanent, human-readable identity on ENS
+- `AegisNameRegistry.sol` on 0G testnet registered the subname `trading-bot` under the `aegis.eth` node
+- ENSIP-25 text records (`agent.registry` and `agent.id`) were written to AegisNameRegistry
+- The subname is now resolvable from Ethereum via the CCIP gateway
 
 ---
 
@@ -326,7 +381,7 @@ The attestation has been:
 1. Committed to **0G Storage** permanently (the root hash is the cryptographic receipt)
 2. Propagated across the AXL mesh (Witness → Propagator → Memory)
 3. Stored in **0G KV** under `aegis:trading-bot.aegis.eth:history`
-4. Reflected in ENS text records: `aegis.totalDecisions` increments by 1
+4. Reflected in AegisNameRegistry text records: `aegis.totalDecisions` increments by 1
 
 The **Overview** screen (`/app`) shows the running totals updating in real time.
 
@@ -351,13 +406,13 @@ aegis.totalDecisions  1
 aegis.lastVerdict     PENDING
 aegis.flaggedCount    0
 aegis.storageIndex    0xabc123…
-agent.registry        0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc
-agent.id              0x0000000000000000000000000000000000000001
+agent.registry        0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1
+agent.id              1
 
 [ ENSIP-25 VERIFIED ]   [ View on ENS App ↗ ]
 ```
 
-Any app in the world — any wallet, any DeFi protocol — can resolve `trading-bot.aegis.eth` and read these records without touching the Aegis backend.
+Any ENS-aware app — any wallet, any DeFi protocol — can resolve `trading-bot.aegis.eth` and read these records via the CCIP gateway, without touching the Aegis backend.
 
 ---
 
@@ -367,7 +422,7 @@ You notice the bot swapped tokens without meeting the documented minimum balance
 
 In the sidebar, click **File Dispute** (`/app/disputes`).
 
-The dispute form has two fields:
+The dispute form has three fields:
 
 **Agent ENS Name** — type `trading-bot.aegis.eth`
 
@@ -413,7 +468,7 @@ The moment the event landed, the `aegis.execute_remedy` workflow fired automatic
 1. Fetched the verdict
 2. Notified the agent owner
 3. Executed the remedy transaction onchain
-4. Updated ENS reputation
+4. Updated AegisNameRegistry reputation records
 
 In the sidebar, click **KeeperHub Audit** (`/app/audit`).
 
@@ -452,7 +507,7 @@ aegis.flaggedCount    1
 aegis.storageIndex    0xabc123…
 ```
 
-Any DeFi protocol that resolves `trading-bot.aegis.eth` now sees this score — without calling the Aegis API. ENS is the trust signal.
+Any DeFi protocol that resolves `trading-bot.aegis.eth` now sees this score — without calling the Aegis API. The CCIP gateway serves the live data from 0G testnet to any Ethereum resolver query.
 
 ---
 
@@ -462,10 +517,10 @@ Any DeFi protocol that resolves `trading-bot.aegis.eth` now sees this score — 
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Opens dashboard at `http://localhost:4000`                  | Landing page loads with live mesh animation                                            |
 | Clicks **Register Your Agent**, connects MetaMask           | Wallet connects, redirected to `/app`                                                  |
-| Types `trading-bot`, sets 60/40 split, clicks **Mint iNFT** | iNFT minted on 0G chain, `trading-bot.aegis.eth` auto-issued, ENSIP-25 records written |
-| Bot makes a decision                                        | One AXL call → 0G Storage commit → AXL mesh propagation → ENS text records updated     |
+| Types `trading-bot`, sets 60/40 split, clicks **Mint iNFT** | iNFT minted on 0G chain, subname registered in AegisNameRegistry, ENSIP-25 records written |
+| Bot makes a decision                                        | One AXL call → 0G Storage commit → AXL mesh propagation → AegisNameRegistry text records updated |
 | Views **Attestation Feed**                                  | Live card: root hash, verdict badge, timestamp                                         |
-| Views **Agent Profile** → types `trading-bot`               | ENS text records loaded live, ENSIP-25 verified                                        |
+| Views **Agent Profile** → types `trading-bot`               | AegisNameRegistry text records loaded via CCIP gateway, ENSIP-25 verified              |
 | Opens **File Dispute**, pastes root hash, submits           | Verifier replays via 0G Compute TEE, verdict returned, AegisCourt.sol records it       |
 | KeeperHub fires                                             | `aegis.execute_remedy` runs automatically, tx lands, audit trail appears               |
 | Views **KeeperHub Audit**                                   | tx hash, gas used (47,823), retries (0), status: Completed                             |
@@ -600,7 +655,7 @@ The attestation call is fire-and-forget. If Aegis is unreachable, the agent cont
 
 **Setup before recording:**
 
-- All 5 terminals open and visible (tiled layout)
+- All terminals open and visible (tiled layout)
 - Browser at `http://localhost:4000`
 - MetaMask unlocked with funded 0G testnet wallet
 
@@ -627,7 +682,7 @@ The attestation call is fire-and-forget. If Aegis is unreachable, the agent cont
 5. Click **Mint iNFT** — MetaMask transaction fires — approve it
 6. Green banner appears: `trading-bot.aegis.eth issued`
 
-> "iNFT minted on 0G chain. ENS subname auto-issued via Name Wrapper. ENSIP-25 text records written. The bot has a permanent, human-readable identity — no manual steps."
+> "iNFT minted on 0G chain. Subname registered in AegisNameRegistry. ENSIP-25 text records written. The bot has a permanent, human-readable identity — no manual steps."
 
 ---
 
@@ -709,7 +764,7 @@ aegis.execute_remedy · Completed · gas 47,823 · retries 0 · tx: 0x…
 - `aegis.lastVerdict = FLAGGED`
 - `aegis.flaggedCount = 1`
 
-> "Any wallet. Any DeFi protocol. Any app. They resolve trading-bot.aegis.eth and see the live accountability score — without touching our backend at all. ENS is now the trust signal for AI agents."
+> "Any wallet. Any DeFi protocol. Any app. They resolve trading-bot.aegis.eth and get the live accountability score via CCIP-read — without touching our backend at all. ENS is now the trust signal for AI agents."
 
 **End frame:** Overview screen with all metrics live.
 
@@ -717,18 +772,35 @@ aegis.execute_remedy · Completed · gas 47,823 · retries 0 · tx: 0x…
 
 ## 10. Contracts
 
-Deployed on 0G testnet (chainId 16602).
+### 0G Testnet (chainId 16602)
 
-| Contract          | Address                                      | Explorer                                                                                   |
-| ----------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| AegisCourt.sol    | `0x3De27365b376D43422314899dA0E18042f0F734a` | [View](https://chainscan-galileo.0g.ai/address/0x3De27365b376D43422314899dA0E18042f0F734a) |
-| AgentRegistry.sol | `0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc` | [View](https://chainscan-galileo.0g.ai/address/0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc) |
+| Contract              | Address                                      | Explorer                                                                                   |
+| --------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| AegisCourt.sol        | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` | [View](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6) |
+| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1) |
+| AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4) |
 
-To redeploy:
+### Ethereum Sepolia (chainId 11155111)
+
+| Contract                | Address                                      | Explorer                                                                                                            |
+| ----------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| AegisCCIPResolver.sol   | `0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC` | [View](https://sepolia.etherscan.io/address/0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC)                            |
+| ENS Registry (Sepolia)  | `0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e` | [View](https://sepolia.etherscan.io/address/0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)                            |
+
+`aegis.eth` is registered on Sepolia with `AegisCCIPResolver` set as its resolver. The resolver points to the CCIP gateway at `CCIP_GATEWAY_URL`.
+
+To redeploy all 0G contracts:
 
 ```bash
 cd contracts
 npx hardhat run scripts/deploy.ts --network zero-g-testnet
+```
+
+To redeploy the Sepolia resolver (e.g. after a gateway URL change):
+
+```bash
+cd contracts
+npm run setup:ens-sepolia
 ```
 
 ---
@@ -743,7 +815,7 @@ POST /agents
   Returns: { tokenId, ensName, txHash, ensip25 }
 
 GET  /agents/label/:label
-  Returns: { agent record + live ENS text records }
+  Returns: { agent record + live AegisNameRegistry text records }
 
 GET  /agents/owner/:address
   Returns: [ list of iNFTs owned by this wallet ]
@@ -764,6 +836,18 @@ GET  /network/stats
 
 GET  /keeperhub/audit?workflowId=aegis.execute_remedy
   Returns: [ { runId, status, txHash, gasUsed, retryCount, completedAt } ]
+```
+
+**CCIP Gateway API** (port 8080)
+
+```
+GET  /health
+  Returns: { status: "ok", registry: "0x..." }
+
+GET  /:sender/:calldata
+  CCIP-read endpoint per EIP-3668. Decodes ENS resolution calldata,
+  queries AegisNameRegistry on 0G testnet, returns ABI-encoded response.
+  Supports: text(bytes32,string) and addr(bytes32) selectors.
 ```
 
 ---
@@ -808,7 +892,7 @@ Verify your wallet has OG balance and `ZG_INDEXER_RPC` is reachable.
 **0G Compute TEE replay fails**
 
 ```bash
-curl https://api.0g.ai/v1/models \
+curl https://compute-network-6.integratenetwork.work/v1/proxy/models \
   -H "Authorization: Bearer $ZG_COMPUTE_API_KEY"
 ```
 
@@ -820,14 +904,26 @@ Verify the compute API key is valid and has credits.
 - Verify the `aegis.execute_remedy` workflow exists in your KeeperHub account
 - The workflow trigger must be `onchain:AegisCourtVerdictEmitted`
 
-**ENS text records not updating**
+**ENS resolution fails / OffchainLookup not resolving**
 
-- `ENS_PRIVATE_KEY` must be the wallet that controls the `aegis.eth` registrar
-- The wallet needs ETH on the ENS deployment network for record update transactions
+- Confirm `CCIP_GATEWAY_URL` in `.env` is the publicly reachable URL of the gateway (not `localhost`)
+- Verify the gateway is running: `curl $CCIP_GATEWAY_URL/health`
+- If the tunnel URL changed, re-run `npm run setup:ens-sepolia` from `contracts/` to redeploy the resolver with the new URL
+- The gateway must serve the `/{sender}/{data}.json` route — test: `curl $CCIP_GATEWAY_URL/health`
+
+**CCIP gateway can't reach AegisNameRegistry**
+
+- Confirm `AEGIS_NAME_REGISTRY_ADDRESS=0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` is set in `.env`
+- Confirm `ZG_RPC_URL=https://evmrpc-testnet.0g.ai` is reachable: `curl https://evmrpc-testnet.0g.ai`
+
+**setup:ens-sepolia fails — insufficient balance**
+
+Fund `0x50D1e2ca8f70751D2FB9Dba4605431f1692e825E` with at least 0.05 Sepolia ETH from:
+https://cloud.google.com/application/web3/faucet/ethereum/sepolia
 
 ---
 
-## Repository Structure
+## 13. Repository Structure
 
 ```
 apps/
@@ -835,18 +931,25 @@ apps/
   witness-node/       AXL :9002 — attestation intake, 0G Storage upload
   verifier-node/      AXL :9012 — 0G Compute TEE replay, verdict
   propagator-node/    AXL :9022 — mesh broadcast (autoresearch pattern)
-  memory-node/        AXL :9032 — 0G KV R/W, ENS text record updates
+  memory-node/        AXL :9032 — 0G KV R/W, AegisNameRegistry text record updates
+  ccip-gateway/       EIP-3668 CCIP-read gateway — bridges ENS resolution to 0G testnet
   dashboard/          React — wallet connect, registration, live feed, dispute UI, ENS profiles
 packages/
   0g-client/          0G Storage SDK wrapper (KV + file upload/download)
   0g-compute/         OpenAI-compat wrapper → 0G Compute endpoint
   axl-client/         AXL HTTP helpers (send, recv, topology)
   keeper-client/      KeeperHub MCP workflow tools
-  ens-client/         ENS subname issuance, text record R/W, ENSIP-25
+  ens-client/         AegisNameRegistry subname issuance, text record R/W, ENSIP-25
   types/              Shared TypeScript interfaces
 contracts/
-  AegisCourt.sol      Dispute submission, verdict storage, remedy event
-  AgentRegistry.sol   ERC-7857 iNFT mint + ENS Name Wrapper subname issuance
+  AegisCourt.sol            Dispute submission, verdict storage, remedy event (0G testnet)
+  AgentRegistry.sol         ERC-7857 iNFT mint + AegisNameRegistry subname issuance (0G testnet)
+  AegisNameRegistry.sol     ENS-compatible text record store for agent subnames (0G testnet)
+  AegisCCIPResolver.sol     ENSIP-10 Extended Resolver — EIP-3668 OffchainLookup (Ethereum Sepolia)
+  scripts/
+    deploy.ts               Deploy all 0G contracts, wire addresses
+    setup-ens-sepolia.ts    Register aegis.eth on Sepolia, deploy resolver, set resolver
+    deploy-l1-resolver.ts   Deploy AegisCCIPResolver only (without registering aegis.eth)
 axl-configs/          AXL node configs + ed25519 private keys
 bin/                  Gensyn AXL binary
 docs/
