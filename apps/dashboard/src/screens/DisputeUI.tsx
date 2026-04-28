@@ -144,10 +144,10 @@ export default function DisputeUI() {
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: 600,
-              transition: 'all 0.15s',
-              background: tab === t ? 'var(--app-card)' : 'transparent',
-              color: tab === t ? 'var(--app-text)' : 'var(--app-text-muted)',
-              boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
+              transition: 'background 0.15s, color 0.15s, box-shadow 0.15s',
+              background: tab === t ? 'var(--app-accent)' : 'transparent',
+              color: tab === t ? '#fff' : 'var(--app-text-muted)',
+              boxShadow: tab === t ? '0 1px 6px rgba(99,102,241,0.35)' : 'none',
             }}
           >
             {t === 'file' ? 'File Dispute' : `History${disputeList.length > 0 ? ` (${disputeList.length})` : ''}`}
