@@ -76,7 +76,8 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
 }
 
 setInterval(async () => {
-  const messages = await recv(AXL_BASE_URL).catch(() => []);
+  const raw = await recv(AXL_BASE_URL).catch(() => []);
+  const messages = Array.isArray(raw) ? raw : [];
   for (const msg of messages) {
     if (msg.body.type === 'PROPAGATE_ATTESTATION') {
       await handlePropagateAttestation(msg.body as unknown as PropagateMessage).catch(() => {});

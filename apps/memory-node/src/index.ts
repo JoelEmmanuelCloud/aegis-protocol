@@ -77,7 +77,7 @@ process.on('SIGTERM', () => {
 
 async function handlePropagateAttestation(body: PropagateMessage): Promise<void> {
   const key = `aegis:${body.agentId}:history`;
-  const existing = await readKVObject<AgentHistory>(key);
+  const existing = await readKVObject<AgentHistory>(key).catch(() => null);
 
   const entry = { rootHash: body.rootHash, verdict: body.verdict, timestamp: body.timestamp };
   const history: AgentHistory = {
@@ -85,9 +85,9 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
     entries: [...(existing?.entries ?? []), entry],
     lastUpdated: Date.now(),
   };
-  await writeKVObject(key, history);
+  await writeKVObject(key, history).catch(() => {});
 
-  const reputation = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`);
+  const reputation = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(() => null);
 
   if (body.agentId.endsWith('.aegis.eth')) {
     await setTextRecords(body.agentId, {
@@ -101,7 +101,8 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
 }
 
 setInterval(async () => {
-  const messages = await recv(AXL_BASE_URL).catch(() => []);
+  const raw = await recv(AXL_BASE_URL).catch(() => []);
+  const messages = Array.isArray(raw) ? raw : [];
   for (const msg of messages) {
     if (msg.body.type === 'PROPAGATE_ATTESTATION') {
       await handlePropagateAttestation(msg.body as unknown as PropagateMessage).catch(() => {});
