@@ -10,7 +10,7 @@ function getStreamId(): string {
   if (!ZG_PRIVATE_KEY) throw new Error('ZG_PRIVATE_KEY is required for 0G KV operations');
   const wallet = new ethers.Wallet(ZG_PRIVATE_KEY);
   const hex = wallet.address.toLowerCase().replace('0x', '');
-  return '0'.repeat(24) + hex;
+  return '0x' + '0'.repeat(24) + hex;
 }
 
 function getSigner(): ethers.Wallet {
