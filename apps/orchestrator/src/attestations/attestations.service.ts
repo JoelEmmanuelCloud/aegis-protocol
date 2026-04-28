@@ -29,6 +29,8 @@ export class AttestationsService {
       rootHash: result.rootHash,
       verdict: 'PENDING',
       timestamp: dto.timestamp,
+      action: dto.action,
+      reasoning: dto.reasoning,
     });
     if (this.log.length > 500) this.log.pop();
     return result;

@@ -86,6 +86,8 @@ export interface AttestationItem {
   rootHash: string;
   verdict: Verdict;
   timestamp: number;
+  action?: Record<string, unknown>;
+  reasoning?: string;
 }
 
 export interface AttestationListResponse {

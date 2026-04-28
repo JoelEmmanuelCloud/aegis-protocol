@@ -1,7 +1,15 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAttestations } from '../hooks/useAttestations';
 
-type Attestation = { agentId: string; rootHash: string; verdict: string; timestamp: number };
+type Attestation = {
+  agentId: string;
+  rootHash: string;
+  verdict: string;
+  timestamp: number;
+  action?: Record<string, unknown>;
+  reasoning?: string;
+};
 
 function VerdictBadge({ verdict }: { verdict: string }) {
   if (verdict === 'CLEARED') return <span className="badge-cleared">Cleared</span>;
@@ -9,7 +17,21 @@ function VerdictBadge({ verdict }: { verdict: string }) {
   return <span className="badge-pending">Pending</span>;
 }
 
+function summarizeAction(action?: Record<string, unknown>): string {
+  if (!action) return '';
+  const { type, ...rest } = action as { type?: unknown; [k: string]: unknown };
+  if (typeof type === 'string') {
+    const parts = Object.entries(rest)
+      .slice(0, 3)
+      .map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : String(v)}`);
+    return parts.length ? `${type}: ${parts.join(', ')}` : type;
+  }
+  const str = JSON.stringify(action);
+  return str.length > 100 ? str.slice(0, 97) + '…' : str;
+}
+
 export default function AttestationFeed() {
+  const navigate = useNavigate();
   const { data: live, isLoading } = useAttestations();
   const [filter, setFilter] = useState<string>('ALL');
 
@@ -82,68 +104,125 @@ export default function AttestationFeed() {
           </div>
         ) : (
           <div>
-            {items.map((a, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: '16px 20px',
-                  borderBottom: i < items.length - 1 ? '1px solid var(--app-border)' : 'none',
-                }}
-              >
+            {items.map((a, i) => {
+              const actionText = summarizeAction(a.action);
+              return (
                 <div
+                  key={i}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 8,
+                    padding: '16px 20px',
+                    borderBottom: i < items.length - 1 ? '1px solid var(--app-border)' : 'none',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: 'var(--accent-dim)',
-                        border: '1px solid rgba(212,148,26,0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: 'var(--app-accent-light)',
-                      }}
-                    >
-                      {a.agentId?.[0]?.toUpperCase() ?? 'A'}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: actionText || a.reasoning ? 10 : 8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 8,
+                          background: 'var(--accent-dim)',
+                          border: '1px solid rgba(212,148,26,0.2)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: 'var(--app-accent-light)',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {a.agentId?.[0]?.toUpperCase() ?? 'A'}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
+                          {a.agentId}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                          {new Date(a.timestamp).toLocaleString()}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
-                        {a.agentId}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
-                        {new Date(a.timestamp).toLocaleString()}
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <VerdictBadge verdict={a.verdict} />
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/app/disputes?rootHash=${encodeURIComponent(a.rootHash)}&agentId=${encodeURIComponent(a.agentId)}`
+                          )
+                        }
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 5,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          border: '1px solid rgba(239,68,68,0.35)',
+                          background: 'var(--app-red-dim)',
+                          color: 'var(--app-red)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        File Dispute
+                      </button>
                     </div>
                   </div>
-                  <VerdictBadge verdict={a.verdict} />
+
+                  {actionText && (
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: 'var(--app-text)',
+                        marginBottom: a.reasoning ? 6 : 8,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {actionText}
+                    </div>
+                  )}
+
+                  {a.reasoning && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: 'var(--app-text-muted)',
+                        marginBottom: 8,
+                        lineHeight: 1.5,
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {a.reasoning}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--app-text-muted)',
+                      fontFamily: 'monospace',
+                      background: 'var(--app-elevated)',
+                      padding: '6px 10px',
+                      borderRadius: 6,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {a.rootHash}
+                  </div>
                 </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: 'var(--app-text-muted)',
-                    fontFamily: 'monospace',
-                    background: 'var(--app-elevated)',
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  rootHash: {a.rootHash}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
