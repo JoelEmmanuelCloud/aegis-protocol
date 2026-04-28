@@ -8,6 +8,8 @@ import { useDemoMode } from '../context/DemoContext';
 import { fetchDisputeList } from '../lib/orchestratorApi';
 import type { DisputeRecord } from '@aegis/types';
 
+type Tab = 'file' | 'history';
+
 function FieldError({ msg }: { msg: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
@@ -36,9 +38,14 @@ export default function DisputeUI() {
   const { address } = useAccount();
   const { isDemoMode } = useDemoMode();
   const canSubmit = isDemoMode || !!address;
+
+  const [tab, setTab] = useState<Tab>('file');
   const [rootHash, setRootHash] = useState('');
   const [agentId, setAgentId] = useState('');
   const [reason, setReason] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [touched, setTouched] = useState({ rootHash: false, agentId: false, reason: false });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   useEffect(() => {
     const hash = searchParams.get('rootHash');
@@ -46,9 +53,7 @@ export default function DisputeUI() {
     if (hash) setRootHash(hash);
     if (agent) setAgentId(agent);
   }, []);
-  const [submitted, setSubmitted] = useState(false);
-  const [touched, setTouched] = useState({ rootHash: false, agentId: false, reason: false });
-  const [submitAttempted, setSubmitAttempted] = useState(false);
+
   const { mutate: fileDispute, isPending, isSuccess, error } = useDispute();
   const { data: status } = useDisputeStatus(submitted ? rootHash : undefined);
   const { data: disputeList = [] } = useQuery<DisputeRecord[]>({
@@ -79,7 +84,6 @@ export default function DisputeUI() {
   })();
 
   const touch = (field: keyof typeof touched) => setTouched((prev) => ({ ...prev, [field]: true }));
-
   const show = (field: keyof typeof touched) => touched[field] || submitAttempted;
 
   const verdictColor =
@@ -99,243 +103,319 @@ export default function DisputeUI() {
       : `${agentId.trim()}.aegis.eth`;
     fileDispute(
       { rootHash: rootHash.trim(), agentId: normalizedAgentId, reason: reason.trim() },
-      { onSuccess: () => setSubmitted(true) }
+      {
+        onSuccess: () => {
+          setSubmitted(true);
+          setTab('history');
+        },
+      }
     );
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
         <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.01em', marginBottom: 4 }}>
-          File Dispute
+          Disputes
         </h1>
         <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
           Challenge an agent decision. The Verifier replays it via 0G Compute TEE.
         </p>
       </div>
 
-      {isSuccess && status && (
-        <div
-          style={{
-            padding: '20px',
-            background:
-              status.verdict === 'CLEARED'
-                ? 'var(--app-green-dim)'
-                : status.verdict === 'FLAGGED'
-                  ? 'var(--app-red-dim)'
-                  : 'var(--app-yellow-dim)',
-            border: `1px solid ${verdictColor}40`,
-            borderRadius: 10,
-          }}
-        >
-          <div style={{ fontWeight: 700, fontSize: 16, color: verdictColor, marginBottom: 8 }}>
-            Verdict: {status.verdict}
-          </div>
-          {status.teeProof && (
-            <div
-              style={{
-                fontSize: 11,
-                fontFamily: 'monospace',
-                color: 'var(--app-text-muted)',
-                wordBreak: 'break-all',
-              }}
-            >
-              TEE Proof: {status.teeProof.slice(0, 80)}…
-            </div>
-          )}
-        </div>
-      )}
-
       <div
-        className="app-card"
         style={{
-          padding: '24px',
           display: 'flex',
-          flexDirection: 'column',
-          gap: 18,
-          maxWidth: 560,
+          gap: 2,
+          background: 'var(--app-elevated)',
+          borderRadius: 10,
+          padding: 4,
+          width: 'fit-content',
         }}
       >
-        <div>
-          <label
+        {(['file', 'history'] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
             style={{
-              fontSize: 12,
+              padding: '7px 20px',
+              borderRadius: 7,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 13,
               fontWeight: 600,
-              color: 'var(--app-text-2)',
-              display: 'block',
-              marginBottom: 8,
+              transition: 'all 0.15s',
+              background: tab === t ? 'var(--app-card)' : 'transparent',
+              color: tab === t ? 'var(--app-text)' : 'var(--app-text-muted)',
+              boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
             }}
           >
-            Root Hash <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
-          </label>
-          <input
-            className="app-input"
-            style={{
-              fontFamily: 'monospace',
-              borderColor: show('rootHash') && rootHashError ? 'var(--app-red)' : undefined,
-            }}
-            placeholder="0xabc123..."
-            value={rootHash}
-            onChange={(e) => setRootHash(e.target.value)}
-            onBlur={() => touch('rootHash')}
-          />
-          {show('rootHash') && rootHashError ? (
-            <FieldError msg={rootHashError} />
-          ) : (
-            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-              The root hash from the attestation card
-            </div>
-          )}
-        </div>
+            {t === 'file' ? 'File Dispute' : `History${disputeList.length > 0 ? ` (${disputeList.length})` : ''}`}
+          </button>
+        ))}
+      </div>
 
-        <div>
-          <label
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--app-text-2)',
-              display: 'block',
-              marginBottom: 8,
-            }}
-          >
-            Agent ENS Name <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
-          </label>
-          <input
-            className="app-input"
-            style={{ borderColor: show('agentId') && agentIdError ? 'var(--app-red)' : undefined }}
-            placeholder="trading-bot.aegis.eth"
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-            onBlur={() => touch('agentId')}
-          />
-          {show('agentId') && agentIdError ? (
-            <FieldError msg={agentIdError} />
-          ) : (
-            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-              Enter the label or full ENS name
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: 'var(--app-text-2)',
-              display: 'block',
-              marginBottom: 8,
-            }}
-          >
-            Reason <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
-          </label>
-          <textarea
-            className="app-input"
-            style={{
-              resize: 'vertical',
-              borderColor: show('reason') && reasonError ? 'var(--app-red)' : undefined,
-            }}
-            placeholder="Describe the disputed action and why it was incorrect..."
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            onBlur={() => touch('reason')}
-            rows={4}
-          />
-          {show('reason') && reasonError ? (
-            <FieldError msg={reasonError} />
-          ) : (
-            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
-              Minimum 20 characters
-              {reason.trim().length > 0 && reason.trim().length < 20 && (
-                <span style={{ color: 'var(--app-accent-light)', marginLeft: 6 }}>
-                  {reason.trim().length}/20
-                </span>
+      {tab === 'file' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {isSuccess && status && (
+            <div
+              style={{
+                padding: '20px',
+                background:
+                  status.verdict === 'CLEARED'
+                    ? 'var(--app-green-dim)'
+                    : status.verdict === 'FLAGGED'
+                      ? 'var(--app-red-dim)'
+                      : 'var(--app-yellow-dim)',
+                border: `1px solid ${verdictColor}40`,
+                borderRadius: 10,
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 16, color: verdictColor, marginBottom: 8 }}>
+                Verdict: {status.verdict}
+              </div>
+              {status.teeProof && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    color: 'var(--app-text-muted)',
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  TEE Proof: {status.teeProof.slice(0, 80)}…
+                </div>
               )}
             </div>
           )}
-        </div>
 
-        {error && (
           <div
+            className="app-card"
             style={{
-              padding: '12px 16px',
-              background: 'var(--app-red-dim)',
-              border: '1px solid rgba(239,68,68,0.2)',
-              borderRadius: 8,
-              fontSize: 12,
-              color: 'var(--app-red)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 18,
+              maxWidth: 560,
             }}
           >
-            {String(error).slice(0, 160)}
-          </div>
-        )}
-
-        {!canSubmit && (
-          <div
-            style={{
-              padding: '14px 16px',
-              background: 'var(--app-elevated)',
-              border: '1px solid var(--app-border)',
-              borderRadius: 8,
-              fontSize: 13,
-              color: 'var(--app-text-muted)',
-            }}
-          >
-            Connect your wallet to file a dispute.
-          </div>
-        )}
-
-        <button
-          className="app-btn-primary"
-          onClick={handleSubmit}
-          disabled={isPending || !canSubmit}
-          style={{
-            width: '100%',
-            padding: '12px',
-            opacity: isPending || !canSubmit ? 0.5 : 1,
-            cursor: isPending || !canSubmit ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {isPending ? 'Submitting to AegisCourt…' : 'File Dispute'}
-        </button>
-      </div>
-
-      {disputeList.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            Dispute History
-          </h2>
-          {disputeList.map((d) => {
-            const vcolor =
-              d.verdict === 'CLEARED'
-                ? 'var(--app-green)'
-                : d.verdict === 'FLAGGED'
-                  ? 'var(--app-red)'
-                  : 'var(--app-yellow)';
-            return (
-              <div
-                key={d.rootHash + d.timestamp}
-                className="app-card"
-                style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}
+            <div>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--app-text-2)',
+                  display: 'block',
+                  marginBottom: 8,
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--app-text-muted)' }}>
-                    {d.rootHash.slice(0, 16)}…
-                  </span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: vcolor, textTransform: 'uppercase' }}>
-                    {d.verdict}
-                  </span>
+                Root Hash <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
+              </label>
+              <input
+                className="app-input"
+                style={{
+                  fontFamily: 'monospace',
+                  borderColor: show('rootHash') && rootHashError ? 'var(--app-red)' : undefined,
+                }}
+                placeholder="0xabc123..."
+                value={rootHash}
+                onChange={(e) => setRootHash(e.target.value)}
+                onBlur={() => touch('rootHash')}
+              />
+              {show('rootHash') && rootHashError ? (
+                <FieldError msg={rootHashError} />
+              ) : (
+                <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+                  The root hash from the attestation card
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
-                  {d.agentId}
+              )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--app-text-2)',
+                  display: 'block',
+                  marginBottom: 8,
+                }}
+              >
+                Agent ENS Name <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
+              </label>
+              <input
+                className="app-input"
+                style={{ borderColor: show('agentId') && agentIdError ? 'var(--app-red)' : undefined }}
+                placeholder="trading-bot.aegis.eth"
+                value={agentId}
+                onChange={(e) => setAgentId(e.target.value)}
+                onBlur={() => touch('agentId')}
+              />
+              {show('agentId') && agentIdError ? (
+                <FieldError msg={agentIdError} />
+              ) : (
+                <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+                  Enter the label or full ENS name
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>{d.reason}</div>
-                <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
-                  {new Date((d.timestamp as number) ?? 0).toLocaleString()}
+              )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--app-text-2)',
+                  display: 'block',
+                  marginBottom: 8,
+                }}
+              >
+                Reason <span style={{ color: 'var(--app-red)', marginLeft: 2 }}>*</span>
+              </label>
+              <textarea
+                className="app-input"
+                style={{
+                  resize: 'vertical',
+                  borderColor: show('reason') && reasonError ? 'var(--app-red)' : undefined,
+                }}
+                placeholder="Describe the disputed action and why it was incorrect..."
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                onBlur={() => touch('reason')}
+                rows={4}
+              />
+              {show('reason') && reasonError ? (
+                <FieldError msg={reasonError} />
+              ) : (
+                <div style={{ fontSize: 11, color: 'var(--app-text-muted)', marginTop: 6 }}>
+                  Minimum 20 characters
+                  {reason.trim().length > 0 && reason.trim().length < 20 && (
+                    <span style={{ color: 'var(--app-accent-light)', marginLeft: 6 }}>
+                      {reason.trim().length}/20
+                    </span>
+                  )}
                 </div>
+              )}
+            </div>
+
+            {error && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  background: 'var(--app-red-dim)',
+                  border: '1px solid rgba(239,68,68,0.2)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: 'var(--app-red)',
+                }}
+              >
+                {String(error).slice(0, 160)}
               </div>
-            );
-          })}
+            )}
+
+            {!canSubmit && (
+              <div
+                style={{
+                  padding: '14px 16px',
+                  background: 'var(--app-elevated)',
+                  border: '1px solid var(--app-border)',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  color: 'var(--app-text-muted)',
+                }}
+              >
+                Connect your wallet to file a dispute.
+              </div>
+            )}
+
+            <button
+              className="app-btn-primary"
+              onClick={handleSubmit}
+              disabled={isPending || !canSubmit}
+              style={{
+                width: '100%',
+                padding: '12px',
+                opacity: isPending || !canSubmit ? 0.5 : 1,
+                cursor: isPending || !canSubmit ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isPending ? 'Submitting to AegisCourt…' : 'File Dispute'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tab === 'history' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {disputeList.length === 0 ? (
+            <div
+              className="app-card"
+              style={{
+                padding: '64px',
+                textAlign: 'center',
+                color: 'var(--app-text-muted)',
+                fontSize: 13,
+              }}
+            >
+              No disputes filed yet
+            </div>
+          ) : (
+            disputeList.map((d) => {
+              const vcolor =
+                d.verdict === 'CLEARED'
+                  ? 'var(--app-green)'
+                  : d.verdict === 'FLAGGED'
+                    ? 'var(--app-red)'
+                    : 'var(--app-yellow)';
+              return (
+                <div
+                  key={d.rootHash + (d.timestamp ?? 0)}
+                  className="app-card"
+                  style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        color: 'var(--app-text-muted)',
+                      }}
+                    >
+                      {d.rootHash.slice(0, 16)}…
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: vcolor,
+                        textTransform: 'uppercase',
+                        background: `${vcolor}18`,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                      }}
+                    >
+                      {d.verdict}
+                    </span>
+                  </div>
+                  <div
+                    style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}
+                  >
+                    {d.agentId}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--app-text)' }}>{d.reason}</div>
+                  <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                    {new Date((d.timestamp as number) ?? 0).toLocaleString()}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
     </div>
