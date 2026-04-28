@@ -31,6 +31,13 @@ const config: HardhatUserConfig = {
       chainId: 16602,
       accounts: process.env.ZG_PRIVATE_KEY ? [process.env.ZG_PRIVATE_KEY] : [],
     },
+    'ethereum-sepolia': {
+      url: process.env.ENS_RPC_URL ?? 'https://rpc.sepolia.org',
+      chainId: 11155111,
+      accounts: (process.env.ENS_PRIVATE_KEY ?? process.env.ZG_PRIVATE_KEY)
+        ? [(process.env.ENS_PRIVATE_KEY ?? process.env.ZG_PRIVATE_KEY)!]
+        : [],
+    },
   },
 };
 

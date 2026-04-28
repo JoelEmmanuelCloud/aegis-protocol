@@ -5,6 +5,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "deploy": "hardhat run scripts/deploy.ts --network zero-g-testnet",
+    "deploy:l1-resolver": "hardhat run scripts/deploy-l1-resolver.ts --network ethereum-sepolia",
     "test": "hardhat test"
   },
   "devDependencies": {
