@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useDispute } from '../hooks/useDispute';
 import { useDisputeStatus } from '../hooks/useDisputeStatus';
@@ -28,12 +29,20 @@ function FieldError({ msg }: { msg: string }) {
 }
 
 export default function DisputeUI() {
+  const [searchParams] = useSearchParams();
   const { address } = useAccount();
   const { isDemoMode } = useDemoMode();
   const canSubmit = isDemoMode || !!address;
   const [rootHash, setRootHash] = useState('');
   const [agentId, setAgentId] = useState('');
   const [reason, setReason] = useState('');
+
+  useEffect(() => {
+    const hash = searchParams.get('rootHash');
+    const agent = searchParams.get('agentId');
+    if (hash) setRootHash(hash);
+    if (agent) setAgentId(agent);
+  }, []);
   const [submitted, setSubmitted] = useState(false);
   const [touched, setTouched] = useState({ rootHash: false, agentId: false, reason: false });
   const [submitAttempted, setSubmitAttempted] = useState(false);
