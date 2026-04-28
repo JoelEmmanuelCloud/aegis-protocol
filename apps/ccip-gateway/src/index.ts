@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import path from 'path';
 import express, { Request, Response } from 'express';
 import { ethers } from 'ethers';

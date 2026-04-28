@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import 'reflect-metadata';
 import path from 'path';
 import { NestFactory } from '@nestjs/core';
