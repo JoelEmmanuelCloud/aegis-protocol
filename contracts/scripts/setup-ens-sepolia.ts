@@ -2,9 +2,9 @@ import { ethers } from 'hardhat';
 import { ethers as ethersLib } from 'ethers';
 
 const ENS_REGISTRY = '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e';
-const ETH_REGISTRAR_CONTROLLER = '0xFED6a969AaA60E4961FCD3EBF1A2e8913ac65B16';
-const NAME_WRAPPER = '0x0635513f179D50A207757E05759CbD106d7dFbe8';
-const PUBLIC_RESOLVER = '0x8FADE66B79cC9f707aB26799354482EB93a5B7dD';
+const ETH_REGISTRAR_CONTROLLER = '0xfb3cE5D01e0f33f41DbB39035dB9745962F1f968';
+const NAME_WRAPPER = '0x0635513f179D50A207757E05759CbD106d7dFcE8';
+const PUBLIC_RESOLVER = '0xE99638b40E4Fff0129D56f03b55b6bbC4BBE49b5';
 
 const REGISTRY_ABI = [
   'function owner(bytes32 node) view returns (address)',
@@ -21,9 +21,9 @@ const NAME_WRAPPER_ABI = [
 const CONTROLLER_ABI = [
   'function available(string name) view returns (bool)',
   'function rentPrice(string name, uint256 duration) view returns (tuple(uint256 base, uint256 premium))',
-  'function makeCommitment(string name, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] data, bool reverseRecord, uint16 ownerControlledFuses) view returns (bytes32)',
+  'function makeCommitment(tuple(string label, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] data, uint8 reverseRecord, bytes32 referrer) reg) pure returns (bytes32)',
   'function commit(bytes32 commitment) external',
-  'function register(string name, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] data, bool reverseRecord, uint16 ownerControlledFuses) external payable',
+  'function register(tuple(string label, address owner, uint256 duration, bytes32 secret, address resolver, bytes[] data, uint8 reverseRecord, bytes32 referrer) reg) external payable',
   'function minCommitmentAge() view returns (uint256)',
 ];
 
@@ -71,16 +71,18 @@ async function main() {
     const price = await controller.rentPrice('aegis', duration);
     const value = price.base + price.premium + ethersLib.parseEther('0.001');
 
-    const commitment = await controller.makeCommitment(
-      'aegis',
-      deployer.address,
+    const reg = {
+      label: 'aegis',
+      owner: deployer.address,
       duration,
       secret,
-      PUBLIC_RESOLVER,
-      [],
-      false,
-      0
-    );
+      resolver: PUBLIC_RESOLVER,
+      data: [],
+      reverseRecord: 0,
+      referrer: ethersLib.ZeroHash,
+    };
+
+    const commitment = await controller.makeCommitment(reg);
 
     const commitTx = await controller.commit(commitment);
     await commitTx.wait();
@@ -88,17 +90,7 @@ async function main() {
 
     await new Promise((resolve) => setTimeout(resolve, 65000));
 
-    const registerTx = await controller.register(
-      'aegis',
-      deployer.address,
-      duration,
-      secret,
-      PUBLIC_RESOLVER,
-      [],
-      false,
-      0,
-      { value }
-    );
+    const registerTx = await controller.register(reg, { value });
     await registerTx.wait();
     process.stdout.write('aegis.eth registered\n');
   }
