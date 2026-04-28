@@ -44,7 +44,7 @@ async function main() {
   if (balance < ethersLib.parseEther('0.05')) {
     process.stderr.write(
       `Insufficient Sepolia ETH. Fund ${deployer.address} with at least 0.05 ETH from:\n` +
-      `  https://cloud.google.com/application/web3/faucet/ethereum/sepolia\n`
+        `  https://cloud.google.com/application/web3/faucet/ethereum/sepolia\n`
     );
     process.exit(1);
   }

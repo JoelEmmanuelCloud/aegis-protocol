@@ -102,13 +102,13 @@ aegis.eth  (Ethereum Sepolia — owned by deployer)
 
 ## 3. Prerequisites
 
-| Requirement             | Version | Check                                |
-| ----------------------- | ------- | ------------------------------------ |
-| Node.js                 | 20+     | `node -v`                            |
-| npm                     | 10+     | `npm -v`                             |
-| Docker + Docker Compose | latest  | `docker -v`                          |
-| MetaMask                | any     | browser extension installed          |
-| 0G testnet wallet       | funded  | [faucet.0g.ai](https://faucet.0g.ai) |
+| Requirement             | Version | Check                                                                              |
+| ----------------------- | ------- | ---------------------------------------------------------------------------------- |
+| Node.js                 | 20+     | `node -v`                                                                          |
+| npm                     | 10+     | `npm -v`                                                                           |
+| Docker + Docker Compose | latest  | `docker -v`                                                                        |
+| MetaMask                | any     | browser extension installed                                                        |
+| 0G testnet wallet       | funded  | [faucet.0g.ai](https://faucet.0g.ai)                                               |
 | Sepolia ETH             | ≥0.05   | [Google faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) |
 
 **Fund your wallet before starting.** You need testnet OG tokens for:
@@ -256,6 +256,7 @@ npm run setup:ens-sepolia
 ```
 
 This script:
+
 1. Checks Sepolia ETH balance (requires ≥0.05 ETH)
 2. Registers `aegis.eth` on Sepolia if not already registered
 3. Deploys a fresh `AegisCCIPResolver` pointing at `CCIP_GATEWAY_URL`
@@ -513,18 +514,18 @@ Any DeFi protocol that resolves `trading-bot.aegis.eth` now sees this score — 
 
 ### The Full Loop in 60 Seconds
 
-| What the user does                                          | What Aegis does                                                                        |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Opens dashboard at `http://localhost:4000`                  | Landing page loads with live mesh animation                                            |
-| Clicks **Register Your Agent**, connects MetaMask           | Wallet connects, redirected to `/app`                                                  |
-| Types `trading-bot`, sets 60/40 split, clicks **Mint iNFT** | iNFT minted on 0G chain, subname registered in AegisNameRegistry, ENSIP-25 records written |
+| What the user does                                          | What Aegis does                                                                                  |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Opens dashboard at `http://localhost:4000`                  | Landing page loads with live mesh animation                                                      |
+| Clicks **Register Your Agent**, connects MetaMask           | Wallet connects, redirected to `/app`                                                            |
+| Types `trading-bot`, sets 60/40 split, clicks **Mint iNFT** | iNFT minted on 0G chain, subname registered in AegisNameRegistry, ENSIP-25 records written       |
 | Bot makes a decision                                        | One AXL call → 0G Storage commit → AXL mesh propagation → AegisNameRegistry text records updated |
-| Views **Attestation Feed**                                  | Live card: root hash, verdict badge, timestamp                                         |
-| Views **Agent Profile** → types `trading-bot`               | AegisNameRegistry text records loaded via CCIP gateway, ENSIP-25 verified              |
-| Opens **File Dispute**, pastes root hash, submits           | Verifier replays via 0G Compute TEE, verdict returned, AegisCourt.sol records it       |
-| KeeperHub fires                                             | `aegis.execute_remedy` runs automatically, tx lands, audit trail appears               |
-| Views **KeeperHub Audit**                                   | tx hash, gas used (47,823), retries (0), status: Completed                             |
-| Views **Agent Profile** again                               | Score dropped from 100 → 90, `aegis.lastVerdict = FLAGGED`                             |
+| Views **Attestation Feed**                                  | Live card: root hash, verdict badge, timestamp                                                   |
+| Views **Agent Profile** → types `trading-bot`               | AegisNameRegistry text records loaded via CCIP gateway, ENSIP-25 verified                        |
+| Opens **File Dispute**, pastes root hash, submits           | Verifier replays via 0G Compute TEE, verdict returned, AegisCourt.sol records it                 |
+| KeeperHub fires                                             | `aegis.execute_remedy` runs automatically, tx lands, audit trail appears                         |
+| Views **KeeperHub Audit**                                   | tx hash, gas used (47,823), retries (0), status: Completed                                       |
+| Views **Agent Profile** again                               | Score dropped from 100 → 90, `aegis.lastVerdict = FLAGGED`                                       |
 
 ---
 
@@ -782,10 +783,10 @@ aegis.execute_remedy · Completed · gas 47,823 · retries 0 · tx: 0x…
 
 ### Ethereum Sepolia (chainId 11155111)
 
-| Contract                | Address                                      | Explorer                                                                                                            |
-| ----------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| AegisCCIPResolver.sol   | `0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC` | [View](https://sepolia.etherscan.io/address/0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC)                            |
-| ENS Registry (Sepolia)  | `0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e` | [View](https://sepolia.etherscan.io/address/0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e)                            |
+| Contract               | Address                                      | Explorer                                                                                |
+| ---------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
+| AegisCCIPResolver.sol  | `0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC` | [View](https://sepolia.etherscan.io/address/0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC) |
+| ENS Registry (Sepolia) | `0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e` | [View](https://sepolia.etherscan.io/address/0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e) |
 
 `aegis.eth` is registered on Sepolia with `AegisCCIPResolver` set as its resolver. The resolver points to the CCIP gateway at `CCIP_GATEWAY_URL`.
 

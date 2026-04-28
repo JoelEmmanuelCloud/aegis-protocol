@@ -21,9 +21,7 @@ async function main() {
   process.stdout.write(`Deployer:             ${deployer.address}\n`);
   process.stdout.write(`AegisCCIPResolver:    ${resolverAddress}\n`);
   process.stdout.write(`\nNext step — set aegis.eth resolver on Sepolia:\n`);
-  process.stdout.write(
-    `  ENS_REGISTRY.setResolver(${aegisNode}, ${resolverAddress})\n`
-  );
+  process.stdout.write(`  ENS_REGISTRY.setResolver(${aegisNode}, ${resolverAddress})\n`);
   process.stdout.write(
     `  Or use app.ens.domains on Sepolia to set the custom resolver to ${resolverAddress}\n`
   );
