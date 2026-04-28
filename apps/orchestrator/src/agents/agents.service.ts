@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { readKVObject, writeKVObject } from '@aegis/0g-client';
+import { setTextRecords } from '@aegis/ens-client';
 import type { NetworkStats } from '@aegis/types';
 
 const AGENT_REGISTRY_ABI = [
@@ -41,7 +42,7 @@ export class AgentsService implements OnModuleInit {
       const address = process.env.AGENT_REGISTRY_ADDRESS;
       if (!address || !ethers.isAddress(address)) {
         throw new ServiceUnavailableException(
-          'AGENT_REGISTRY_ADDRESS is not configured — set it in .env to 0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc'
+          'AGENT_REGISTRY_ADDRESS is not configured — run npm run deploy from the contracts directory'
         );
       }
       const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
@@ -56,7 +57,7 @@ export class AgentsService implements OnModuleInit {
       const address = process.env.AGENT_REGISTRY_ADDRESS;
       if (!address || !ethers.isAddress(address)) {
         throw new ServiceUnavailableException(
-          'AGENT_REGISTRY_ADDRESS is not configured — set it in .env to 0x65cB34BCc2941f842Eb5c290d8e8aC24aEa22bbc'
+          'AGENT_REGISTRY_ADDRESS is not configured — run npm run deploy from the contracts directory'
         );
       }
       const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
@@ -124,6 +125,15 @@ export class AgentsService implements OnModuleInit {
       totalAttestations: stats?.totalAttestations ?? 0,
       disputes: stats?.disputes ?? 0,
       activeAgents: this._activeAgentCount,
+    }).catch(() => {});
+
+    await setTextRecords(ensName, {
+      'agent.registry': process.env.AGENT_REGISTRY_ADDRESS ?? '',
+      'agent.id': tokenId.toString(),
+      'aegis.reputation': '100',
+      'aegis.totalDecisions': '0',
+      'aegis.lastVerdict': 'CLEARED',
+      'aegis.flaggedCount': '0',
     }).catch(() => {});
 
     return { tokenId: tokenId.toString(), ensName, txHash: receipt.hash };

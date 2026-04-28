@@ -4,6 +4,10 @@ pragma solidity ^0.8.24;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
+interface IAegisNameRegistry {
+    function register(string calldata label, address subnodeOwner) external;
+}
+
 contract AgentRegistry is ERC721, Ownable {
     struct AccountabilitySplit {
         uint8 userPercent;
@@ -19,6 +23,8 @@ contract AgentRegistry is ERC721, Ownable {
         bool active;
         uint256 mintedAt;
     }
+
+    address public nameRegistry;
 
     uint256 private _nextTokenId;
 
@@ -45,6 +51,10 @@ contract AgentRegistry is ERC721, Ownable {
     error TokenNotFound();
 
     constructor() ERC721("Aegis iNFT", "AINFT") Ownable(msg.sender) {}
+
+    function setNameRegistry(address _nameRegistry) external onlyOwner {
+        nameRegistry = _nameRegistry;
+    }
 
     function mint(
         address agentOwner,
@@ -75,6 +85,10 @@ contract AgentRegistry is ERC721, Ownable {
 
         _ensNameToTokenId[label] = tokenId;
         _ownerTokenIds[agentOwner].push(tokenId);
+
+        if (nameRegistry != address(0)) {
+            try IAegisNameRegistry(nameRegistry).register(label, agentOwner) {} catch {}
+        }
 
         emit AgentMinted(tokenId, agentOwner, ensName, ensNode, userPercent, builderPercent);
     }
