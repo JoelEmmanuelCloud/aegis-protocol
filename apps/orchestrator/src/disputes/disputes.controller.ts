@@ -11,9 +11,14 @@ export class DisputesController {
     return this.disputesService.file(dto);
   }
 
+  @Get('all')
+  listAll() {
+    return this.disputesService.listAll();
+  }
+
   @Get('count')
   count() {
-    return this.disputesService.count();
+    return this.disputesService.disputeCount();
   }
 
   @Get(':rootHash')

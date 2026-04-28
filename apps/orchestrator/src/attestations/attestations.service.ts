@@ -36,6 +36,20 @@ export class AttestationsService {
     return result;
   }
 
+  totalCount(): number {
+    return this.log.length;
+  }
+
+  getSummary(agentId: string): { totalDecisions: number; lastVerdict: string; flaggedCount: number } {
+    const items = this.log.filter((a) => a.agentId === agentId);
+    const flagged = items.filter((a) => a.verdict === 'FLAGGED').length;
+    return {
+      totalDecisions: items.length,
+      lastVerdict: items[0]?.verdict ?? 'PENDING',
+      flaggedCount: flagged,
+    };
+  }
+
   async list(agentId?: string, cursor?: string, limit = 20): Promise<AttestationListResponse> {
     const params = new URLSearchParams();
     if (agentId) params.set('agentId', agentId);

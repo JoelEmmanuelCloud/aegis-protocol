@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useReadContracts } from 'wagmi';
 import { namehash } from 'viem';
 import { useAgent } from '../hooks/useAgent';
+import { fetchAgentSummary } from '../lib/orchestratorApi';
 
 const PUBLIC_RESOLVER_ABI = [
   {
@@ -129,6 +131,13 @@ export default function AgentProfile() {
   const ensName = label ? `${label}.aegis.eth` : null;
   const { data: agent, isLoading, isError } = useAgent(label);
 
+  const { data: liveSummary } = useQuery({
+    queryKey: ['agentSummary', ensName],
+    queryFn: () => fetchAgentSummary(ensName!),
+    enabled: !!ensName,
+    refetchInterval: 5000,
+  });
+
   const { data: ensData } = useReadContracts({
     contracts: ENS_TEXT_KEYS.map((key) => ({
       address: resolverAddress,
@@ -148,6 +157,14 @@ export default function AgentProfile() {
     },
     {} as Record<string, string>
   );
+
+  if (liveSummary) {
+    if (liveSummary.totalDecisions > 0) {
+      ensRecords['aegis.totalDecisions'] = String(liveSummary.totalDecisions);
+      ensRecords['aegis.lastVerdict'] = liveSummary.lastVerdict;
+      ensRecords['aegis.flaggedCount'] = String(liveSummary.flaggedCount);
+    }
+  }
 
   const score = parseInt(ensRecords['aegis.reputation'] ?? '0', 10);
 

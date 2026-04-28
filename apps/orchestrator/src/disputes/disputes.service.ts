@@ -25,10 +25,20 @@ export interface FileDisputeDto {
   reason: string;
 }
 
+export interface DisputeRecord {
+  rootHash: string;
+  agentId: string;
+  reason: string;
+  verdict: Verdict;
+  teeProof: string;
+  timestamp: number;
+}
+
 @Injectable()
 export class DisputesService {
   private _court: ethers.Contract | null = null;
   private readonly verifierUrl: string;
+  private readonly disputeLog: DisputeRecord[] = [];
 
   constructor() {
     const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
@@ -85,12 +95,15 @@ export class DisputesService {
       }).catch(() => {});
     }
 
-    const stats = await readKVObject<NetworkStats>('aegis:network:stats').catch(() => null);
-    await writeKVObject('aegis:network:stats', {
-      totalAttestations: stats?.totalAttestations ?? 0,
-      disputes: (stats?.disputes ?? 0) + 1,
-      activeAgents: stats?.activeAgents ?? 0,
-    }).catch(() => {});
+    this.disputeLog.unshift({
+      rootHash: dto.rootHash,
+      agentId: dto.agentId,
+      reason: dto.reason,
+      verdict: verification.verdict,
+      teeProof: verification.teeProof ?? '',
+      timestamp: Date.now(),
+    });
+    if (this.disputeLog.length > 200) this.disputeLog.pop();
 
     return {
       rootHash: dto.rootHash,
@@ -98,6 +111,14 @@ export class DisputesService {
       verdict: verification.verdict,
       teeProof: verification.teeProof,
     };
+  }
+
+  listAll(): DisputeRecord[] {
+    return this.disputeLog;
+  }
+
+  disputeCount(): number {
+    return this.disputeLog.length;
   }
 
   async get(rootHash: string): Promise<Record<string, unknown>> {

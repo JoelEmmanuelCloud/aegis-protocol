@@ -1,10 +1,15 @@
-import { Controller, Post, Get, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { AttestationsService } from './attestations.service';
 import type { AttestationRequest } from '@aegis/types';
 
 @Controller('attestations')
 export class AttestationsController {
   constructor(private readonly attestationsService: AttestationsService) {}
+
+  @Get('summary/:agentId')
+  summary(@Param('agentId') agentId: string) {
+    return this.attestationsService.getSummary(agentId);
+  }
 
   @Get()
   list(
