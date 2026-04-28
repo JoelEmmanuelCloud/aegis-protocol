@@ -7,7 +7,7 @@ import { useDemoMode } from '../context/DemoContext';
 
 export default function ConnectGate() {
   const { connect } = useConnect();
-  const { enableDemo } = useDemoMode();
+  const { enableDemo, enableBrowse } = useDemoMode();
   const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
 
@@ -23,6 +23,11 @@ export default function ConnectGate() {
   const handleDemo = () => {
     enableDemo();
     navigate('/app');
+  };
+
+  const handleBrowse = () => {
+    enableBrowse();
+    navigate('/app/attestations');
   };
 
   return (
@@ -82,6 +87,22 @@ export default function ConnectGate() {
         }}
       >
         Try Demo
+      </button>
+
+      <button
+        onClick={handleBrowse}
+        style={{
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          fontSize: 13,
+          color: 'var(--app-text-muted)',
+          cursor: 'pointer',
+          textDecoration: 'underline',
+          textUnderlineOffset: 3,
+        }}
+      >
+        Browse public feed without connecting
       </button>
 
       <a href="/" style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
