@@ -90,7 +90,7 @@ export default function Overview() {
         />
         <StatCard
           label="Active Agents"
-          value={(myAgents ?? []).filter((a) => a.active).length}
+          value={stats?.activeAgents ?? 0}
           sub="registered iNFTs"
           color="var(--green)"
         />

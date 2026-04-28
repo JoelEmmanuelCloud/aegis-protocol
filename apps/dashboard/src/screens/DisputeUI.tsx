@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useAccount } from 'wagmi';
 import { useDispute } from '../hooks/useDispute';
 import { useDisputeStatus } from '../hooks/useDisputeStatus';
+import { useDemoMode } from '../context/DemoContext';
 
 function FieldError({ msg }: { msg: string }) {
   return (
@@ -26,6 +28,9 @@ function FieldError({ msg }: { msg: string }) {
 }
 
 export default function DisputeUI() {
+  const { address } = useAccount();
+  const { isDemoMode } = useDemoMode();
+  const canSubmit = isDemoMode || !!address;
   const [rootHash, setRootHash] = useState('');
   const [agentId, setAgentId] = useState('');
   const [reason, setReason] = useState('');
@@ -71,6 +76,7 @@ export default function DisputeUI() {
   const handleSubmit = () => {
     setSubmitAttempted(true);
     setTouched({ rootHash: true, agentId: true, reason: true });
+    if (!canSubmit) return;
     if (rootHashError || agentIdError || reasonError) return;
     const normalizedAgentId = agentId.trim().endsWith('.aegis.eth')
       ? agentId.trim()
@@ -248,15 +254,30 @@ export default function DisputeUI() {
           </div>
         )}
 
+        {!canSubmit && (
+          <div
+            style={{
+              padding: '14px 16px',
+              background: 'var(--app-elevated)',
+              border: '1px solid var(--app-border)',
+              borderRadius: 8,
+              fontSize: 13,
+              color: 'var(--app-text-muted)',
+            }}
+          >
+            Connect your wallet to file a dispute.
+          </div>
+        )}
+
         <button
           className="app-btn-primary"
           onClick={handleSubmit}
-          disabled={isPending}
+          disabled={isPending || !canSubmit}
           style={{
             width: '100%',
             padding: '12px',
-            opacity: isPending ? 0.5 : 1,
-            cursor: isPending ? 'not-allowed' : 'pointer',
+            opacity: isPending || !canSubmit ? 0.5 : 1,
+            cursor: isPending || !canSubmit ? 'not-allowed' : 'pointer',
           }}
         >
           {isPending ? 'Submitting to AegisCourt…' : 'File Dispute'}

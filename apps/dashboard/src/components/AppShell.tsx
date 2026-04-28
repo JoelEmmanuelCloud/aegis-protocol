@@ -157,14 +157,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
-  const { isDemoMode, enableDemo, disableDemo } = useDemoMode();
+  const { isDemoMode, enableDemo, disableDemo, isBrowseMode, disableBrowse } = useDemoMode();
   const [open, setOpen] = React.useState(true);
 
   const short = isDemoMode
     ? 'Demo Mode'
-    : address
-      ? `${address.slice(0, 6)}…${address.slice(-4)}`
-      : '';
+    : isBrowseMode
+      ? 'Browse Mode'
+      : address
+        ? `${address.slice(0, 6)}…${address.slice(-4)}`
+        : '';
+
+  const handleSidebarExit = () => {
+    if (isDemoMode) disableDemo();
+    else if (isBrowseMode) disableBrowse();
+    else disconnect();
+  };
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -307,7 +315,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <div style={{ fontSize: 10, color: 'var(--app-text-muted)' }}>0G Galileo</div>
               </div>
               <button
-                onClick={() => disconnect()}
+                onClick={handleSidebarExit}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -406,6 +414,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {!isDemoMode && (
               <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
             )}
+            {isBrowseMode && !isDemoMode && !address && (
+              <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>
+                Read-only
+              </span>
+            )}
           </div>
         </header>
 
@@ -439,6 +452,50 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <button
               onClick={disableDemo}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                color: 'var(--app-text-muted)',
+                padding: '2px 6px',
+              }}
+            >
+              Exit
+            </button>
+          </div>
+        )}
+
+        {isBrowseMode && (
+          <div
+            style={{
+              background: 'rgba(99,102,241,0.08)',
+              borderBottom: '1px solid rgba(99,102,241,0.25)',
+              padding: '7px 28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: 12,
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: '#818cf8',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Browse Mode
+              </span>
+              <span style={{ color: 'var(--app-text-muted)' }}>
+                Read-only — connect your wallet to register agents or file disputes
+              </span>
+            </div>
+            <button
+              onClick={disableBrowse}
               style={{
                 background: 'none',
                 border: 'none',

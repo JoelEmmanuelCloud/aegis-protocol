@@ -21,8 +21,8 @@ import Register from './screens/Register';
 
 function AppRoutes() {
   const { isConnected } = useAccount();
-  const { isDemoMode } = useDemoMode();
-  const hasAccess = isConnected || isDemoMode;
+  const { isDemoMode, isBrowseMode } = useDemoMode();
+  const hasAccess = isConnected || isDemoMode || isBrowseMode;
 
   return (
     <Routes>
