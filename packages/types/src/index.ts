@@ -81,6 +81,18 @@ export interface AXLEnvelope {
   body: unknown;
 }
 
+export interface AttestationItem {
+  agentId: string;
+  rootHash: string;
+  verdict: Verdict;
+  timestamp: number;
+}
+
+export interface AttestationListResponse {
+  items: AttestationItem[];
+  nextCursor: string | null;
+}
+
 export interface DisputeRecord {
   rootHash: string;
   agentId: string;
