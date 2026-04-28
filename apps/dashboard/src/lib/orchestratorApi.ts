@@ -59,6 +59,16 @@ export function fetchDisputeStatus(rootHash: string): Promise<DisputeRecord> {
   return apiFetch<DisputeRecord>(`/disputes/${encodeURIComponent(rootHash)}`);
 }
 
+export function fetchDisputeList(): Promise<DisputeRecord[]> {
+  return apiFetch<DisputeRecord[]>('/disputes/all');
+}
+
+export function fetchAgentSummary(
+  agentId: string
+): Promise<{ totalDecisions: number; lastVerdict: string; flaggedCount: number }> {
+  return apiFetch(`/attestations/summary/${encodeURIComponent(agentId)}`);
+}
+
 export function fetchNetworkStats(): Promise<NetworkStats> {
   return apiFetch<NetworkStats>('/network/stats');
 }

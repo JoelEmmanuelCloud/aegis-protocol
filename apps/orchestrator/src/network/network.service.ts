@@ -1,17 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { readKVObject } from '@aegis/0g-client';
 import { AgentsService } from '../agents/agents.service';
+import { AttestationsService } from '../attestations/attestations.service';
+import { DisputesService } from '../disputes/disputes.service';
 import type { NetworkStats } from '@aegis/types';
 
 @Injectable()
 export class NetworkService {
-  constructor(private readonly agentsService: AgentsService) {}
+  constructor(
+    private readonly agentsService: AgentsService,
+    private readonly attestationsService: AttestationsService,
+    private readonly disputesService: DisputesService,
+  ) {}
 
-  async getStats(): Promise<NetworkStats> {
-    const stats = await readKVObject<NetworkStats>('aegis:network:stats').catch(() => null);
+  getStats(): NetworkStats {
     return {
-      totalAttestations: stats?.totalAttestations ?? 0,
-      disputes: stats?.disputes ?? 0,
+      totalAttestations: this.attestationsService.totalCount(),
+      disputes: this.disputesService.disputeCount(),
       activeAgents: this.agentsService.getActiveAgentCount(),
     };
   }

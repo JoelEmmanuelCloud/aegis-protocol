@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
+import { useQuery } from '@tanstack/react-query';
 import { useDispute } from '../hooks/useDispute';
 import { useDisputeStatus } from '../hooks/useDisputeStatus';
 import { useDemoMode } from '../context/DemoContext';
+import { fetchDisputeList } from '../lib/orchestratorApi';
+import type { DisputeRecord } from '@aegis/types';
 
 function FieldError({ msg }: { msg: string }) {
   return (
@@ -48,11 +51,15 @@ export default function DisputeUI() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const { mutate: fileDispute, isPending, isSuccess, error } = useDispute();
   const { data: status } = useDisputeStatus(submitted ? rootHash : undefined);
+  const { data: disputeList = [] } = useQuery<DisputeRecord[]>({
+    queryKey: ['disputeList'],
+    queryFn: fetchDisputeList,
+    refetchInterval: 5000,
+  });
 
   const rootHashError = (() => {
     if (!rootHash.trim()) return 'Root hash is required';
-    if (!/^0x[0-9a-fA-F]+$/.test(rootHash.trim())) return 'Must be a hex string starting with 0x';
-    if (rootHash.trim().length < 10) return 'Root hash is too short';
+    if (!/^(0x)?[0-9a-fA-F]{8,}$/.test(rootHash.trim())) return 'Must be a valid hex hash';
     return '';
   })();
 
@@ -292,6 +299,45 @@ export default function DisputeUI() {
           {isPending ? 'Submitting to AegisCourt…' : 'File Dispute'}
         </button>
       </div>
+
+      {disputeList.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
+            Dispute History
+          </h2>
+          {disputeList.map((d) => {
+            const vcolor =
+              d.verdict === 'CLEARED'
+                ? 'var(--app-green)'
+                : d.verdict === 'FLAGGED'
+                  ? 'var(--app-red)'
+                  : 'var(--app-yellow)';
+            return (
+              <div
+                key={d.rootHash + d.timestamp}
+                className="app-card"
+                style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--app-text-muted)' }}>
+                    {d.rootHash.slice(0, 16)}…
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: vcolor, textTransform: 'uppercase' }}>
+                    {d.verdict}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
+                  {d.agentId}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>{d.reason}</div>
+                <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                  {new Date((d.timestamp as number) ?? 0).toLocaleString()}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
