@@ -106,8 +106,15 @@ services:
     build:
       context: .
       dockerfile: apps/dashboard/Dockerfile
+      args:
+        VITE_ORCHESTRATOR_URL: ${VITE_ORCHESTRATOR_URL:-https://api.aegisprotocol.uk}
+        VITE_AGENT_REGISTRY_ADDRESS: ${VITE_AGENT_REGISTRY_ADDRESS:-0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1}
+        VITE_AEGIS_NAME_REGISTRY_ADDRESS: ${VITE_AEGIS_NAME_REGISTRY_ADDRESS:-0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4}
+        VITE_PUBLIC_RESOLVER_ADDRESS: ${VITE_PUBLIC_RESOLVER_ADDRESS:-0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63}
+        VITE_AEGIS_COURT_ADDRESS: ${VITE_AEGIS_COURT_ADDRESS:-0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6}
+        VITE_0G_EXPLORER_URL: ${VITE_0G_EXPLORER_URL:-https://chainscan-galileo.0g.ai}
+        VITE_KEEPERHUB_WORKFLOW_ID: ${VITE_KEEPERHUB_WORKFLOW_ID:-aegis.execute_remedy}
     ports:
       - '4000:4000'
-    env_file: .env
     depends_on:
       - orchestrator
