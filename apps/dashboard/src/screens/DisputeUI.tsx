@@ -446,7 +446,7 @@ export default function DisputeUI() {
                           textDecoration: 'none',
                         }}
                       >
-                        Verify on-chain ↗
+                        Verify on-chain
                       </a>
                     ) : (
                       <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
