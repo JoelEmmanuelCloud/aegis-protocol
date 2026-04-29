@@ -16,7 +16,7 @@ Aegis is the accountability layer that sits beside any AI agent. When a bot acts
 3. **Enforces** the verdict — AegisCourt.sol records it on-chain; KeeperHub executes the remedy automatically
 4. **Publishes** the reputation — stored as ENS text records on `*.aegis.eth`, readable by any app via EIP-3668 CCIP-read
 
-One line of code is all a bot needs:
+One line of code is all a bot needs to integrate:
 
 ```typescript
 await fetch('http://witness:9002/send', {
@@ -27,47 +27,68 @@ await fetch('http://witness:9002/send', {
 
 ---
 
-## Live Demo
+## Live Links
 
-**Dashboard:** https://app.aegisprotocol.uk
+|                         | URL                                                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| **Dashboard**           | **https://app.aegisprotocol.uk**                                                                   |
+| **API**                 | https://api.aegisprotocol.uk                                                                       |
+| **AegisCourt contract** | https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction |
 
-**Orchestrator API:** https://api.aegisprotocol.uk
-
-No installation needed. Open the dashboard in your browser. MetaMask works — the dashboard is served over HTTPS.
-
-To explore without a wallet, click **Try Demo** on the landing page or **Browse public feed** on the connect screen. Every screen is fully functional in read-only mode.
-
----
-
-## Add 0G Testnet to MetaMask (30 seconds)
-
-| Field        | Value                             |
-| ------------ | --------------------------------- |
-| Network Name | 0G Testnet                        |
-| RPC URL      | `https://evmrpc-testnet.0g.ai`    |
-| Chain ID     | `16602`                           |
-| Currency     | `OG`                              |
-| Explorer     | `https://chainscan-galileo.0g.ai` |
-
-Get free testnet OG: [faucet.0g.ai](https://faucet.0g.ai)
+No installation required to browse. Click **Try Demo** on the landing page or **Browse public feed** on the connect screen for full read-only access without a wallet.
 
 ---
 
-## Test the Full Flow (5 minutes)
+## Full Test Walkthrough
 
-### Step 1 — Register your own agent on-chain
+This flow takes about 5 minutes and makes you a real participant — your agent is minted on-chain, your disputes produce real transactions, your reputation updates live.
+
+### Step 1 — Add 0G Testnet to MetaMask
+
+In MetaMask → Add a network manually:
+
+| Field          | Value                             |
+| -------------- | --------------------------------- |
+| Network Name   | 0G Testnet                        |
+| RPC URL        | `https://evmrpc-testnet.0g.ai`    |
+| Chain ID       | `16602`                           |
+| Currency       | `OG`                              |
+| Block Explorer | `https://chainscan-galileo.0g.ai` |
+
+Get free testnet OG at [faucet.0g.ai](https://faucet.0g.ai) — paste your wallet address and receive tokens instantly.
+
+---
+
+### Step 2 — Register your own agent
 
 Open **https://app.aegisprotocol.uk/app/register**
 
-1. Connect MetaMask (add 0G testnet — details below)
-2. Get OG tokens at [faucet.0g.ai](https://faucet.0g.ai)
-3. Type a label — e.g. `alice-bot` or your own name
-4. Set the accountability split (e.g. 60% user / 40% builder)
-5. Click **Mint iNFT** and approve the MetaMask transaction
+1. Click **Connect Wallet** — MetaMask opens on the 0G testnet
+2. Type a label for your agent — e.g. `alice-bot`
+   - Preview shows: `alice-bot.aegis.eth`
+3. Set the accountability split — e.g. 60% user / 40% builder
+   - This is encoded permanently in the iNFT contract at mint time
+4. Click **Mint iNFT** and approve the MetaMask transaction
 
-Your agent is now on-chain: `alice-bot.aegis.eth` — an ERC-7857 iNFT with ENSIP-25 records.
+When the transaction lands you'll see:
 
-### Step 2 — Run the demo script with your agent name
+```
+Agent registered
+alice-bot.aegis.eth issued
+```
+
+What just happened on-chain:
+
+- ERC-7857 iNFT minted on `AgentRegistry.sol` (0G chain)
+- Subname `alice-bot` registered in `AegisNameRegistry.sol`
+- ENSIP-25 records written: `agent.registry` and `agent.id`
+- Subname is now resolvable from Ethereum via EIP-3668 CCIP-read
+
+---
+
+### Step 3 — Run the demo script
+
+Clone the repo and run with your agent label:
 
 ```bash
 git clone https://github.com/JoelEmmanuelCloud/aegis-protocol.git
@@ -76,69 +97,100 @@ npm install
 npx ts-node scripts/judge-demo.ts alice-bot
 ```
 
-Replace `alice-bot` with whatever label you registered in Step 1.
+Replace `alice-bot` with the label you registered in Step 2.
 
-Running without an argument prints setup instructions.
+The script will:
 
-Expected output:
+- Verify your agent exists on-chain
+- Submit **Decision A** — a normal swap (will be CLEARED)
+- Submit **Decision B** — a prohibited emergency liquidation (will be FLAGGED)
+- Then **pause and hand control to you**
+
+---
+
+### Step 4 — File the disputes yourself in the dashboard
+
+The script pauses and tells you to go to the Attestation Feed:
+
+**https://app.aegisprotocol.uk/app/attestations**
+
+You will see two new cards — one for each decision the script just submitted.
+
+**For each card:**
+
+1. Click the **"File Dispute"** button — it auto-fills the root hash and agent name
+2. Write a reason:
+   - Decision A (swap): `"Challenging the swap to verify the TEE replay matches."`
+   - Decision B (emergency): `"Unauthorised emergency liquidation. Exceeds mandate and 100 OG daily limit."`
+3. Click **File Dispute** and wait a few seconds for the verdict
+
+**Expected results:**
+
+| Decision | Action                        | Expected Verdict | Why                                                        |
+| -------- | ----------------------------- | ---------------- | ---------------------------------------------------------- |
+| A        | sell 0.36 OG/USDC             | **CLEARED**      | Normal swap within mandate and risk limits                 |
+| B        | emergency_liquidation 5000 OG | **FLAGGED**      | Prohibited action type + exceeds 100 OG daily limit by 50× |
+
+After each verdict, a **"Verify on-chain"** link appears on the dispute card. Click it — it goes directly to your `recordVerdict` transaction on `chainscan-galileo.0g.ai`.
+
+---
+
+### Step 5 — Press ENTER in the terminal
+
+The script resumes and shows:
 
 ```
-Step 1 — Submit a normal trading decision (will be CLEARED)
-  rootHash  : 0xa7c425c8...
-  Verdict   : CLEARED
-  On-chain  : https://chainscan-galileo.0g.ai/tx/0xc4a700...
+Step 3 — Checking your results
 
-Step 2 — Submit a high-risk prohibited action (will be FLAGGED)
-  rootHash  : 0x2af2fc22...
-  Verdict   : FLAGGED
+  Reputation for alice-bot.aegis.eth:
+    Score         : 91 / 100
+    Flagged count : 1
+    Cleared count : 1
+    Last verdict  : FLAGGED
 
-Step 3 — Check live reputation
-  Score         : 91 / 100
-  Flagged count : 1
-  Cleared count : 1
+Step 4 — KeeperHub automated remedy
 
-Step 4 — KeeperHub audit trail
-  Run 808658bf... — completed (verdict: FLAGGED)
+  Run a1b2c3d4... — completed (verdict: FLAGGED)
     [OK] aegis.fetch_verdict
     [OK] aegis.notify_agent_owner
-    [OK] aegis.execute_remedy_tx     ← fired because FLAGGED
+    [OK] aegis.execute_remedy_tx      ← fired automatically on FLAGGED
     [OK] aegis.update_ens_reputation
     [OK] aegis.update_reputation
 
-  Run c168b344... — completed (verdict: CLEARED)
+  Run e5f6a7b8... — completed (verdict: CLEARED)
     [OK] aegis.fetch_verdict
     [OK] aegis.notify_agent_owner
-    [--] aegis.execute_remedy_tx     ← skipped because CLEARED
+    [--] aegis.execute_remedy_tx      ← skipped — no consequence for CLEARED
     [OK] aegis.update_ens_reputation
     [OK] aegis.update_reputation
 ```
 
-Then open **https://app.aegisprotocol.uk** and navigate to:
+**Score formula:** 100 − (flagged × 10) + (cleared × 1) = **91**
 
-- `/app/attestations` — both decisions with action text and reasoning
-- `/app/disputes` → History tab — CLEARED card with explorer link, FLAGGED card with explorer link
-- `/app/agents` → search `judge-bot` — live reputation score (91/100)
-- `/app/audit` — KeeperHub steps showing `execute_remedy_tx` completed vs skipped
+---
 
-### Optional — register your own agent via the dashboard
+### Step 6 — Explore the dashboard
 
-Go to **Register** (`/app/register`), connect MetaMask on 0G testnet, type a label, set the accountability split, and click **Mint iNFT**. Your agent gets a `.aegis.eth` subname and ENSIP-25 records automatically.
+| Page                              | What to look for                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------ |
+| `/app/attestations`               | Both decision cards with action text, reasoning, and root hash                             |
+| `/app/disputes` → History tab     | CLEARED card with green badge + on-chain link; FLAGGED card with red badge + on-chain link |
+| `/app/agents` → search your label | Reputation score ring at 91, flaggedCount: 1, lastVerdict: FLAGGED                         |
+| `/app/audit`                      | KeeperHub run breakdown — `execute_remedy_tx` completed on FLAGGED, skipped on CLEARED     |
 
 ---
 
 ## Verify On-Chain
 
-Every dispute produces two verifiable transactions on the 0G chain:
+Every dispute you filed produced two real transactions on the 0G chain:
 
-| TX              | What it does                              |
-| --------------- | ----------------------------------------- |
-| `submitDispute` | Registers the dispute on `AegisCourt.sol` |
-| `recordVerdict` | Records CLEARED or FLAGGED permanently    |
+| TX              | What it does                               |
+| --------------- | ------------------------------------------ |
+| `submitDispute` | Registers your dispute on `AegisCourt.sol` |
+| `recordVerdict` | Records CLEARED or FLAGGED permanently     |
 
-View all dispute transactions on the AegisCourt contract:
+All transactions are visible on the AegisCourt contract:
 **https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction**
-
-The "Verify on-chain" link on each dispute card in the dashboard goes directly to the verdict transaction.
 
 ---
 
@@ -146,23 +198,18 @@ The "Verify on-chain" link on each dispute card in the dashboard goes directly t
 
 ### 0G — Storage + Compute + KV + Chain
 
-| Feature            | How to verify                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| 0G Storage upload  | Root hash `0x...` returned on attestation — computed from actual 0G merkle tree before upload completes |
-| 0G Compute TEE     | Verifier node calls `qwen/qwen-2.5-7b-instruct` via `https://compute-network-6.integratenetwork.work`   |
-| 0G KV              | `aegis:{agentId}:reputation` written after each attestation                                             |
-| 0G Chain contracts | AegisCourt, AgentRegistry, AegisNameRegistry all on chainId 16602                                       |
-
-```bash
-# Check 0G chain contract activity
-curl https://evmrpc-testnet.0g.ai \
-  -d '{"jsonrpc":"2.0","method":"eth_getCode","params":["0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6","latest"],"id":1}'
-```
+| Feature        | How to verify                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| 0G Storage     | Root hash `0x...` returned instantly — computed from the real 0G merkle tree; upload completes in background |
+| 0G Compute TEE | Verifier replays decisions via `qwen/qwen-2.5-7b-instruct` at `compute-network-6.integratenetwork.work`      |
+| 0G KV          | `aegis:{agentId}:reputation` written after each attestation                                                  |
+| 0G Chain       | AegisCourt, AgentRegistry, AegisNameRegistry all deployed on chainId 16602                                   |
 
 ### Gensyn AXL — Four Distinct Nodes
 
+Four separate processes, four distinct ed25519 identity keys, real encrypted P2P messages over Yggdrasil.
+
 ```bash
-# Four real peer IDs — all connected and messaging
 curl http://164.92.165.231:9022/topology
 ```
 
@@ -173,40 +220,27 @@ curl http://164.92.165.231:9022/topology
 | Verifier   | 9012 | `3d702e5b9658f7...`   |
 | Memory     | 9032 | `6bc1bcd7f66d4e...`   |
 
-Each node has its own ed25519 key in `axl-configs/*.pem`. Messages flow Witness → Propagator → Memory via real AXL peer-to-peer encrypted transport. This is the Gensyn autoresearch broadcast pattern applied to accountability signals.
+Health checks:
 
 ```bash
-# Witness health
-curl http://164.92.165.231:10002/health
-# Verifier health
-curl http://164.92.165.231:10012/health
-# Propagator health
-curl http://164.92.165.231:10022/health
-# Memory health
-curl http://164.92.165.231:10032/health
+curl http://164.92.165.231:10002/health   # witness
+curl http://164.92.165.231:10012/health   # verifier
+curl http://164.92.165.231:10022/health   # propagator
+curl http://164.92.165.231:10032/health   # memory
 ```
 
 ### ENS — ENSIP-25 + EIP-3668 CCIP-read + Live Reputation Oracle
 
-Every agent gets a `.aegis.eth` subname. Reputation is stored as text records in `AegisNameRegistry.sol` on 0G testnet and readable from Ethereum via CCIP-read — no bridge, no manual sync.
+When you registered your agent in Step 2, ENSIP-25 records were written to `AegisNameRegistry.sol` on the 0G chain:
 
-```bash
-# Read live reputation text records directly from 0G
-curl http://164.92.165.231:8080/health
-```
+- `agent.registry = 0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1`
+- `agent.id = 1`
 
-The CCIP gateway at port 8080 handles EIP-3668 `OffchainLookup` resolution requests from Ethereum ENS clients. When any ENS-aware app resolves `mit-bot.aegis.eth`, the gateway queries `AegisNameRegistry.sol` on 0G and returns the live accountability score.
-
-ENSIP-25 records written at agent registration:
-
-- `agent.registry = 0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` (AgentRegistry.sol)
-- `agent.id = 1` (iNFT token ID)
+Any ENS-aware app can resolve `alice-bot.aegis.eth` from Ethereum via the CCIP gateway and receive the live reputation score — without touching the Aegis backend. The reputation travels with the name.
 
 ### KeeperHub — Automated Remedy Workflow
 
-The `aegis.execute_remedy` workflow runs automatically after every verdict. View the full audit trail at `/app/audit`.
-
-The workflow integrates with the KeeperHub MCP API shape (`triggerWorkflow`, `getAuditTrail`). The builder feedback documenting our integration experience is in `docs/FEEDBACK.md`.
+The `aegis.execute_remedy` workflow triggered automatically after each verdict — no manual trigger. Steps, outcomes, and agent identity are logged in the audit trail at `/app/audit`. Builder feedback documenting our KeeperHub integration experience is in `docs/FEEDBACK.md`.
 
 ---
 
@@ -221,30 +255,43 @@ The workflow integrates with the KeeperHub MCP API shape (`triggerWorkflow`, `ge
 
 ---
 
-## Architecture (30 seconds)
+## Architecture
 
 ```
-Your Bot
-  │  one fetch call
+Your Bot (any framework)
+  │  one fetch call  →  AXL Witness Node :9002
   ▼
-Witness :9002 ──→ 0G Storage (real merkle rootHash)
+Witness  ──→  0G Storage (real merkle rootHash returned immediately)
   │  AXL P2P mesh (Gensyn)
   ▼
-Propagator :9022 ──→ broadcast to peers
+Propagator :9022  ──→  broadcasts to all peers
   │
   ▼
-Memory :9032 ──→ 0G KV + ENS text records (AegisNameRegistry)
+Memory :9032  ──→  0G KV write + AegisNameRegistry text record update
 
-Dispute filed
+Judge files dispute via dashboard
   │
   ▼
-Verifier :9012 ──→ 0G Compute TEE replay
-  │  verdict
+Orchestrator :3000  ──→  rule check + calls Verifier
+  │
   ▼
-AegisCourt.sol ──→ on-chain permanent record
-  │  VerdictEmitted event
+Verifier :9012  ──→  0G Compute TEE replay (qwen/qwen-2.5-7b-instruct)
+  │  verdict  →  AegisCourt.sol (submitDispute + recordVerdict)
   ▼
-KeeperHub ──→ execute_remedy workflow (automatic)
+KeeperHub  ──→  aegis.execute_remedy fires automatically
+  ├─ fetch_verdict
+  ├─ notify_agent_owner
+  ├─ execute_remedy_tx  (only if FLAGGED)
+  ├─ update_ens_reputation
+  └─ update_reputation
+
+Any ENS-aware app
+  │  resolve("alice-bot.aegis.eth")
+  ▼
+AegisCCIPResolver (Ethereum Sepolia)  ──→  OffchainLookup
+  │  CCIP gateway :8080
+  ▼
+AegisNameRegistry (0G testnet)  ──→  live reputation score returned
 ```
 
-**The key insight:** Any agent framework integrates Aegis with one fetch call. Storage, verification, court, reputation, ENS identity — all handled automatically. Aegis does not touch the agent's decision logic. It only records what happened and enforces consequences.
+Any agent, any framework, one call. Aegis records what happened and enforces consequences automatically.
