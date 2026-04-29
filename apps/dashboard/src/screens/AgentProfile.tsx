@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useReadContracts } from 'wagmi';
 import { namehash } from 'viem';
 import { useAgent } from '../hooks/useAgent';
+import { useDemoMode } from '../context/DemoContext';
 import { fetchAgentSummary, fetchAgentReputation } from '../lib/orchestratorApi';
+import { demoAgentSummary, demoAgentReputation } from '../lib/demoData';
 
 const PUBLIC_RESOLVER_ABI = [
   {
@@ -120,7 +122,8 @@ function Row({ label, value }: { label: string; value?: string }) {
 }
 
 export default function AgentProfile() {
-  const [label, setLabel] = useState<string | null>(null);
+  const { isDemoMode } = useDemoMode();
+  const [label, setLabel] = useState<string | null>(isDemoMode ? 'trading-bot' : null);
   const [input, setInput] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
   const [searchAttempted, setSearchAttempted] = useState(false);
@@ -132,17 +135,23 @@ export default function AgentProfile() {
   const { data: agent, isLoading, isError } = useAgent(label);
 
   const { data: liveSummary } = useQuery({
-    queryKey: ['agentSummary', ensName],
-    queryFn: () => fetchAgentSummary(ensName!),
-    enabled: !!ensName,
-    refetchInterval: 5000,
+    queryKey: ['agentSummary', isDemoMode ? 'demo' : ensName],
+    queryFn: isDemoMode
+      ? () => Promise.resolve(demoAgentSummary)
+      : () => fetchAgentSummary(ensName!),
+    enabled: isDemoMode ? true : !!ensName,
+    staleTime: isDemoMode ? Infinity : 0,
+    refetchInterval: isDemoMode ? false : 5000,
   });
 
   const { data: liveReputation } = useQuery({
-    queryKey: ['agentReputation', ensName],
-    queryFn: () => fetchAgentReputation(ensName!),
-    enabled: !!ensName,
-    refetchInterval: 5000,
+    queryKey: ['agentReputation', isDemoMode ? 'demo' : ensName],
+    queryFn: isDemoMode
+      ? () => Promise.resolve(demoAgentReputation)
+      : () => fetchAgentReputation(ensName!),
+    enabled: isDemoMode ? true : !!ensName,
+    staleTime: isDemoMode ? Infinity : 0,
+    refetchInterval: isDemoMode ? false : 5000,
   });
 
   const { data: ensData } = useReadContracts({

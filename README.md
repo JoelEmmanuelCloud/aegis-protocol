@@ -9,30 +9,30 @@ The accountability layer for AI agents. Any agent can prove what it decided, why
 
 ## Try It Now (judges / reviewers)
 
-The dashboard is deployed at:
+|               | URL                              |
+| ------------- | -------------------------------- |
+| **Dashboard** | **https://app.aegisprotocol.uk** |
+| **API**       | https://api.aegisprotocol.uk     |
 
-> **https://aegis-protocol.vercel.app**
+No installation required. Click **Try Demo** on the landing page or **Browse public feed** to explore every screen without a wallet.
 
-No installation required. Connect MetaMask on the **0G testnet** (Chain ID `16602`, RPC `https://evmrpc-testnet.0g.ai`) and click **Try Demo** to explore without a wallet.
+**To run the full interactive demo (5 minutes):**
 
-**To run the full live flow against the hosted orchestrator:**
-
-1. Get testnet OG from [faucet.0g.ai](https://faucet.0g.ai)
-2. Connect MetaMask, register an agent (`/app/register`)
-3. Run the example bot to generate attested decisions:
+1. Add 0G testnet to MetaMask — RPC `https://evmrpc-testnet.0g.ai`, Chain ID `16602`
+2. Get free OG at [faucet.0g.ai](https://faucet.0g.ai)
+3. Register your own agent at `/app/register` → Mint iNFT on-chain
+4. Run the judge demo script with your agent label:
 
 ```bash
 git clone https://github.com/JoelEmmanuelCloud/aegis-protocol.git
-cd aegis-protocol
-npm install
-cp .env .env.local   # uses the pre-configured .env
-npx ts-node scripts/mit-bot.ts
+cd aegis-protocol && npm install
+npx ts-node scripts/judge-demo.ts alice-bot
 ```
 
-4. File a dispute from the Attestation Feed — click **File Dispute** on any card
-5. Watch the verdict, KeeperHub workflow, and reputation score update live
+5. The script attests two decisions and pauses — go to `/app/attestations`, click **File Dispute** on each card, watch the 5-step progress tracker, see CLEARED and FLAGGED verdicts with on-chain links
+6. Press ENTER — script shows your reputation score and KeeperHub audit trail
 
-If you want to run the full backend locally instead, follow the steps in [Section 5](#5-start-the-system).
+See [`JUDGES.md`](./JUDGES.md) for the complete step-by-step testing guide.
 
 ---
 
@@ -48,22 +48,12 @@ If you want to run the full backend locally instead, follow the steps in [Sectio
 8. [Builder Integration](#8-builder-integration--adding-aegis-to-your-bot)
 9. [Running the Example Bot](#9-running-the-example-bot)
 10. [Full End-to-End Test Walkthrough](#10-full-end-to-end-test-walkthrough)
-    10b. [Deploy Dashboard to Vercel](#10b-deploy-dashboard-to-vercel)
-11. [Demo Video Script (3 min)](#11-demo-video-script-3-min)
-12. [Contracts](#12-contracts)
-13. [Orchestrator API Reference](#13-orchestrator-api-reference)
-14. [Troubleshooting](#14-troubleshooting)
-15. [Repository Structure](#15-repository-structure)
-16. [Start the System](#5-start-the-system)
-17. [Verify All Services Are Live](#6-verify-all-services-are-live)
-18. [Real-World User Flow](#7-real-world-user-flow)
-19. [Builder Integration — Adding Aegis to Your Bot](#8-builder-integration--adding-aegis-to-your-bot)
-20. [Running the Example Bot](#9-running-the-example-bot)
-21. [Demo Video Script (3 min)](#10-demo-video-script-3-min)
-22. [Contracts](#11-contracts)
-23. [Orchestrator API Reference](#12-orchestrator-api-reference)
-24. [Troubleshooting](#13-troubleshooting)
-25. [Repository Structure](#14-repository-structure)
+11. [Production Deployment](#11-production-deployment)
+12. [Demo Video Script (3 min)](#12-demo-video-script-3-min)
+13. [Contracts](#13-contracts)
+14. [Orchestrator API Reference](#14-orchestrator-api-reference)
+15. [Troubleshooting](#15-troubleshooting)
+16. [Repository Structure](#16-repository-structure)
 
 ---
 
@@ -505,36 +495,31 @@ curl -X POST http://localhost:3000/attestations \
 
 ---
 
-## 9. Running the Example Bot
+## 9. Running the Example Scripts
 
-`scripts/mit-bot.ts` is a complete LangGraph 1.x agent that makes real trading decisions using 0G Compute TEE and attests every decision to Aegis via the AXL mesh.
+### Judge demo — interactive full flow
+
+`scripts/judge-demo.ts` is the recommended starting point for judges and reviewers. It attests two decisions against the live hosted backend, pauses for you to file your own disputes in the dashboard, then shows your reputation and KeeperHub results.
+
+```bash
+npx ts-node scripts/judge-demo.ts alice-bot
+```
+
+Replace `alice-bot` with the agent label you registered in Step 2 of the walkthrough. Running without an argument prints setup instructions.
+
+The script connects to `https://api.aegisprotocol.uk` — no local backend required.
+
+### LangGraph trading bot — continuous attestation
+
+`scripts/mit-bot.ts` is a complete LangGraph 1.x agent (`StateGraph` + `ToolNode`) that makes real trading decisions using 0G Compute TEE and attests every decision to Aegis via the AXL mesh.
 
 ```bash
 npx ts-node scripts/mit-bot.ts
 ```
 
-The bot:
+Tools: `get_market_data` · `get_portfolio` · `check_risk_limits`
 
-1. Creates a LangGraph `StateGraph` with three tools: `get_market_data`, `get_portfolio`, `check_risk_limits`
-2. Calls `qwen/qwen-2.5-7b-instruct` via 0G Compute for each decision
-3. Sends every decision to the Witness Node via AXL (`POST /send` with `X-Destination-Peer-Id`)
-4. Also POSTs to the orchestrator so the decision appears in the dashboard feed immediately
-5. Falls back to a rule-based engine if 0G Compute is unavailable
-
-**Before running** — ensure you have 0G Compute balance (see [Troubleshooting](#13-troubleshooting)).
-
-Example output:
-
-```
-=== mit-bot.aegis.eth — LangGraph StateGraph agent + Aegis attestation ===
-
-[Decision 1] OG/USDC
-  LangGraph   : Based on the current market data for OG/USDC... holding due to 9.4% volatility.
-  Action      : {"type":"hold","pair":"OG/USDC","amount":"3.08","strategy":"Stabilize Portfolio"}
-  Reasoning   : High volatility detected. Holding to avoid potential losses.
-  rootHash    : 0xe1cce9dc77e3bf2ece97b5b68a70bed6aba7b157da8a9e74630ce9195ce6e4e0
-  AXL + Aegis : attested
-```
+Requires 0G Compute balance — see [Troubleshooting](#15-troubleshooting). Falls back to a rule-based engine when compute is unavailable.
 
 ---
 
@@ -665,95 +650,109 @@ All 5 steps above should complete without errors. The whole sequence takes under
 
 ---
 
-## 10b. Deploy Dashboard to Vercel
+## 11. Production Deployment
 
-The dashboard is a Vite React SPA. It connects to a publicly hosted orchestrator and reads on-chain data directly from the 0G testnet.
+The live deployment runs all 5 services on a DigitalOcean droplet (Ubuntu 24.04, 2 vCPU, 4 GB) via Docker Compose, with Cloudflare Zero Trust tunnel providing permanent HTTPS.
 
-### Step 1 — Expose the orchestrator publicly
+### Live URLs
 
-The orchestrator must be publicly reachable for the Vercel dashboard to call it.
+| Service          | URL                                           |
+| ---------------- | --------------------------------------------- |
+| Dashboard        | **https://app.aegisprotocol.uk**              |
+| Orchestrator API | **https://api.aegisprotocol.uk**              |
+| Domain           | `aegisprotocol.uk` (registered on Cloudflare) |
 
-**Option A — Railway (recommended, free tier available)**
+### Architecture
 
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-railway login
+```
+Cloudflare Zero Trust tunnel (permanent HTTPS)
+  ├─ app.aegisprotocol.uk  →  localhost:4000  (dashboard)
+  └─ api.aegisprotocol.uk  →  localhost:3000  (orchestrator)
 
-# From the project root
-railway init
-railway up --service orchestrator
-# Note the generated URL e.g. https://aegis-orchestrator.railway.app
+DigitalOcean droplet  164.92.165.231
+  └─ docker compose up -d
+       ├─ axl-propagator   :9022 / :10022
+       ├─ axl-witness      :9002 / :10002
+       ├─ axl-verifier     :9012 / :10012
+       ├─ axl-memory       :9032 / :10032
+       ├─ orchestrator     :3000
+       └─ dashboard        :4000
 ```
 
-**Option B — ngrok (for judging only)**
+The Dockerfiles build the Linux AXL binary from source (Gensyn Go repo) — no Windows binary dependency.
+
+### Deploy your own instance
+
+**1. Server setup**
 
 ```bash
-ngrok http 3000
-# Copy the HTTPS URL e.g. https://abc123.ngrok.io
+# On a Ubuntu 24.04 server
+curl -fsSL https://get.docker.com | sh
+git clone https://github.com/JoelEmmanuelCloud/aegis-protocol.git
+cd aegis-protocol
+cp .env.example .env   # fill in ZG_PRIVATE_KEY and ZG_COMPUTE_API_KEY
 ```
 
-All 5 services must also be running locally when using ngrok.
+Upload the gitignored secrets:
 
-### Step 2 — Deploy dashboard to Vercel
+- `.env` with your keys
+- `axl-configs/*.pem` key files
+
+**2. Build and start**
 
 ```bash
-cd apps/dashboard
-npm install -g vercel
-vercel --prod
+docker compose up -d --build
 ```
 
-Or connect via the Vercel dashboard:
+First build takes ~8 minutes (compiles the Go AXL binary). Subsequent restarts are instant.
 
-1. Import `https://github.com/JoelEmmanuelCloud/aegis-protocol`
-2. Set **Root Directory** to `apps/dashboard`
-3. Vercel auto-detects Vite — no framework override needed
+**3. HTTPS with Cloudflare Zero Trust**
 
-### Step 3 — Set environment variables in Vercel
+```bash
+# Install cloudflared
+curl -L --output /tmp/cloudflared.deb \
+  https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+dpkg -i /tmp/cloudflared.deb
 
-In **Project Settings → Environment Variables**, add:
+# Install as systemd service with your tunnel token
+cloudflared service install <your-tunnel-token>
+systemctl enable --now cloudflared
+```
 
-| Variable                           | Value                                                           |
-| ---------------------------------- | --------------------------------------------------------------- |
-| `VITE_ORCHESTRATOR_URL`            | `https://your-orchestrator.railway.app`                         |
-| `VITE_WALLETCONNECT_PROJECT_ID`    | From [cloud.walletconnect.com](https://cloud.walletconnect.com) |
-| `VITE_AGENT_REGISTRY_ADDRESS`      | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1`                    |
-| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4`                    |
-| `VITE_PUBLIC_RESOLVER_ADDRESS`     | `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63`                    |
-| `VITE_AEGIS_COURT_ADDRESS`         | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6`                    |
-| `VITE_0G_EXPLORER_URL`             | `https://chainscan-galileo.0g.ai`                               |
-| `VITE_KEEPERHUB_WORKFLOW_ID`       | `aegis.execute_remedy`                                          |
+Configure two **Published Application** routes in the Cloudflare Zero Trust dashboard:
 
-Redeploy after setting variables.
+- `app.yourdomain.com` → `http://localhost:4000`
+- `api.yourdomain.com` → `http://localhost:3000`
 
-### Step 4 — Add 0G testnet to MetaMask
+**4. Dashboard environment variables**
 
-Judges need to add the 0G testnet manually:
+The dashboard bakes `VITE_ORCHESTRATOR_URL` at build time:
 
-| Field           | Value                             |
-| --------------- | --------------------------------- |
-| Network Name    | 0G Testnet                        |
-| RPC URL         | `https://evmrpc-testnet.0g.ai`    |
-| Chain ID        | `16602`                           |
-| Currency Symbol | `OG`                              |
-| Block Explorer  | `https://chainscan-galileo.0g.ai` |
+```bash
+VITE_ORCHESTRATOR_URL="https://api.yourdomain.com" docker compose build --no-cache dashboard
+docker compose up -d dashboard
+```
 
-Get testnet OG at [faucet.0g.ai](https://faucet.0g.ai).
+| Variable                           | Value                                        |
+| ---------------------------------- | -------------------------------------------- |
+| `VITE_ORCHESTRATOR_URL`            | `https://api.yourdomain.com`                 |
+| `VITE_AGENT_REGISTRY_ADDRESS`      | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` |
+| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` |
+| `VITE_PUBLIC_RESOLVER_ADDRESS`     | `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63` |
+| `VITE_AEGIS_COURT_ADDRESS`         | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` |
+| `VITE_0G_EXPLORER_URL`             | `https://chainscan-galileo.0g.ai`            |
+| `VITE_KEEPERHUB_WORKFLOW_ID`       | `aegis.execute_remedy`                       |
 
-### What works without a wallet
+**5. Update after new commits**
 
-The dashboard has a **Try Demo** button on the landing page and a **Browse public feed** option on the connect screen. Both give full read-only access to:
-
-- Live attestation feed with action text and reasoning
-- Agent profiles with reputation scores
-- Dispute history with on-chain verification links
-- KeeperHub audit trail with step breakdown
-
-Writing (register agent, file dispute) requires a connected wallet with 0G testnet funds.
+```bash
+git pull origin dev
+docker compose up -d --build
+```
 
 ---
 
-## 11. Demo Video Script (3 min)
+## 12. Demo Video Script (3 min)
 
 **Setup before recording:** All 5 services running, browser at `http://localhost:4000`, MetaMask unlocked with funded 0G testnet wallet.
 
@@ -830,7 +829,7 @@ Show: score ring dropped, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1
 
 ---
 
-## 12. Contracts
+## 13. Contracts
 
 ### 0G Testnet (chainId 16602)
 
@@ -863,7 +862,7 @@ npm run setup:ens-sepolia
 
 ---
 
-## 13. Orchestrator API Reference
+## 14. Orchestrator API Reference
 
 ```
 POST /attestations
@@ -925,7 +924,7 @@ GET  /:sender/:calldata
 
 ---
 
-## 14. Troubleshooting
+## 15. Troubleshooting
 
 **AXL node fails to start / port already in use**
 
@@ -999,7 +998,7 @@ Fund your deployer wallet with at least 0.05 Sepolia ETH from [cloud.google.com 
 
 ---
 
-## 15. Repository Structure
+## 16. Repository Structure
 
 ```
 apps/
@@ -1030,6 +1029,7 @@ contracts/
     deploy-l1-resolver.ts   Deploy AegisCCIPResolver without registering aegis.eth
 
 scripts/
+  judge-demo.ts       Interactive judge demo — attests decisions, pauses for disputes, shows results
   mit-bot.ts          LangGraph 1.x trading agent — real 0G Compute decisions attested to Aegis
 
 axl-configs/          AXL node ed25519 private key files (*.pem)
@@ -1037,4 +1037,5 @@ bin/                  Gensyn AXL binary (axl-node / axl-node.exe)
 docs/
   FEEDBACK.md         KeeperHub builder feedback (prize bounty)
   SUBMISSION_CHECKLIST.md
+JUDGES.md             Complete judge testing guide with 6-step walkthrough
 ```
