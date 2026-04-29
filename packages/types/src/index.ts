@@ -103,4 +103,7 @@ export interface DisputeRecord {
   timestamp: number;
   verdict?: Verdict;
   teeProof?: string;
+  submitTxHash?: string;
+  recordTxHash?: string;
+  explorerUrl?: string;
 }
