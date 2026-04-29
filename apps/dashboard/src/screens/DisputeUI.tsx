@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,138 @@ import { demoDisputeList } from '../lib/demoData';
 import type { DisputeRecord } from '@aegis/types';
 
 type Tab = 'file' | 'history';
+
+const DISPUTE_STEPS = [
+  { label: 'Submitting to AegisCourt', ms: 300 },
+  { label: 'Applying risk guardrails', ms: 1200 },
+  { label: 'Verifier replaying via 0G Compute TEE', ms: 4000 },
+  { label: 'Recording verdict on-chain', ms: 7000 },
+  { label: 'Triggering KeeperHub workflow', ms: 8500 },
+];
+
+function DisputeProgress({ active }: { active: boolean }) {
+  const [step, setStep] = useState(-1);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    if (!active) {
+      setStep(-1);
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+      return;
+    }
+    setStep(0);
+    DISPUTE_STEPS.forEach((s, i) => {
+      const t = setTimeout(() => setStep(i), s.ms);
+      timers.current.push(t);
+    });
+    return () => {
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+    };
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <div
+      style={{
+        padding: '20px 24px',
+        background: 'var(--app-elevated)',
+        borderRadius: 10,
+        border: '1px solid var(--app-border)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 4 }}>
+        Processing dispute...
+      </div>
+      {DISPUTE_STEPS.map((s, i) => {
+        const done = i < step;
+        const current = i === step;
+        return (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: '50%',
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: done
+                  ? 'var(--app-green)'
+                  : current
+                    ? 'var(--app-accent)'
+                    : 'var(--app-border)',
+                transition: 'background 0.3s',
+              }}
+            >
+              {done ? (
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  strokeWidth="3"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : current ? (
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: '#fff',
+                    animation: 'pulse 1s infinite',
+                  }}
+                />
+              ) : null}
+            </div>
+            <span
+              style={{
+                fontSize: 12,
+                color: done
+                  ? 'var(--app-text-2)'
+                  : current
+                    ? 'var(--app-text)'
+                    : 'var(--app-text-muted)',
+                fontWeight: current ? 600 : 400,
+                transition: 'color 0.3s',
+              }}
+            >
+              {s.label}
+            </span>
+          </div>
+        );
+      })}
+      <div
+        style={{
+          height: 3,
+          background: 'var(--app-border)',
+          borderRadius: 2,
+          overflow: 'hidden',
+          marginTop: 4,
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            background: 'var(--app-accent)',
+            borderRadius: 2,
+            width: `${Math.max(4, ((step + 1) / DISPUTE_STEPS.length) * 100)}%`,
+            transition: 'width 0.8s ease',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function FieldError({ msg }: { msg: string }) {
   return (
@@ -204,6 +336,8 @@ export default function DisputeUI() {
 
       {tab === 'file' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <DisputeProgress active={isPending} />
+
           {isSuccess && status && (
             <div
               style={{
@@ -388,7 +522,7 @@ export default function DisputeUI() {
                 cursor: isPending || !canSubmit ? 'not-allowed' : 'pointer',
               }}
             >
-              {isPending ? 'Submitting to AegisCourt…' : 'File Dispute'}
+              {isPending ? 'Processing…' : 'File Dispute'}
             </button>
           </div>
         </div>
