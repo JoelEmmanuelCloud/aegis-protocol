@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import * as readline from 'readline';
 
 const API = 'https://api.aegisprotocol.uk';
 const DASHBOARD = 'https://app.aegisprotocol.uk';
@@ -43,8 +44,17 @@ function sep(title: string) {
   log('─'.repeat(60));
 }
 
+function pause(msg: string): Promise<void> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(`\n  ${msg}\n\n  Press ENTER when done...`, () => {
+      rl.close();
+      resolve();
+    });
+  });
+}
+
 async function attest(
-  agentId: string,
   inputs: Record<string, unknown>,
   reasoning: string,
   action: Record<string, unknown>
@@ -52,31 +62,11 @@ async function attest(
   const res = await fetch(`${API}/attestations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ agentId, inputs, reasoning, action, timestamp: Date.now() }),
+    body: JSON.stringify({ agentId: AGENT_ID, inputs, reasoning, action, timestamp: Date.now() }),
   });
   if (!res.ok) throw new Error(`Attestation failed: ${res.status} ${await res.text()}`);
   const body = (await res.json()) as { rootHash: string };
   return body.rootHash;
-}
-
-async function dispute(rootHash: string, agentId: string, reason: string) {
-  const res = await fetch(`${API}/disputes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      rootHash,
-      agentId,
-      reason,
-      disputedBy: '0x50D1e2ca8f70751D2FB9Dba4605431f1692e825E',
-    }),
-  });
-  if (!res.ok) throw new Error(`Dispute failed: ${res.status} ${await res.text()}`);
-  return res.json() as Promise<{
-    verdict: string;
-    submitTxHash?: string;
-    recordTxHash?: string;
-    explorerUrl?: string;
-  }>;
 }
 
 async function run() {
@@ -100,47 +90,52 @@ async function run() {
   log(`  Token ID  : #${agent.tokenId}`);
   log(`  Status    : ${agent.active ? 'Active' : 'Inactive'}`);
 
-  sep('Step 1 — Submit a normal trading decision (will be CLEARED)');
+  sep('Step 1 — Attesting two decisions to Aegis');
 
-  log('  Attesting: swap 0.10 OG/USDC — within mandate...');
-  const clearedRoot = await attest(
-    AGENT_ID,
+  log('\n  Decision A — normal swap (expect: CLEARED)');
+  log('  Attesting...');
+  const clearHash = await attest(
     { market: 'OG/USDC', balance: '2.4 OG', priceChange24h: '+8.2%' },
     'Market momentum positive. Price up 8.2% on high volume. Executing 15% profit-take within mandate and daily risk limit.',
     { type: 'sell', pair: 'OG/USDC', amount: '0.36', strategy: 'momentum_exit' }
   );
-  log(`  rootHash  : ${clearedRoot}`);
+  log(`  rootHash  : ${clearHash}`);
 
-  log('\n  Filing dispute on the normal decision...');
-  const clearedResult = await dispute(
-    clearedRoot,
-    AGENT_ID,
-    'Challenging the sell decision to verify the TEE replay matches the original action.'
-  );
-  log(`  Verdict   : ${clearedResult.verdict}`);
-  if (clearedResult.explorerUrl) log(`  On-chain  : ${clearedResult.explorerUrl}`);
-
-  sep('Step 2 — Submit a high-risk prohibited action (will be FLAGGED)');
-
-  log('  Attesting: emergency_liquidation 5000 OG — prohibited action...');
-  const flaggedRoot = await attest(
-    AGENT_ID,
+  log('\n  Decision B — emergency liquidation (expect: FLAGGED)');
+  log('  Attesting...');
+  const flagHash = await attest(
     { market: 'OG/USDC', balance: '4.8 OG', context: 'market crash -23%' },
-    'Catastrophic market crash. Emergency liquidation of full position to protect capital. No time to check limits.',
+    'Catastrophic market crash. Emergency liquidation of full position. No time to check limits.',
     { type: 'emergency_liquidation', target: 'full_position', amount: '5000', reason: 'panic_sell' }
   );
-  log(`  rootHash  : ${flaggedRoot}`);
+  log(`  rootHash  : ${flagHash}`);
 
-  log('\n  Filing dispute on the prohibited action...');
-  const flaggedResult = await dispute(
-    flaggedRoot,
-    AGENT_ID,
-    'Agent executed emergency_liquidation of 5000 OG without user authorisation. Action type is explicitly prohibited. Exceeds 100 OG daily risk limit by 50x.'
-  );
-  log(`  Verdict   : ${flaggedResult.verdict}`);
-  if (flaggedResult.explorerUrl) log(`  On-chain  : ${flaggedResult.explorerUrl}`);
+  sep('Step 2 — File disputes yourself in the dashboard');
 
-  sep('Step 3 — Check live reputation');
+  log(`
+  Both decisions are now in the Attestation Feed.
+  Open the dashboard and file a dispute on each one:
+
+  ${DASHBOARD}/app/attestations
+
+  For EACH card:
+    1. Click the "File Dispute" button on the card
+       (it auto-fills the root hash and agent name)
+    2. Write a reason — for example:
+       Decision A: "Challenging the swap to verify the TEE replay matches."
+       Decision B: "Unauthorised emergency liquidation. Exceeds mandate and 100 OG limit."
+    3. Click "File Dispute" and wait for the verdict
+
+  Expected results:
+    Decision A (sell 0.36 OG)    →  CLEARED  — within mandate
+    Decision B (emergency 5000)  →  FLAGGED  — prohibited action type + exceeds limit
+
+  Each verdict records TWO on-chain transactions on the 0G chain.
+  The "Verify on-chain" link appears on each dispute card.`);
+
+  await pause('File both disputes in the dashboard, then come back here.');
+
+  sep('Step 3 — Checking your results');
 
   const repRes = await fetch(`${API}/disputes/reputation/${AGENT_ID}`);
   const rep = (await repRes.json()) as {
@@ -149,39 +144,53 @@ async function run() {
     clearedCount: number;
     lastVerdict: string;
   };
-  log(`  Score         : ${rep.score} / 100`);
-  log(`  Flagged count : ${rep.flaggedCount}`);
-  log(`  Cleared count : ${rep.clearedCount}`);
-  log(`  Last verdict  : ${rep.lastVerdict}`);
 
-  sep('Step 4 — KeeperHub audit trail');
+  log(`\n  Reputation for ${AGENT_ID}:`);
+  log(`    Score         : ${rep.score} / 100`);
+  log(`    Flagged count : ${rep.flaggedCount}`);
+  log(`    Cleared count : ${rep.clearedCount}`);
+  log(`    Last verdict  : ${rep.lastVerdict}`);
 
-  const auditRes = await fetch(`${API}/keeperhub/audit?workflowId=aegis.execute_remedy&limit=2`);
+  if (rep.flaggedCount === 0 && rep.clearedCount === 0) {
+    log('\n  No disputes found yet. File both disputes in the dashboard and run again.');
+    process.exit(0);
+  }
+
+  sep('Step 4 — KeeperHub automated remedy');
+
+  const auditRes = await fetch(`${API}/keeperhub/audit?workflowId=aegis.execute_remedy&limit=4`);
   const runs = (await auditRes.json()) as Array<{
     runId: string;
     status: string;
-    payload?: { verdict: string };
+    payload?: { verdict: string; agentId: string };
     steps?: Array<{ action: string; status: string }>;
   }>;
 
-  for (const run of runs) {
-    log(`\n  Run ${run.runId.slice(0, 8)}... — ${run.status} (verdict: ${run.payload?.verdict})`);
-    for (const step of run.steps ?? []) {
-      const icon = step.status === 'completed' ? 'OK' : step.status === 'skipped' ? '--' : 'ER';
-      log(`    [${icon}] ${step.action}`);
+  const myRuns = runs.filter((r) => r.payload?.agentId === AGENT_ID);
+
+  if (myRuns.length === 0) {
+    log('  No workflow runs found for your agent yet.');
+  } else {
+    for (const r of myRuns) {
+      log(`\n  Run ${r.runId.slice(0, 8)}... — ${r.status} (verdict: ${r.payload?.verdict})`);
+      for (const step of r.steps ?? []) {
+        const icon = step.status === 'completed' ? 'OK' : step.status === 'skipped' ? '--' : 'ER';
+        log(`    [${icon}] ${step.action}`);
+      }
     }
+    log('\n  execute_remedy_tx: OK on FLAGGED, -- (skipped) on CLEARED.');
+    log('  This ran automatically — no manual trigger.');
   }
 
   log('\n====================================================');
-  log('  Demo complete. Open the dashboard to see results:');
-  log(`\n  ${DASHBOARD}`);
-  log('\n  Navigate to:');
-  log('    /app/attestations  — see both decisions with reasoning');
-  log('    /app/disputes      — History tab: CLEARED + FLAGGED cards');
-  log('    /app/agents        — search "judge-bot" — reputation score');
-  log('    /app/audit         — KeeperHub: execute_remedy_tx ran/skipped');
-  log('\n  All verdicts are recorded on-chain and verifiable at:');
-  log('  https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6');
+  log('  Done. Check the dashboard to see everything live:');
+  log(`\n  ${DASHBOARD}/app/disputes   — your dispute history`);
+  log(`  ${DASHBOARD}/app/agents     — search "${label}" — reputation score`);
+  log(`  ${DASHBOARD}/app/audit      — KeeperHub step breakdown`);
+  log('\n  On-chain contract (all your verdicts are here):');
+  log(
+    '  https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction'
+  );
   log('====================================================\n');
 }
 
