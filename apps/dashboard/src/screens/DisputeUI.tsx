@@ -6,6 +6,7 @@ import { useDispute } from '../hooks/useDispute';
 import { useDisputeStatus } from '../hooks/useDisputeStatus';
 import { useDemoMode } from '../context/DemoContext';
 import { fetchDisputeList } from '../lib/orchestratorApi';
+import { demoDisputeList } from '../lib/demoData';
 import type { DisputeRecord } from '@aegis/types';
 
 type Tab = 'file' | 'history';
@@ -57,9 +58,10 @@ export default function DisputeUI() {
   const { mutate: fileDispute, isPending, isSuccess, error } = useDispute();
   const { data: status } = useDisputeStatus(submitted ? rootHash : undefined);
   const { data: disputeList = [] } = useQuery<DisputeRecord[]>({
-    queryKey: ['disputeList'],
-    queryFn: fetchDisputeList,
-    refetchInterval: 5000,
+    queryKey: ['disputeList', isDemoMode],
+    queryFn: isDemoMode ? () => Promise.resolve(demoDisputeList) : fetchDisputeList,
+    refetchInterval: isDemoMode ? false : 5000,
+    staleTime: isDemoMode ? Infinity : 0,
   });
 
   const rootHashError = (() => {
