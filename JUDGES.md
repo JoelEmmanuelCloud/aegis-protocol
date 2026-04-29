@@ -29,11 +29,11 @@ await fetch('http://witness:9002/send', {
 
 ## Live Demo
 
-**Dashboard:** http://164.92.165.231:4000
+**Dashboard:** https://exec-download-products-dependent.trycloudflare.com
 
-**Orchestrator API:** http://164.92.165.231:3000
+**Orchestrator API:** https://still-cultural-lecture-cholesterol.trycloudflare.com
 
-No installation needed. Open the dashboard in your browser.
+No installation needed. Open the dashboard in your browser. MetaMask works — the dashboard is served over HTTPS.
 
 To explore without a wallet, click **Try Demo** on the landing page or **Browse public feed** on the connect screen. Every screen is fully functional in read-only mode.
 
