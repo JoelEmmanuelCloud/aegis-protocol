@@ -7,12 +7,53 @@ The accountability layer for AI agents. Any agent can prove what it decided, why
 
 ---
 
+## Try It Now (judges / reviewers)
+
+The dashboard is deployed at:
+
+> **https://aegis-protocol.vercel.app**
+
+No installation required. Connect MetaMask on the **0G testnet** (Chain ID `16602`, RPC `https://evmrpc-testnet.0g.ai`) and click **Try Demo** to explore without a wallet.
+
+**To run the full live flow against the hosted orchestrator:**
+
+1. Get testnet OG from [faucet.0g.ai](https://faucet.0g.ai)
+2. Connect MetaMask, register an agent (`/app/register`)
+3. Run the example bot to generate attested decisions:
+
+```bash
+git clone https://github.com/JoelEmmanuelCloud/aegis-protocol.git
+cd aegis-protocol
+npm install
+cp .env .env.local   # uses the pre-configured .env
+npx ts-node scripts/mit-bot.ts
+```
+
+4. File a dispute from the Attestation Feed — click **File Dispute** on any card
+5. Watch the verdict, KeeperHub workflow, and reputation score update live
+
+If you want to run the full backend locally instead, follow the steps in [Section 5](#5-start-the-system).
+
+---
+
 ## Table of Contents
 
 1. [What It Does](#1-what-it-does)
 2. [Architecture](#2-architecture)
 3. [Prerequisites](#3-prerequisites)
 4. [Environment Setup](#4-environment-setup)
+5. [Start the System](#5-start-the-system)
+6. [Verify All Services Are Live](#6-verify-all-services-are-live)
+7. [Real-World User Flow](#7-real-world-user-flow)
+8. [Builder Integration](#8-builder-integration--adding-aegis-to-your-bot)
+9. [Running the Example Bot](#9-running-the-example-bot)
+10. [Full End-to-End Test Walkthrough](#10-full-end-to-end-test-walkthrough)
+10b. [Deploy Dashboard to Vercel](#10b-deploy-dashboard-to-vercel)
+11. [Demo Video Script (3 min)](#11-demo-video-script-3-min)
+12. [Contracts](#12-contracts)
+13. [Orchestrator API Reference](#13-orchestrator-api-reference)
+14. [Troubleshooting](#14-troubleshooting)
+15. [Repository Structure](#15-repository-structure)
 5. [Start the System](#5-start-the-system)
 6. [Verify All Services Are Live](#6-verify-all-services-are-live)
 7. [Real-World User Flow](#7-real-world-user-flow)
@@ -496,7 +537,221 @@ Example output:
 
 ---
 
-## 10. Demo Video Script (3 min)
+## 10. Full End-to-End Test Walkthrough
+
+Run this sequence to verify every part of the system from a single terminal. All commands assume the 5 services are running (see [Section 5](#5-start-the-system)).
+
+### Part A — Submit bot decisions
+
+```bash
+# Run the LangGraph bot — makes 3 real AI decisions via 0G Compute, attests each
+npx ts-node scripts/mit-bot.ts
+```
+
+Expected output per decision:
+
+```
+[Decision 1] OG/USDC
+  LangGraph   : Based on the current market data...
+  Action      : {"type":"hold","pair":"OG/USDC","amount":"3.08","strategy":"..."}
+  Reasoning   : High volatility detected. Holding to avoid potential losses.
+  rootHash    : 0xe1cce9dc77e3bf2ece97b5b68a70bed6...
+  AXL + Aegis : attested
+```
+
+Verify the decisions appear in the orchestrator:
+
+```bash
+curl http://localhost:3000/attestations
+# Returns: items[] with agentId, rootHash, action, reasoning for each decision
+```
+
+### Part B — Check agent reputation (before any dispute)
+
+```bash
+curl http://localhost:3000/attestations/summary/mit-bot.aegis.eth
+# {"totalDecisions":3,"lastVerdict":"PENDING","flaggedCount":0}
+
+curl http://localhost:3000/disputes/reputation/mit-bot.aegis.eth
+# {"score":100,"flaggedCount":0,"clearedCount":0,"lastVerdict":"PENDING"}
+```
+
+### Part C — File a CLEARED dispute (legitimate decision)
+
+Take the rootHash of a normal swap decision from Part A:
+
+```bash
+curl -X POST http://localhost:3000/disputes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rootHash": "0x<rootHash from Part A>",
+    "agentId": "mit-bot.aegis.eth",
+    "reason": "Challenging the swap decision — verifying the TEE replay matches.",
+    "disputedBy": "0x50D1e2ca8f70751D2FB9Dba4605431f1692e825E"
+  }'
+```
+
+Expected: `"verdict":"CLEARED"` with `submitTxHash` and `recordTxHash` — both verifiable at [chainscan-galileo.0g.ai](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction).
+
+### Part D — File a FLAGGED dispute (high-risk action)
+
+First submit a suspicious attestation:
+
+```bash
+TS=$(date +%s%3N)
+curl -X POST http://localhost:3000/attestations \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"agentId\": \"mit-bot.aegis.eth\",
+    \"inputs\": {\"context\": \"balance 4.8 OG, market crash -23%\"},
+    \"reasoning\": \"Emergency liquidation required. No time to check limits.\",
+    \"action\": {\"type\": \"emergency_liquidation\", \"target\": \"full_position\", \"amount\": \"4800\"},
+    \"timestamp\": $TS
+  }"
+# Save the returned rootHash
+```
+
+Dispute it:
+
+```bash
+curl -X POST http://localhost:3000/disputes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rootHash": "0x<rootHash from above>",
+    "agentId": "mit-bot.aegis.eth",
+    "reason": "Agent executed emergency_liquidation of 4800 OG without user authorisation. Exceeds 100 OG daily limit.",
+    "disputedBy": "0x50D1e2ca8f70751D2FB9Dba4605431f1692e825E"
+  }'
+```
+
+Expected: `"verdict":"FLAGGED"` — the `emergency_liquidation` action type triggers the guardrail.
+
+### Part E — Check reputation after disputes
+
+```bash
+curl http://localhost:3000/disputes/reputation/mit-bot.aegis.eth
+# {"score":91,"flaggedCount":1,"clearedCount":1,"lastVerdict":"FLAGGED"}
+# Score = 100 - (1 FLAGGED × 10) + (1 CLEARED × 1) = 91
+```
+
+### Part F — KeeperHub audit trail
+
+```bash
+curl "http://localhost:3000/keeperhub/audit?workflowId=aegis.execute_remedy&limit=2"
+```
+
+Check that:
+- FLAGGED run: `execute_remedy_tx` has `"status":"completed"`
+- CLEARED run: `execute_remedy_tx` has `"status":"skipped"`
+
+### Part G — Dispute history list
+
+```bash
+curl http://localhost:3000/disputes/all
+```
+
+Returns all disputes with `verdict`, `reason`, `submitTxHash`, `recordTxHash`, and `explorerUrl` for each.
+
+### Part H — AXL mesh verification
+
+```bash
+curl http://localhost:9022/topology | grep '"up":true' | wc -l
+# Should return 5 (3 Aegis nodes + 2 Gensyn bootstrap nodes)
+```
+
+All 5 steps above should complete without errors. The whole sequence takes under 3 minutes.
+
+---
+
+## 10b. Deploy Dashboard to Vercel
+
+The dashboard is a Vite React SPA. It connects to a publicly hosted orchestrator and reads on-chain data directly from the 0G testnet.
+
+### Step 1 — Expose the orchestrator publicly
+
+The orchestrator must be publicly reachable for the Vercel dashboard to call it.
+
+**Option A — Railway (recommended, free tier available)**
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+railway login
+
+# From the project root
+railway init
+railway up --service orchestrator
+# Note the generated URL e.g. https://aegis-orchestrator.railway.app
+```
+
+**Option B — ngrok (for judging only)**
+
+```bash
+ngrok http 3000
+# Copy the HTTPS URL e.g. https://abc123.ngrok.io
+```
+
+All 5 services must also be running locally when using ngrok.
+
+### Step 2 — Deploy dashboard to Vercel
+
+```bash
+cd apps/dashboard
+npm install -g vercel
+vercel --prod
+```
+
+Or connect via the Vercel dashboard:
+1. Import `https://github.com/JoelEmmanuelCloud/aegis-protocol`
+2. Set **Root Directory** to `apps/dashboard`
+3. Vercel auto-detects Vite — no framework override needed
+
+### Step 3 — Set environment variables in Vercel
+
+In **Project Settings → Environment Variables**, add:
+
+| Variable | Value |
+|---|---|
+| `VITE_ORCHESTRATOR_URL` | `https://your-orchestrator.railway.app` |
+| `VITE_WALLETCONNECT_PROJECT_ID` | From [cloud.walletconnect.com](https://cloud.walletconnect.com) |
+| `VITE_AGENT_REGISTRY_ADDRESS` | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` |
+| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` |
+| `VITE_PUBLIC_RESOLVER_ADDRESS` | `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63` |
+| `VITE_AEGIS_COURT_ADDRESS` | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` |
+| `VITE_0G_EXPLORER_URL` | `https://chainscan-galileo.0g.ai` |
+| `VITE_KEEPERHUB_WORKFLOW_ID` | `aegis.execute_remedy` |
+
+Redeploy after setting variables.
+
+### Step 4 — Add 0G testnet to MetaMask
+
+Judges need to add the 0G testnet manually:
+
+| Field | Value |
+|---|---|
+| Network Name | 0G Testnet |
+| RPC URL | `https://evmrpc-testnet.0g.ai` |
+| Chain ID | `16602` |
+| Currency Symbol | `OG` |
+| Block Explorer | `https://chainscan-galileo.0g.ai` |
+
+Get testnet OG at [faucet.0g.ai](https://faucet.0g.ai).
+
+### What works without a wallet
+
+The dashboard has a **Try Demo** button on the landing page and a **Browse public feed** option on the connect screen. Both give full read-only access to:
+
+- Live attestation feed with action text and reasoning
+- Agent profiles with reputation scores
+- Dispute history with on-chain verification links
+- KeeperHub audit trail with step breakdown
+
+Writing (register agent, file dispute) requires a connected wallet with 0G testnet funds.
+
+---
+
+## 11. Demo Video Script (3 min)
+
 
 **Setup before recording:** All 5 services running, browser at `http://localhost:4000`, MetaMask unlocked with funded 0G testnet wallet.
 
@@ -572,7 +827,7 @@ Show: score ring dropped, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1
 
 ---
 
-## 11. Contracts
+## 12. Contracts
 
 ### 0G Testnet (chainId 16602)
 
@@ -605,7 +860,7 @@ npm run setup:ens-sepolia
 
 ---
 
-## 12. Orchestrator API Reference
+## 13. Orchestrator API Reference
 
 ```
 POST /attestations
@@ -667,7 +922,7 @@ GET  /:sender/:calldata
 
 ---
 
-## 13. Troubleshooting
+## 14. Troubleshooting
 
 **AXL node fails to start / port already in use**
 
@@ -740,7 +995,7 @@ Fund your deployer wallet with at least 0.05 Sepolia ETH from [cloud.google.com 
 
 ---
 
-## 14. Repository Structure
+## 15. Repository Structure
 
 ```
 apps/
