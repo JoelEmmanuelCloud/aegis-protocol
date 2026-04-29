@@ -122,7 +122,23 @@ You will see two new cards — one for each decision the script just submitted.
 2. Write a reason:
    - Decision A (swap): `"Challenging the swap to verify the TEE replay matches."`
    - Decision B (emergency): `"Unauthorised emergency liquidation. Exceeds mandate and 100 OG daily limit."`
-3. Click **File Dispute** and wait a few seconds for the verdict
+3. Click **File Dispute**
+
+A **live progress tracker** appears immediately, walking through each stage of the dispute:
+
+```
+Processing dispute...
+
+  ● Submitting to AegisCourt          ← lights up first
+  ● Applying risk guardrails
+  ● Verifier replaying via 0G Compute TEE
+  ● Recording verdict on-chain
+  ● Triggering KeeperHub workflow
+
+  [████████████████████░░░░░] 80%
+```
+
+Each step lights up in sequence as the backend processes it. When complete, the tracker is replaced by the verdict card.
 
 **Expected results:**
 
