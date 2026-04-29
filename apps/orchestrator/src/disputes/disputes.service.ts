@@ -13,7 +13,7 @@ const AEGIS_COURT_ABI = [
 const VERDICT_TO_UINT: Record<Verdict, number> = { PENDING: 0, CLEARED: 1, FLAGGED: 2 };
 const UINT_TO_VERDICT: Verdict[] = ['PENDING', 'CLEARED', 'FLAGGED'];
 
-const ZG_EXPLORER = 'https://chainscan-newton.0g.ai';
+const ZG_EXPLORER = 'https://chainscan-galileo.0g.ai';
 
 export interface FileDisputeDto {
   rootHash: string;

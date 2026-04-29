@@ -15,7 +15,7 @@ type Run = {
   steps?: StepRecord[];
 };
 
-const ZG_EXPLORER = 'https://chainscan-newton.0g.ai';
+const ZG_EXPLORER = 'https://chainscan-galileo.0g.ai';
 
 const STEP_LABELS: Record<string, string> = {
   'aegis.fetch_verdict': 'Fetch verdict from AegisCourt',
