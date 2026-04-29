@@ -30,6 +30,13 @@ contracts/typechain-types/
 # Go binaries
 axl/
 
+# Logs
+logs/
+*.log
+
+# TypeScript build info
+**/*.tsbuildinfo
+
 # OS
 .DS_Store
 Thumbs.db

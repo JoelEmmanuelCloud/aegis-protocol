@@ -1,7 +1,0 @@
-2026/04/28 15:30:32 Connection from peer f2f2af19af8f20bf...
-C:\Users\joel.emmanuel\Desktop\aegis-protocol\apps\propagator-node\src\index.ts:80
-  for (const msg of messages) {
-                    ^
-TypeError: messages is not iterable
-    at Timeout._onTimeout (C:\Users\joel.emmanuel\Desktop\aegis-protocol\apps\propagator-node\src\index.ts:80:21)
-    at processTicksAndRejections (node:internal/process/task_queues:105:5)
