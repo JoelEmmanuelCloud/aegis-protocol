@@ -29,9 +29,9 @@ await fetch('http://witness:9002/send', {
 
 ## Live Demo
 
-**Dashboard:** https://exec-download-products-dependent.trycloudflare.com
+**Dashboard:** https://app.aegisprotocol.uk
 
-**Orchestrator API:** https://still-cultural-lecture-cholesterol.trycloudflare.com
+**Orchestrator API:** https://api.aegisprotocol.uk
 
 No installation needed. Open the dashboard in your browser. MetaMask works — the dashboard is served over HTTPS.
 
