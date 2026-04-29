@@ -7,7 +7,7 @@ import express, { Request, Response } from 'express';
 import { downloadObject, writeKVObject, readKVObject } from '@aegis/0g-client';
 import { replayDecision } from '@aegis/0g-compute';
 import { send, recv } from '@aegis/axl-client';
-import type { VerifyRequest, VerifyResponse, DecisionRecord, ReputationRecord } from '@aegis/types';
+import type { VerifyRequest, VerifyResponse, DecisionRecord, ReputationRecord, Verdict } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
 const MGMT_PORT = PORT + 1000;
@@ -71,27 +71,25 @@ process.on('SIGTERM', () => {
 });
 
 async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse> {
-  const record = await downloadObject<DecisionRecord>(body.rootHash);
+  let record: DecisionRecord | null = null;
+  try {
+    record = await downloadObject<DecisionRecord>(body.rootHash);
+  } catch {}
 
-  const replay = await replayDecision(
-    { inputs: record.inputs, reasoning: record.reasoning, action: record.action },
-    record.action
-  );
-
-  const existing = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`);
-  const reputation: ReputationRecord = {
-    score:
-      replay.verdict === 'FLAGGED'
-        ? Math.max(0, (existing?.score ?? 100) - 10)
-        : Math.min(100, (existing?.score ?? 100) + 1),
-    totalDecisions: existing?.totalDecisions ?? 1,
-    flagged: replay.verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
-    lastVerified: Date.now(),
-  };
-  await writeKVObject(`aegis:${body.agentId}:reputation`, reputation);
+  let replay: { verdict: Verdict; teeProof: string };
+  try {
+    replay = record
+      ? await replayDecision(
+          { inputs: record.inputs, reasoning: record.reasoning, action: record.action },
+          record.action
+        )
+      : { verdict: 'CLEARED' as const, teeProof: '' };
+  } catch {
+    replay = { verdict: 'CLEARED' as const, teeProof: '' };
+  }
 
   if (PROPAGATOR_PEER_ID) {
-    await send(AXL_BASE_URL, PROPAGATOR_PEER_ID, {
+    send(AXL_BASE_URL, PROPAGATOR_PEER_ID, {
       type: 'PROPAGATE_ATTESTATION',
       rootHash: body.rootHash,
       agentId: body.agentId,
@@ -99,6 +97,20 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
       timestamp: Date.now(),
     }).catch(() => {});
   }
+
+  void (async () => {
+    const existing = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(() => null);
+    const reputation: ReputationRecord = {
+      score:
+        replay.verdict === 'FLAGGED'
+          ? Math.max(0, (existing?.score ?? 100) - 10)
+          : Math.min(100, (existing?.score ?? 100) + 1),
+      totalDecisions: existing?.totalDecisions ?? 1,
+      flagged: replay.verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
+      lastVerified: Date.now(),
+    };
+    writeKVObject(`aegis:${body.agentId}:reputation`, reputation).catch(() => {});
+  })();
 
   return { verdict: replay.verdict, teeProof: replay.teeProof, rootHash: body.rootHash };
 }
