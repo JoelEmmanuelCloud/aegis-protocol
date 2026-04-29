@@ -60,7 +60,7 @@ const getPortfolio = tool(
 );
 
 const checkRiskLimits = tool(
-  async ({ action, amount }: { action: string; amount: number }) => {
+  async ({ amount }: { action: string; amount: number }) => {
     const allowed = amount <= AMOUNT_LIMIT;
     return JSON.stringify({
       allowed,
