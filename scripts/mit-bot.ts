@@ -3,7 +3,8 @@ import fetch from 'node-fetch';
 import { ChatOpenAI } from '@langchain/openai';
 import { tool } from '@langchain/core/tools';
 import { HumanMessage } from '@langchain/core/messages';
-import { createReactAgent } from '@langchain/langgraph/prebuilt';
+import { StateGraph, MessagesAnnotation, END, START } from '@langchain/langgraph';
+import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { z } from 'zod';
 
 const AGENT_ID = 'mit-bot.aegis.eth';
@@ -77,6 +78,33 @@ const checkRiskLimits = tool(
   }
 );
 
+const tools = [getMarketData, getPortfolio, checkRiskLimits];
+const toolNode = new ToolNode(tools);
+const llmWithTools = llm.bindTools(tools);
+
+function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
+  const last = messages[messages.length - 1];
+  if ('tool_calls' in last && Array.isArray((last as { tool_calls: unknown[] }).tool_calls) && (last as { tool_calls: unknown[] }).tool_calls.length > 0) {
+    return 'tools';
+  }
+  return END;
+}
+
+async function callModel({ messages }: typeof MessagesAnnotation.State) {
+  const response = await llmWithTools.invoke(messages);
+  return { messages: [response] };
+}
+
+function buildAgent() {
+  const graph = new StateGraph(MessagesAnnotation)
+    .addNode('agent', callModel)
+    .addNode('tools', toolNode)
+    .addEdge(START, 'agent')
+    .addConditionalEdges('agent', shouldContinue)
+    .addEdge('tools', 'agent');
+  return graph.compile();
+}
+
 async function attestToAegis(
   action: Record<string, unknown>,
   reasoning: string,
@@ -106,21 +134,28 @@ function ruleFallback(pair: string): { action: Record<string, unknown>; reasonin
   const inputs = { pair, price, priceChange24h: change, walletBalance: balance };
 
   if (change < -10) {
-    return { action: { type: 'buy', pair, amount: (balance * 0.2).toFixed(2), strategy: 'dip_buy' }, reasoning: `${pair} down ${Math.abs(change).toFixed(1)}% — dip-buying 20% of balance (${(balance * 0.2).toFixed(2)}).`, inputs };
+    return {
+      action: { type: 'buy', pair, amount: (balance * 0.2).toFixed(2), strategy: 'dip_buy' },
+      reasoning: `${pair} down ${Math.abs(change).toFixed(1)}% — dip-buying 20% of balance (${(balance * 0.2).toFixed(2)} OG).`,
+      inputs,
+    };
   }
   if (change > 8) {
-    return { action: { type: 'sell', pair, amount: (balance * 0.15).toFixed(2), strategy: 'momentum_exit' }, reasoning: `${pair} up ${change.toFixed(1)}% on momentum — taking 15% profit (${(balance * 0.15).toFixed(2)}).`, inputs };
+    return {
+      action: { type: 'sell', pair, amount: (balance * 0.15).toFixed(2), strategy: 'momentum_exit' },
+      reasoning: `${pair} up ${change.toFixed(1)}% on momentum — taking 15% profit (${(balance * 0.15).toFixed(2)} OG).`,
+      inputs,
+    };
   }
-  return { action: { type: 'swap', pair, amount: (balance * 0.1).toFixed(2), strategy: 'rebalance' }, reasoning: `${pair} neutral at ${price.toFixed(3)} — standard 10% rebalance (${(balance * 0.1).toFixed(2)}).`, inputs };
+  return {
+    action: { type: 'swap', pair, amount: (balance * 0.1).toFixed(2), strategy: 'rebalance' },
+    reasoning: `${pair} neutral at ${price.toFixed(3)} — standard 10% rebalance (${(balance * 0.1).toFixed(2)} OG).`,
+    inputs,
+  };
 }
 
-async function runDecision(pair: string, index: number): Promise<void> {
+async function runDecision(agent: ReturnType<typeof buildAgent>, pair: string, index: number): Promise<void> {
   process.stdout.write(`\n[Decision ${index}] ${pair}\n`);
-
-  const agent = createReactAgent({
-    llm,
-    tools: [getMarketData, getPortfolio, checkRiskLimits],
-  });
 
   let action: Record<string, unknown> = { type: 'hold', pair };
   let reasoning = '';
@@ -131,23 +166,23 @@ async function runDecision(pair: string, index: number): Promise<void> {
       messages: [
         new HumanMessage(
           `You are mit-bot, a DeFi trading agent on 0G Chain. ` +
-          `Use your tools to check the ${pair} market and portfolio, verify risk limits, then decide ONE action (buy/sell/swap/hold). ` +
-          `End your response with EXACTLY this JSON on its own line: ` +
-          `{"action":{"type":"<type>","pair":"${pair}","amount":"<number>","strategy":"<name>"},"reasoning":"<2 sentences>"}`
+          `Use your tools: check the ${pair} market, get your portfolio, verify risk limits, then decide ONE action. ` +
+          `End your final answer with this JSON on its own line: ` +
+          `{"action":{"type":"<buy|sell|swap|hold>","pair":"${pair}","amount":"<number>","strategy":"<name>"},"reasoning":"<2 sentences>"}`
         ),
       ],
     });
 
-    const lastMsg = result.messages[result.messages.length - 1];
-    const text = typeof lastMsg.content === 'string' ? lastMsg.content : JSON.stringify(lastMsg.content);
-    process.stdout.write(`  LangChain   : ${text.slice(0, 120)}...\n`);
+    const last = result.messages[result.messages.length - 1];
+    const text = typeof last.content === 'string' ? last.content : JSON.stringify(last.content);
+    process.stdout.write(`  LangGraph   : ${text.slice(0, 120)}${text.length > 120 ? '...' : ''}\n`);
 
-    const jsonMatch = text.match(/\{[\s\S]*"action"[\s\S]*\}/);
+    const jsonMatch = text.match(/\{[\s\S]*"action"[\s\S]*"reasoning"[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]) as { action: Record<string, unknown>; reasoning: string };
       action = parsed.action;
       reasoning = parsed.reasoning;
-      inputs = { pair, source: 'langchain_react_agent' };
+      inputs = { pair, source: 'langgraph_stategraph' };
     }
   } catch (err) {
     process.stdout.write(`  LLM error   : ${String(err).slice(0, 80)}\n`);
@@ -163,19 +198,21 @@ async function runDecision(pair: string, index: number): Promise<void> {
 
   const rootHash = await attestToAegis(action, reasoning, inputs);
   process.stdout.write(`  rootHash    : ${rootHash}\n`);
-  process.stdout.write(`  AXL         : delivered to Aegis witness mesh\n`);
+  process.stdout.write(`  AXL + Aegis : attested\n`);
 }
 
 async function run(): Promise<void> {
-  process.stdout.write('\n=== mit-bot.aegis.eth — LangChain ReAct agent + Aegis attestation ===\n');
-  process.stdout.write(`Framework   : LangChain (@langchain/langgraph createReactAgent)\n`);
+  process.stdout.write('\n=== mit-bot.aegis.eth — LangGraph StateGraph agent + Aegis attestation ===\n');
+  process.stdout.write(`Framework   : LangGraph 1.x (StateGraph + ToolNode — non-deprecated)\n`);
   process.stdout.write(`LLM         : ${process.env.ZG_COMPUTE_MODEL ?? 'qwen/qwen-2.5-7b-instruct'} via 0G Compute\n`);
   process.stdout.write(`Tools       : get_market_data · get_portfolio · check_risk_limits\n`);
   process.stdout.write(`Witness     : ${WITNESS_AXL_URL} → peer ${WITNESS_PEER_ID.slice(0, 16)}...\n`);
 
+  const agent = buildAgent();
   const pairs = ['OG/USDC', 'OG/ETH', 'ETH/USDC'];
+
   for (let i = 0; i < pairs.length; i++) {
-    await runDecision(pairs[i], i + 1);
+    await runDecision(agent, pairs[i], i + 1);
   }
 
   process.stdout.write('\n=== All decisions attested to Aegis ===\n');
