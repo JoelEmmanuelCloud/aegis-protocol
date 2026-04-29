@@ -2,7 +2,36 @@ import fetch from 'node-fetch';
 
 const API = 'https://api.aegisprotocol.uk';
 const DASHBOARD = 'https://app.aegisprotocol.uk';
-const AGENT_ID = 'judge-bot.aegis.eth';
+
+const label = process.argv[2];
+
+if (!label) {
+  process.stdout.write(`
+====================================================
+  Aegis Protocol — Judge Demo
+====================================================
+
+  Before running this script, register your own agent:
+
+  1. Open ${DASHBOARD}
+  2. Connect your MetaMask wallet (0G testnet, chain 16602)
+     RPC: https://evmrpc-testnet.0g.ai
+     Get OG tokens: https://faucet.0g.ai
+  3. Go to Register (/app/register)
+  4. Type your agent label  e.g.  alice-bot
+  5. Set accountability split (e.g. 60 / 40)
+  6. Click Mint iNFT and approve the transaction
+
+  Then run this script with your label:
+
+    npx ts-node scripts/judge-demo.ts alice-bot
+
+====================================================\n
+`);
+  process.exit(0);
+}
+
+const AGENT_ID = label.endsWith('.aegis.eth') ? label : `${label}.aegis.eth`;
 
 function log(msg: string) {
   process.stdout.write(`${msg}\n`);
@@ -52,13 +81,24 @@ async function dispute(rootHash: string, agentId: string, reason: string) {
 
 async function run() {
   log('\n====================================================');
-  log('  Aegis Protocol — Judge Demo Script');
-  log('  This script runs the full accountability flow');
-  log('  against the live hosted backend.');
+  log('  Aegis Protocol — Judge Demo');
   log('====================================================');
   log(`\n  Dashboard : ${DASHBOARD}`);
   log(`  API       : ${API}`);
   log(`  Agent     : ${AGENT_ID}`);
+
+  const agentRes = await fetch(`${API}/agents/label/${encodeURIComponent(label)}`).catch(
+    () => null
+  );
+  if (!agentRes || !agentRes.ok) {
+    log(`\n  Agent "${AGENT_ID}" not found.`);
+    log(`  Register it first at ${DASHBOARD}/app/register`);
+    log(`  then run: npx ts-node scripts/judge-demo.ts ${label}\n`);
+    process.exit(1);
+  }
+  const agent = (await agentRes.json()) as { ensName: string; tokenId: string; active: boolean };
+  log(`  Token ID  : #${agent.tokenId}`);
+  log(`  Status    : ${agent.active ? 'Active' : 'Inactive'}`);
 
   sep('Step 1 — Submit a normal trading decision (will be CLEARED)');
 

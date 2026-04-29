@@ -53,16 +53,32 @@ Get free testnet OG: [faucet.0g.ai](https://faucet.0g.ai)
 
 ---
 
-## Test the Full Flow (2 minutes)
+## Test the Full Flow (5 minutes)
 
-Run one script. It hits the live hosted backend, submits two decisions, files both disputes, and prints the results — no local backend required.
+### Step 1 — Register your own agent on-chain
+
+Open **https://app.aegisprotocol.uk/app/register**
+
+1. Connect MetaMask (add 0G testnet — details below)
+2. Get OG tokens at [faucet.0g.ai](https://faucet.0g.ai)
+3. Type a label — e.g. `alice-bot` or your own name
+4. Set the accountability split (e.g. 60% user / 40% builder)
+5. Click **Mint iNFT** and approve the MetaMask transaction
+
+Your agent is now on-chain: `alice-bot.aegis.eth` — an ERC-7857 iNFT with ENSIP-25 records.
+
+### Step 2 — Run the demo script with your agent name
 
 ```bash
 git clone https://github.com/JoelEmmanuelCloud/aegis-protocol.git
 cd aegis-protocol
 npm install
-npx ts-node scripts/judge-demo.ts
+npx ts-node scripts/judge-demo.ts alice-bot
 ```
+
+Replace `alice-bot` with whatever label you registered in Step 1.
+
+Running without an argument prints setup instructions.
 
 Expected output:
 
