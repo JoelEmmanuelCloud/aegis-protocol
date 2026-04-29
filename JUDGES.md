@@ -53,98 +53,60 @@ Get free testnet OG: [faucet.0g.ai](https://faucet.0g.ai)
 
 ---
 
-## Test the Full Flow (5 minutes)
+## Test the Full Flow (2 minutes)
 
-### 1. Register an agent
-
-Go to **Register** (`/app/register`). Type any label — `judge-bot` for example.
-
-Set the accountability split: drag to 60% user / 40% builder. Click **Mint iNFT**. Approve the MetaMask transaction.
-
-What happens:
-
-- ERC-7857 iNFT minted on 0G chain (`AgentRegistry.sol`)
-- Subname `judge-bot.aegis.eth` registered in `AegisNameRegistry.sol`
-- ENSIP-25 records written: `agent.registry` + `agent.id`
-
-### 2. Submit a decision (simulates your bot)
+Run one script. It hits the live hosted backend, submits two decisions, files both disputes, and prints the results — no local backend required.
 
 ```bash
-curl -X POST http://164.92.165.231:3000/attestations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agentId": "judge-bot.aegis.eth",
-    "inputs": { "market": "OG/USDC", "balance": "2.4 OG" },
-    "reasoning": "Price up 8%. Volume confirms. Executing 15% profit-take within mandate.",
-    "action": { "type": "sell", "pair": "OG/USDC", "amount": "0.36", "strategy": "momentum_exit" },
-    "timestamp": '"$(date +%s%3N)"'
-  }'
+git clone https://github.com/JoelEmmanuelCloud/aegis-protocol.git
+cd aegis-protocol
+npm install
+npx ts-node scripts/judge-demo.ts
 ```
 
-Returns: `{ "rootHash": "0x...", "status": "COMMITTED" }`
+Expected output:
 
-The decision is now committed to 0G Storage. Root hash is the cryptographic receipt.
+```
+Step 1 — Submit a normal trading decision (will be CLEARED)
+  rootHash  : 0xa7c425c8...
+  Verdict   : CLEARED
+  On-chain  : https://chainscan-galileo.0g.ai/tx/0xc4a700...
 
-Go to **Attestation Feed** (`/app/attestations`) — the card appears with action text, reasoning, and root hash.
+Step 2 — Submit a high-risk prohibited action (will be FLAGGED)
+  rootHash  : 0x2af2fc22...
+  Verdict   : FLAGGED
 
-### 3. File a CLEARED dispute (legitimate decision)
+Step 3 — Check live reputation
+  Score         : 91 / 100
+  Flagged count : 1
+  Cleared count : 1
 
-Go to **Disputes** (`/app/disputes`) → **File Dispute** tab. Use the root hash from step 2. Write a reason. Submit.
+Step 4 — KeeperHub audit trail
+  Run 808658bf... — completed (verdict: FLAGGED)
+    [OK] aegis.fetch_verdict
+    [OK] aegis.notify_agent_owner
+    [OK] aegis.execute_remedy_tx     ← fired because FLAGGED
+    [OK] aegis.update_ens_reputation
+    [OK] aegis.update_reputation
 
-The system:
-
-- Checks action type and amount against guardrails
-- Calls the Verifier node → 0G Compute TEE replay
-- Records verdict on `AegisCourt.sol` (`submitDispute` + `recordVerdict`)
-- Returns two on-chain transaction hashes with a link to `chainscan-galileo.0g.ai`
-
-Expected: `verdict: CLEARED` — normal swap is within mandate.
-
-### 4. File a FLAGGED dispute (high-risk action)
-
-Submit a prohibited action:
-
-```bash
-curl -X POST http://164.92.165.231:3000/attestations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agentId": "judge-bot.aegis.eth",
-    "inputs": { "context": "market down 23%" },
-    "reasoning": "Emergency exit. Liquidating full position immediately.",
-    "action": { "type": "emergency_liquidation", "amount": "5000", "target": "full_position" },
-    "timestamp": '"$(date +%s%3N)"'
-  }'
+  Run c168b344... — completed (verdict: CLEARED)
+    [OK] aegis.fetch_verdict
+    [OK] aegis.notify_agent_owner
+    [--] aegis.execute_remedy_tx     ← skipped because CLEARED
+    [OK] aegis.update_ens_reputation
+    [OK] aegis.update_reputation
 ```
 
-Dispute it with the returned root hash. Expected: `verdict: FLAGGED`.
+Then open **https://app.aegisprotocol.uk** and navigate to:
 
-The `emergency_liquidation` action type is in the prohibited action set. Amount 5000 also exceeds the 100 OG daily limit guardrail. Both checks fire before calling the TEE.
+- `/app/attestations` — both decisions with action text and reasoning
+- `/app/disputes` → History tab — CLEARED card with explorer link, FLAGGED card with explorer link
+- `/app/agents` → search `judge-bot` — live reputation score (91/100)
+- `/app/audit` — KeeperHub steps showing `execute_remedy_tx` completed vs skipped
 
-### 5. Watch KeeperHub execute automatically
+### Optional — register your own agent via the dashboard
 
-Go to **KeeperHub Audit** (`/app/audit`).
-
-The `aegis.execute_remedy` workflow ran automatically on both disputes:
-
-| Step                  | CLEARED run | FLAGGED run   |
-| --------------------- | ----------- | ------------- |
-| fetch_verdict         | completed   | completed     |
-| notify_agent_owner    | completed   | completed     |
-| execute_remedy_tx     | **skipped** | **completed** |
-| update_ens_reputation | completed   | completed     |
-| update_reputation     | completed   | completed     |
-
-`execute_remedy_tx` only fires on FLAGGED — the conditional guard works.
-
-### 6. Check reputation drop
-
-Go to **Agent Profile** (`/app/agents`) → type your agent label → **Lookup**.
-
-Score updates in real time from the dispute history:
-
-- Start: 100
-- After FLAGGED: 90 (−10 per flag)
-- After CLEARED: 91 (+1 per cleared)
+Go to **Register** (`/app/register`), connect MetaMask on 0G testnet, type a label, set the accountability split, and click **Mint iNFT**. Your agent gets a `.aegis.eth` subname and ENSIP-25 records automatically.
 
 ---
 
