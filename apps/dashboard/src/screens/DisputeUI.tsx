@@ -125,6 +125,38 @@ export default function DisputeUI() {
 
       <div
         style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 10,
+        }}
+      >
+        {[
+          { icon: '⬡', label: 'On-chain Enforcement', desc: 'Disputes submitted to AegisCourt.sol on 0G — immutable, permissionless' },
+          { icon: '🔒', label: 'TEE Verification', desc: 'Verifier node replays decisions inside 0G Compute trusted execution environment' },
+          { icon: '🪪', label: 'ENS Identity', desc: 'Every agent has a verified .aegis.eth on-chain identity that cannot be impersonated' },
+        ].map(({ icon, label, desc }) => (
+          <div
+            key={label}
+            style={{
+              padding: '12px 14px',
+              background: 'var(--app-elevated)',
+              borderRadius: 10,
+              border: '1px solid var(--app-border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>{icon}</span>{label}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>{desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
           display: 'flex',
           gap: 2,
           background: 'var(--app-elevated)',
@@ -371,22 +403,10 @@ export default function DisputeUI() {
                 <div
                   key={d.rootHash + (d.timestamp ?? 0)}
                   className="app-card"
-                  style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}
+                  style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: 'var(--app-text-muted)',
-                      }}
-                    >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--app-text-muted)' }}>
                       {d.rootHash.slice(0, 16)}…
                     </span>
                     <span
@@ -403,14 +423,36 @@ export default function DisputeUI() {
                       {d.verdict}
                     </span>
                   </div>
-                  <div
-                    style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}
-                  >
+                  <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
                     {d.agentId}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--app-text)' }}>{d.reason}</div>
-                  <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
-                    {new Date((d.timestamp as number) ?? 0).toLocaleString()}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                    <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                      {new Date((d.timestamp as number) ?? 0).toLocaleString()}
+                    </span>
+                    {(d as DisputeRecord & { explorerUrl?: string; submitTxHash?: string; recordTxHash?: string }).explorerUrl ? (
+                      <a
+                        href={(d as DisputeRecord & { explorerUrl?: string }).explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 11,
+                          color: 'var(--app-accent)',
+                          fontFamily: 'monospace',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        ⬡ Verify on-chain
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                        Pending on-chain confirmation
+                      </span>
+                    )}
                   </div>
                 </div>
               );

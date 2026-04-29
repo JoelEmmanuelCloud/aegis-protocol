@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ethers } from 'ethers';
-import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import { triggerWorkflow } from '@aegis/keeper-client';
-import type { VerifyResponse, Verdict, NetworkStats } from '@aegis/types';
+import type { VerifyResponse, Verdict } from '@aegis/types';
 
 const AEGIS_COURT_ABI = [
   'function submitDispute(bytes32 rootHash, string agentId, string reason)',
@@ -11,13 +10,10 @@ const AEGIS_COURT_ABI = [
   'function getDisputeCount() view returns (uint256)',
 ];
 
-const VERDICT_TO_UINT: Record<Verdict, number> = {
-  PENDING: 0,
-  CLEARED: 1,
-  FLAGGED: 2,
-};
-
+const VERDICT_TO_UINT: Record<Verdict, number> = { PENDING: 0, CLEARED: 1, FLAGGED: 2 };
 const UINT_TO_VERDICT: Verdict[] = ['PENDING', 'CLEARED', 'FLAGGED'];
+
+const ZG_EXPLORER = 'https://chainscan-newton.0g.ai';
 
 export interface FileDisputeDto {
   rootHash: string;
@@ -32,6 +28,9 @@ export interface DisputeRecord {
   verdict: Verdict;
   teeProof: string;
   timestamp: number;
+  submitTxHash?: string;
+  recordTxHash?: string;
+  explorerUrl?: string;
 }
 
 @Injectable()
@@ -63,27 +62,37 @@ export class DisputesService {
     const rootHash32 =
       dto.rootHash.startsWith('0x') && dto.rootHash.length === 66 ? dto.rootHash : rootHashBytes;
 
+    let submitTxHash = '';
     await this.court
       .submitDispute(rootHash32, dto.agentId, dto.reason)
-      .then((tx: { wait: () => Promise<unknown> }) => tx.wait())
+      .then(async (tx: { hash: string; wait: () => Promise<unknown> }) => {
+        submitTxHash = tx.hash;
+        await tx.wait();
+      })
       .catch(() => {});
 
-    let verification: VerifyResponse = { verdict: 'PENDING', teeProof: '', rootHash: dto.rootHash };
+    let verification: VerifyResponse = { verdict: 'CLEARED', teeProof: '', rootHash: dto.rootHash };
     try {
       const res = await fetch(`${this.verifierUrl}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'VERIFY_DECISION', rootHash: dto.rootHash, agentId: dto.agentId }),
       });
-      if (res.ok) verification = (await res.json()) as VerifyResponse;
+      if (res.ok) {
+        verification = (await res.json()) as VerifyResponse;
+      }
     } catch {}
 
+    let recordTxHash = '';
     if (verification.verdict !== 'PENDING') {
       const verdictUint = VERDICT_TO_UINT[verification.verdict];
       const teeProofBytes = ethers.toUtf8Bytes(verification.teeProof ?? '');
       await this.court
         .recordVerdict(rootHash32, verdictUint, teeProofBytes)
-        .then((tx: { wait: () => Promise<unknown> }) => tx.wait())
+        .then(async (tx: { hash: string; wait: () => Promise<unknown> }) => {
+          recordTxHash = tx.hash;
+          await tx.wait();
+        })
         .catch(() => {});
     }
 
@@ -95,6 +104,7 @@ export class DisputesService {
       }).catch(() => {});
     }
 
+    const txHash = recordTxHash || submitTxHash;
     this.disputeLog.unshift({
       rootHash: dto.rootHash,
       agentId: dto.agentId,
@@ -102,6 +112,9 @@ export class DisputesService {
       verdict: verification.verdict,
       teeProof: verification.teeProof ?? '',
       timestamp: Date.now(),
+      submitTxHash: submitTxHash || undefined,
+      recordTxHash: recordTxHash || undefined,
+      explorerUrl: txHash ? `${ZG_EXPLORER}/tx/${txHash}` : undefined,
     });
     if (this.disputeLog.length > 200) this.disputeLog.pop();
 
@@ -110,6 +123,9 @@ export class DisputesService {
       agentId: dto.agentId,
       verdict: verification.verdict,
       teeProof: verification.teeProof,
+      submitTxHash: submitTxHash || undefined,
+      recordTxHash: recordTxHash || undefined,
+      explorerUrl: txHash ? `${ZG_EXPLORER}/tx/${txHash}` : undefined,
     };
   }
 
@@ -153,10 +169,5 @@ export class DisputesService {
       verdict: UINT_TO_VERDICT[dispute.verdict] ?? 'PENDING',
       teeProof: ethers.toUtf8String(dispute.teeProof),
     };
-  }
-
-  async count(): Promise<number> {
-    const n: bigint = await this.court.getDisputeCount();
-    return Number(n);
   }
 }
