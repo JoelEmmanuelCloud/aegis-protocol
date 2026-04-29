@@ -32,6 +32,7 @@ function StepRow({ step }: { step: StepRecord }) {
       : step.status === 'skipped'
         ? 'var(--app-text-muted)'
         : 'var(--app-red)';
+  const mark = step.status === 'completed' ? '✓' : step.status === 'skipped' ? '–' : '✗';
   return (
     <div
       style={{
@@ -41,8 +42,8 @@ function StepRow({ step }: { step: StepRecord }) {
         padding: '5px 0',
       }}
     >
-      <span style={{ fontSize: 10, color, fontWeight: 700, width: 14, textAlign: 'center', flexShrink: 0, letterSpacing: '-0.02em' }}>
-        {step.status === 'completed' ? 'OK' : step.status === 'skipped' ? 'SK' : 'ER'}
+      <span style={{ fontSize: 12, color, fontWeight: 700, width: 14, textAlign: 'center', flexShrink: 0 }}>
+        {mark}
       </span>
       <span style={{ fontSize: 12, color: step.status === 'skipped' ? 'var(--app-text-muted)' : 'var(--app-text-2)', flex: 1 }}>
         {STEP_LABELS[step.action] ?? step.action}
@@ -204,7 +205,7 @@ export default function KeeperAuditTrail() {
                       rel="noopener noreferrer"
                       style={{ fontSize: 11, color: 'var(--app-accent)', fontFamily: 'monospace', textDecoration: 'none' }}
                     >
-                      {r.txHash.slice(0, 14)}…
+                      {r.txHash.slice(0, 14)}… ↗
                     </a>
                   ) : (
                     <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
