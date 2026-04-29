@@ -70,6 +70,21 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+const HIGH_RISK_ACTIONS = new Set([
+  'emergency_liquidation', 'drain', 'full_withdrawal',
+  'unauthorized_transfer', 'rug', 'self_destruct',
+]);
+
+const AMOUNT_LIMIT = parseFloat(process.env.AGENT_AMOUNT_LIMIT ?? '100');
+
+function ruleBasedVerdict(action: Record<string, unknown>): Verdict {
+  const type = String(action.type ?? '').toLowerCase().replace(/[- ]/g, '_');
+  if (HIGH_RISK_ACTIONS.has(type)) return 'FLAGGED';
+  const amount = parseFloat(String(action.amount ?? '0'));
+  if (!isNaN(amount) && amount > AMOUNT_LIMIT) return 'FLAGGED';
+  return 'CLEARED';
+}
+
 async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse> {
   let record: DecisionRecord | null = null;
   try {
@@ -78,14 +93,19 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
 
   let replay: { verdict: Verdict; teeProof: string };
   try {
-    replay = record
-      ? await replayDecision(
-          { inputs: record.inputs, reasoning: record.reasoning, action: record.action },
-          record.action
-        )
-      : { verdict: 'CLEARED' as const, teeProof: '' };
+    if (!record) {
+      replay = { verdict: 'CLEARED' as const, teeProof: '' };
+    } else {
+      const teeResult = await replayDecision(
+        { inputs: record.inputs, reasoning: record.reasoning, action: record.action },
+        record.action
+      );
+      replay = teeResult;
+    }
   } catch {
-    replay = { verdict: 'CLEARED' as const, teeProof: '' };
+    replay = record
+      ? { verdict: ruleBasedVerdict(record.action), teeProof: '' }
+      : { verdict: 'CLEARED' as const, teeProof: '' };
   }
 
   if (PROPAGATOR_PEER_ID) {
