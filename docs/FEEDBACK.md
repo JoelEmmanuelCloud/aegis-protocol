@@ -92,10 +92,39 @@ can receive a push notification when a run completes.
 
 ---
 
+### 6. REST API base URL unreachable without plugin auth
+
+**Finding:** `api.keeperhub.com` does not resolve via DNS. The REST API is only reachable
+after installing the Claude plugin and completing auth. No public base URL is documented,
+blocking direct HTTP integration before plugin setup.
+
+**Impact:** We built an in-memory keeper-client fallback that mirrors the MCP tool shape
+so the orchestrator works without the plugin. The fallback tracks run state and step
+outcomes but cannot execute real on-chain remedy transactions.
+
+**Suggestion:** Publish the REST API base URL publicly so developers integrating without
+Claude Code can make direct HTTP calls using their API key.
+
+### 7. Step outcomes missing from list_runs response
+
+**Finding:** `keeperhub.list_runs` returns top-level run status but not individual step
+outcomes. Per-step detail requires a separate `get_workflow_run` call per run — N+1
+requests to build a full audit view.
+
+**Impact:** The Aegis audit trail dashboard needs per-step breakdown (skipped, completed,
+failed) in the list render. Current API shape forces a waterfall of individual fetches.
+
+**Suggestion:** Include `steps[]` in `list_runs`, or add a `?include=steps` query param.
+
+---
+
 ## What Worked Well
 
 - Workflow creation is fast — under 30 seconds from definition to registered workflow.
 - The `trigger_workflow` tool is useful for manual testing without needing an onchain event.
 - The step-based model maps cleanly to the Aegis court flow — each accountability action
   is naturally one step.
+- The conditional `if` field on steps (`verdict===FLAGGED`) is the right primitive —
+  remedy fires only when warranted, not on every verdict.
 - API response shapes are consistent and easy to type in TypeScript.
+- MCP tool discovery is smooth after plugin setup — zero friction once authenticated.
