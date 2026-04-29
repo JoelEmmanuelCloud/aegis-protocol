@@ -4,6 +4,9 @@ export interface AgentHistoryEntry {
   rootHash: string;
   verdict: Verdict;
   timestamp: number;
+  agentId?: string;
+  action?: Record<string, unknown>;
+  reasoning?: string;
 }
 
 export interface AttestationListResponse {
@@ -62,4 +65,6 @@ export interface WorkflowRun {
   txHash?: string;
   gasUsed?: number;
   retryCount: number;
+  payload?: Record<string, string>;
+  steps?: Array<{ action: string; status: string; completedAt: number }>;
 }
