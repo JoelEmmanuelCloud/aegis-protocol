@@ -89,10 +89,10 @@ export default function KeeperAuditTrail() {
         }}
       >
         {[
-          { icon: '⚡', label: 'Automated Execution', desc: 'Triggered automatically on every verdict — no manual intervention required' },
-          { icon: '⬡', label: 'On-chain Remedy', desc: 'execute_remedy_tx fires a contract call when verdict is FLAGGED; skipped for CLEARED' },
-          { icon: '🔍', label: 'Fully Auditable', desc: 'Every run, step outcome, and agent are logged here and verifiable on AegisCourt' },
-        ].map(({ icon, label, desc }) => (
+          { label: 'Automated Execution', desc: 'Triggered automatically on every verdict — no manual intervention required' },
+          { label: 'On-chain Remedy', desc: 'execute_remedy_tx fires a contract call when verdict is FLAGGED; skipped for CLEARED' },
+          { label: 'Fully Auditable', desc: 'Every run, step outcome, and agent are logged here and verifiable on AegisCourt' },
+        ].map(({ label, desc }) => (
           <div
             key={label}
             style={{
@@ -105,8 +105,8 @@ export default function KeeperAuditTrail() {
               gap: 4,
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>{icon}</span>{label}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
+              {label}
             </div>
             <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>{desc}</div>
           </div>
@@ -203,11 +203,11 @@ export default function KeeperAuditTrail() {
                       rel="noopener noreferrer"
                       style={{ fontSize: 11, color: 'var(--app-accent)', fontFamily: 'monospace', textDecoration: 'none' }}
                     >
-                      ⬡ {r.txHash.slice(0, 14)}…
+                      {r.txHash.slice(0, 14)}… ↗
                     </a>
                   ) : (
                     <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
-                      ⬡ No on-chain tx (verdict was not FLAGGED)
+                      No on-chain tx — verdict was not FLAGGED
                     </span>
                   )}
                 </div>
