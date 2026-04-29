@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { DisputesService, FileDisputeDto } from './disputes.service';
 
 @Controller('disputes')
@@ -19,6 +19,11 @@ export class DisputesController {
   @Get('count')
   count() {
     return this.disputesService.disputeCount();
+  }
+
+  @Get('reputation/:agentId')
+  reputation(@Param('agentId') agentId: string) {
+    return this.disputesService.getAgentReputation(agentId);
   }
 
   @Get(':rootHash')

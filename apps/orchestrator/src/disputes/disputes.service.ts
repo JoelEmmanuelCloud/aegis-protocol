@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { triggerWorkflow } from '@aegis/keeper-client';
+import { AttestationsService } from '../attestations/attestations.service';
 import type { VerifyResponse, Verdict } from '@aegis/types';
 
 const AEGIS_COURT_ABI = [
@@ -12,6 +13,21 @@ const AEGIS_COURT_ABI = [
 
 const VERDICT_TO_UINT: Record<Verdict, number> = { PENDING: 0, CLEARED: 1, FLAGGED: 2 };
 const UINT_TO_VERDICT: Verdict[] = ['PENDING', 'CLEARED', 'FLAGGED'];
+
+const HIGH_RISK_ACTIONS = new Set([
+  'emergency_liquidation', 'drain', 'full_withdrawal',
+  'unauthorized_transfer', 'rug', 'self_destruct',
+]);
+
+const AMOUNT_LIMIT = parseFloat(process.env.AGENT_AMOUNT_LIMIT ?? '100');
+
+function ruleBasedVerdict(action: Record<string, unknown>): Verdict {
+  const type = String(action.type ?? '').toLowerCase().replace(/[- ]/g, '_');
+  if (HIGH_RISK_ACTIONS.has(type)) return 'FLAGGED';
+  const amount = parseFloat(String(action.amount ?? '0'));
+  if (!isNaN(amount) && amount > AMOUNT_LIMIT) return 'FLAGGED';
+  return 'CLEARED';
+}
 
 const ZG_EXPLORER = 'https://chainscan-galileo.0g.ai';
 
@@ -39,7 +55,7 @@ export class DisputesService {
   private readonly verifierUrl: string;
   private readonly disputeLog: DisputeRecord[] = [];
 
-  constructor() {
+  constructor(private readonly attestationsService: AttestationsService) {
     const verifierAxlPort = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
     this.verifierUrl =
       process.env.VERIFIER_MGMT_URL || `http://localhost:${verifierAxlPort + 1000}`;
@@ -71,7 +87,17 @@ export class DisputesService {
       })
       .catch(() => {});
 
-    let verification: VerifyResponse = { verdict: 'CLEARED', teeProof: '', rootHash: dto.rootHash };
+    const knownAction = await this.attestationsService
+      .list(dto.agentId)
+      .then((r) => r.items.find((i) => i.rootHash === dto.rootHash)?.action ?? null)
+      .catch(() => null);
+
+    let verification: VerifyResponse = {
+      verdict: knownAction ? ruleBasedVerdict(knownAction) : 'CLEARED',
+      teeProof: '',
+      rootHash: dto.rootHash,
+    };
+
     try {
       const res = await fetch(`${this.verifierUrl}/verify`, {
         method: 'POST',
@@ -79,7 +105,10 @@ export class DisputesService {
         body: JSON.stringify({ type: 'VERIFY_DECISION', rootHash: dto.rootHash, agentId: dto.agentId }),
       });
       if (res.ok) {
-        verification = (await res.json()) as VerifyResponse;
+        const teeResult = (await res.json()) as VerifyResponse;
+        if (teeResult.teeProof) {
+          verification = teeResult;
+        }
       }
     } catch {}
 
@@ -135,6 +164,24 @@ export class DisputesService {
 
   disputeCount(): number {
     return this.disputeLog.length;
+  }
+
+  getAgentReputation(agentId: string): {
+    score: number;
+    flaggedCount: number;
+    clearedCount: number;
+    lastVerdict: string;
+  } {
+    const relevant = this.disputeLog.filter((d) => d.agentId === agentId);
+    const flagged = relevant.filter((d) => d.verdict === 'FLAGGED').length;
+    const cleared = relevant.filter((d) => d.verdict === 'CLEARED').length;
+    const score = Math.max(0, Math.min(100, 100 - flagged * 10 + cleared));
+    return {
+      score,
+      flaggedCount: flagged,
+      clearedCount: cleared,
+      lastVerdict: relevant[0]?.verdict ?? 'PENDING',
+    };
   }
 
   async get(rootHash: string): Promise<Record<string, unknown>> {

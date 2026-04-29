@@ -63,6 +63,12 @@ export function fetchDisputeList(): Promise<DisputeRecord[]> {
   return apiFetch<DisputeRecord[]>('/disputes/all');
 }
 
+export function fetchAgentReputation(
+  agentId: string
+): Promise<{ score: number; flaggedCount: number; clearedCount: number; lastVerdict: string }> {
+  return apiFetch(`/disputes/reputation/${encodeURIComponent(agentId)}`);
+}
+
 export function fetchAgentSummary(
   agentId: string
 ): Promise<{ totalDecisions: number; lastVerdict: string; flaggedCount: number }> {

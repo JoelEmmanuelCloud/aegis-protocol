@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useReadContracts } from 'wagmi';
 import { namehash } from 'viem';
 import { useAgent } from '../hooks/useAgent';
-import { fetchAgentSummary } from '../lib/orchestratorApi';
+import { fetchAgentSummary, fetchAgentReputation } from '../lib/orchestratorApi';
 
 const PUBLIC_RESOLVER_ABI = [
   {
@@ -138,6 +138,13 @@ export default function AgentProfile() {
     refetchInterval: 5000,
   });
 
+  const { data: liveReputation } = useQuery({
+    queryKey: ['agentReputation', ensName],
+    queryFn: () => fetchAgentReputation(ensName!),
+    enabled: !!ensName,
+    refetchInterval: 5000,
+  });
+
   const { data: ensData } = useReadContracts({
     contracts: ENS_TEXT_KEYS.map((key) => ({
       address: resolverAddress,
@@ -158,15 +165,17 @@ export default function AgentProfile() {
     {} as Record<string, string>
   );
 
-  if (liveSummary) {
-    if (liveSummary.totalDecisions > 0) {
-      ensRecords['aegis.totalDecisions'] = String(liveSummary.totalDecisions);
-      ensRecords['aegis.lastVerdict'] = liveSummary.lastVerdict;
-      ensRecords['aegis.flaggedCount'] = String(liveSummary.flaggedCount);
-    }
+  if (liveSummary && liveSummary.totalDecisions > 0) {
+    ensRecords['aegis.totalDecisions'] = String(liveSummary.totalDecisions);
   }
 
-  const score = parseInt(ensRecords['aegis.reputation'] ?? '0', 10);
+  if (liveReputation) {
+    ensRecords['aegis.reputation'] = String(liveReputation.score);
+    ensRecords['aegis.lastVerdict'] = liveReputation.lastVerdict;
+    ensRecords['aegis.flaggedCount'] = String(liveReputation.flaggedCount);
+  }
+
+  const score = liveReputation?.score ?? parseInt(ensRecords['aegis.reputation'] ?? '100', 10);
 
   const handleSearch = () => {
     setSearchAttempted(true);
