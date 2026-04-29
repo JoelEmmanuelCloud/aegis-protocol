@@ -64,7 +64,9 @@ export default function DisputeUI() {
 
   const rootHashError = (() => {
     if (!rootHash.trim()) return 'Root hash is required';
-    if (!/^(0x)?[0-9a-fA-F]{8,}$/.test(rootHash.trim())) return 'Must be a valid hex hash';
+    const h = rootHash.trim();
+    const bare = h.startsWith('0x') ? h.slice(2) : h;
+    if (!/^[0-9a-fA-F]{64}$/.test(bare)) return 'Must be a 32-byte hex hash (64 hex chars)';
     return '';
   })();
 
@@ -471,15 +473,9 @@ export default function DisputeUI() {
                     <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
                       {new Date((d.timestamp as number) ?? 0).toLocaleString()}
                     </span>
-                    {(
-                      d as DisputeRecord & {
-                        explorerUrl?: string;
-                        submitTxHash?: string;
-                        recordTxHash?: string;
-                      }
-                    ).explorerUrl ? (
+                    {d.explorerUrl ? (
                       <a
-                        href={(d as DisputeRecord & { explorerUrl?: string }).explorerUrl}
+                        href={d.explorerUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
