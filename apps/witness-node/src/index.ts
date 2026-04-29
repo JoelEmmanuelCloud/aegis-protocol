@@ -151,7 +151,7 @@ app.post('/attest', async (req: Request, res: Response): Promise<void> => {
 
 app.get('/attestations', (req: Request, res: Response): void => {
   const { agentId, cursor, limit } = req.query as Record<string, string | undefined>;
-  let items = agentId ? attestationLog.filter((a) => a.agentId === agentId) : attestationLog;
+  const items = agentId ? attestationLog.filter((a) => a.agentId === agentId) : attestationLog;
   const pageSize = limit ? parseInt(limit, 10) : 20;
   const startIdx = cursor ? items.findIndex((a) => a.rootHash === cursor) + 1 : 0;
   const page = items.slice(startIdx, startIdx + pageSize);
