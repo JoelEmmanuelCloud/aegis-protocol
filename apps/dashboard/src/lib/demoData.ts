@@ -20,73 +20,61 @@ export const demoNetworkStats: NetworkStats = {
 export const demoAttestations: AttestationListResponse = {
   items: [
     {
-      agentId: 'trading-bot',
       rootHash: '0xa1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f678901',
       verdict: 'CLEARED',
       timestamp: m(2),
     },
     {
-      agentId: 'risk-monitor',
       rootHash: '0xb2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b',
       verdict: 'CLEARED',
       timestamp: m(5),
     },
     {
-      agentId: 'arb-executor',
       rootHash: '0xc3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c',
       verdict: 'FLAGGED',
       timestamp: m(11),
     },
     {
-      agentId: 'liquidity-mgr',
       rootHash: '0xd4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d',
       verdict: 'CLEARED',
       timestamp: m(18),
     },
     {
-      agentId: 'rebalancer',
       rootHash: '0xe5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e',
       verdict: 'PENDING',
       timestamp: m(24),
     },
     {
-      agentId: 'trading-bot',
       rootHash: '0xf67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f',
       verdict: 'CLEARED',
       timestamp: m(31),
     },
     {
-      agentId: 'risk-monitor',
       rootHash: '0x07890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6',
       verdict: 'CLEARED',
       timestamp: m(44),
     },
     {
-      agentId: 'arb-executor',
       rootHash: '0x1890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67',
       verdict: 'CLEARED',
       timestamp: m(58),
     },
     {
-      agentId: 'liquidity-mgr',
       rootHash: '0x290a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f678',
       verdict: 'FLAGGED',
       timestamp: m(73),
     },
     {
-      agentId: 'rebalancer',
       rootHash: '0x30a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f6789',
       verdict: 'CLEARED',
       timestamp: m(89),
     },
     {
-      agentId: 'trading-bot',
       rootHash: '0x4a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890',
       verdict: 'CLEARED',
       timestamp: m(102),
     },
     {
-      agentId: 'risk-monitor',
       rootHash: '0x5b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1',
       verdict: 'PENDING',
       timestamp: m(118),
@@ -141,7 +129,7 @@ export const demoKeeperRuns: WorkflowRun[] = [
 
 export const demoDisputeRecord: DisputeRecord = {
   rootHash: '0xc3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c',
-  agentId: 'arb-executor',
+  agentId: 'arb-executor.aegis.eth',
   disputedBy: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
   reason: 'Agent executed trade outside permitted slippage bounds (3.8% vs 1% limit)',
   timestamp: m(11),
