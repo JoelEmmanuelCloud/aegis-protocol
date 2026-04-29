@@ -92,13 +92,22 @@ async function handleAttestDecision(body: AttestationRequest): Promise<Attestati
 
   const rootHash = await uploadObject(record);
 
-  attestationLog.unshift({ agentId: record.agentId, rootHash, verdict: record.verdict, timestamp: record.timestamp, action: record.action, reasoning: record.reasoning });
+  attestationLog.unshift({
+    agentId: record.agentId,
+    rootHash,
+    verdict: record.verdict,
+    timestamp: record.timestamp,
+    action: record.action,
+    reasoning: record.reasoning,
+  });
   if (attestationLog.length > 500) attestationLog.pop();
 
   const latest: LatestRecord = { rootHash, timestamp: record.timestamp, verdict: record.verdict };
   await writeKVObject(`aegis:${record.agentId}:latest`, latest).catch(() => {});
 
-  const existing = await readKVObject<ReputationRecord>(`aegis:${record.agentId}:reputation`).catch(() => null);
+  const existing = await readKVObject<ReputationRecord>(`aegis:${record.agentId}:reputation`).catch(
+    () => null
+  );
   const reputation: ReputationRecord = {
     score: existing?.score ?? 100,
     totalDecisions: (existing?.totalDecisions ?? 0) + 1,

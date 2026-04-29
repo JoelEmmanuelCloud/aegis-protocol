@@ -5,7 +5,9 @@ const WITNESS_AXL_URL = 'http://localhost:9002';
 
 const AGENT_ID = 'mit-bot.aegis.eth';
 
-const WITNESS_PEER_ID = process.env.AXL_WITNESS_PEER_ID ?? '0c0ad1361fc678003b3264705cffee150069fe2926a5190c8bb2692688fbd17e';
+const WITNESS_PEER_ID =
+  process.env.AXL_WITNESS_PEER_ID ??
+  '0c0ad1361fc678003b3264705cffee150069fe2926a5190c8bb2692688fbd17e';
 
 async function checkHealth(): Promise<void> {
   const res = await fetch(`${WITNESS_MGMT_URL}/health`);
@@ -21,7 +23,8 @@ async function attestDirect(): Promise<string> {
       context: 'wallet 0x50D1e2ca8f70751D2FB9Dba4605431f1692e825E, balance 1.2 OG',
       market: 'OG/USDC',
     },
-    reasoning: 'Balance above 0.5 threshold. Market momentum positive. Confidence 0.91. Execute swap.',
+    reasoning:
+      'Balance above 0.5 threshold. Market momentum positive. Confidence 0.91. Execute swap.',
     action: {
       type: 'swap',
       from: 'USDC',
@@ -42,7 +45,7 @@ async function attestDirect(): Promise<string> {
     throw new Error(`/attest failed ${res.status}: ${text}`);
   }
 
-  const body = await res.json() as { rootHash: string; status: string };
+  const body = (await res.json()) as { rootHash: string; status: string };
   console.log('[direct /attest]', JSON.stringify(body, null, 2));
   return body.rootHash;
 }

@@ -131,9 +131,18 @@ export default function DisputeUI() {
         }}
       >
         {[
-          { label: 'On-chain Enforcement', desc: 'Disputes submitted to AegisCourt.sol on 0G — immutable, permissionless' },
-          { label: 'TEE Verification', desc: 'Verifier node replays decisions inside 0G Compute trusted execution environment' },
-          { label: 'ENS Identity', desc: 'Every agent has a verified .aegis.eth on-chain identity that cannot be impersonated' },
+          {
+            label: 'On-chain Enforcement',
+            desc: 'Disputes submitted to AegisCourt.sol on 0G — immutable, permissionless',
+          },
+          {
+            label: 'TEE Verification',
+            desc: 'Verifier node replays decisions inside 0G Compute trusted execution environment',
+          },
+          {
+            label: 'ENS Identity',
+            desc: 'Every agent has a verified .aegis.eth on-chain identity that cannot be impersonated',
+          },
         ].map(({ label, desc }) => (
           <div
             key={label}
@@ -147,10 +156,10 @@ export default function DisputeUI() {
               gap: 4,
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
-              {label}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>{label}</div>
+            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>
+              {desc}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>{desc}</div>
           </div>
         ))}
       </div>
@@ -182,7 +191,9 @@ export default function DisputeUI() {
               boxShadow: tab === t ? '0 1px 6px rgba(99,102,241,0.35)' : 'none',
             }}
           >
-            {t === 'file' ? 'File Dispute' : `History${disputeList.length > 0 ? ` (${disputeList.length})` : ''}`}
+            {t === 'file'
+              ? 'File Dispute'
+              : `History${disputeList.length > 0 ? ` (${disputeList.length})` : ''}`}
           </button>
         ))}
       </div>
@@ -277,7 +288,9 @@ export default function DisputeUI() {
               </label>
               <input
                 className="app-input"
-                style={{ borderColor: show('agentId') && agentIdError ? 'var(--app-red)' : undefined }}
+                style={{
+                  borderColor: show('agentId') && agentIdError ? 'var(--app-red)' : undefined,
+                }}
                 placeholder="trading-bot.aegis.eth"
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
@@ -403,10 +416,27 @@ export default function DisputeUI() {
                 <div
                   key={d.rootHash + (d.timestamp ?? 0)}
                   className="app-card"
-                  style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}
+                  style={{
+                    padding: '16px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--app-text-muted)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        color: 'var(--app-text-muted)',
+                      }}
+                    >
                       {d.rootHash.slice(0, 16)}…
                     </span>
                     <span
@@ -423,15 +453,31 @@ export default function DisputeUI() {
                       {d.verdict}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
+                  <div
+                    style={{ fontSize: 12, color: 'var(--app-text-2)', fontFamily: 'monospace' }}
+                  >
                     {d.agentId}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--app-text)' }}>{d.reason}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 6,
+                    }}
+                  >
                     <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
                       {new Date((d.timestamp as number) ?? 0).toLocaleString()}
                     </span>
-                    {(d as DisputeRecord & { explorerUrl?: string; submitTxHash?: string; recordTxHash?: string }).explorerUrl ? (
+                    {(
+                      d as DisputeRecord & {
+                        explorerUrl?: string;
+                        submitTxHash?: string;
+                        recordTxHash?: string;
+                      }
+                    ).explorerUrl ? (
                       <a
                         href={(d as DisputeRecord & { explorerUrl?: string }).explorerUrl}
                         target="_blank"

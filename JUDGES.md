@@ -7,7 +7,7 @@
 
 ## What Is Aegis?
 
-Every AI agent framework solves *how agents decide*. None solve *what happens after*.
+Every AI agent framework solves _how agents decide_. None solve _what happens after_.
 
 Aegis is the accountability layer that sits beside any AI agent. When a bot acts, Aegis:
 
@@ -21,7 +21,7 @@ One line of code is all a bot needs:
 ```typescript
 await fetch('http://witness:9002/send', {
   headers: { 'X-Destination-Peer-Id': WITNESS_PEER_ID },
-  body: JSON.stringify({ type: 'ATTEST_DECISION', agentId, inputs, reasoning, action, timestamp })
+  body: JSON.stringify({ type: 'ATTEST_DECISION', agentId, inputs, reasoning, action, timestamp }),
 });
 ```
 
@@ -41,13 +41,13 @@ To explore without a wallet, click **Try Demo** on the landing page or **Browse 
 
 ## Add 0G Testnet to MetaMask (30 seconds)
 
-| Field | Value |
-|---|---|
-| Network Name | 0G Testnet |
-| RPC URL | `https://evmrpc-testnet.0g.ai` |
-| Chain ID | `16602` |
-| Currency | `OG` |
-| Explorer | `https://chainscan-galileo.0g.ai` |
+| Field        | Value                             |
+| ------------ | --------------------------------- |
+| Network Name | 0G Testnet                        |
+| RPC URL      | `https://evmrpc-testnet.0g.ai`    |
+| Chain ID     | `16602`                           |
+| Currency     | `OG`                              |
+| Explorer     | `https://chainscan-galileo.0g.ai` |
 
 Get free testnet OG: [faucet.0g.ai](https://faucet.0g.ai)
 
@@ -62,6 +62,7 @@ Go to **Register** (`/app/register`). Type any label — `judge-bot` for example
 Set the accountability split: drag to 60% user / 40% builder. Click **Mint iNFT**. Approve the MetaMask transaction.
 
 What happens:
+
 - ERC-7857 iNFT minted on 0G chain (`AgentRegistry.sol`)
 - Subname `judge-bot.aegis.eth` registered in `AegisNameRegistry.sol`
 - ENSIP-25 records written: `agent.registry` + `agent.id`
@@ -91,6 +92,7 @@ Go to **Attestation Feed** (`/app/attestations`) — the card appears with actio
 Go to **Disputes** (`/app/disputes`) → **File Dispute** tab. Use the root hash from step 2. Write a reason. Submit.
 
 The system:
+
 - Checks action type and amount against guardrails
 - Calls the Verifier node → 0G Compute TEE replay
 - Records verdict on `AegisCourt.sol` (`submitDispute` + `recordVerdict`)
@@ -124,13 +126,13 @@ Go to **KeeperHub Audit** (`/app/audit`).
 
 The `aegis.execute_remedy` workflow ran automatically on both disputes:
 
-| Step | CLEARED run | FLAGGED run |
-|---|---|---|
-| fetch_verdict | completed | completed |
-| notify_agent_owner | completed | completed |
-| execute_remedy_tx | **skipped** | **completed** |
-| update_ens_reputation | completed | completed |
-| update_reputation | completed | completed |
+| Step                  | CLEARED run | FLAGGED run   |
+| --------------------- | ----------- | ------------- |
+| fetch_verdict         | completed   | completed     |
+| notify_agent_owner    | completed   | completed     |
+| execute_remedy_tx     | **skipped** | **completed** |
+| update_ens_reputation | completed   | completed     |
+| update_reputation     | completed   | completed     |
 
 `execute_remedy_tx` only fires on FLAGGED — the conditional guard works.
 
@@ -139,6 +141,7 @@ The `aegis.execute_remedy` workflow ran automatically on both disputes:
 Go to **Agent Profile** (`/app/agents`) → type your agent label → **Lookup**.
 
 Score updates in real time from the dispute history:
+
 - Start: 100
 - After FLAGGED: 90 (−10 per flag)
 - After CLEARED: 91 (+1 per cleared)
@@ -149,10 +152,10 @@ Score updates in real time from the dispute history:
 
 Every dispute produces two verifiable transactions on the 0G chain:
 
-| TX | What it does |
-|---|---|
+| TX              | What it does                              |
+| --------------- | ----------------------------------------- |
 | `submitDispute` | Registers the dispute on `AegisCourt.sol` |
-| `recordVerdict` | Records CLEARED or FLAGGED permanently |
+| `recordVerdict` | Records CLEARED or FLAGGED permanently    |
 
 View all dispute transactions on the AegisCourt contract:
 **https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction**
@@ -165,12 +168,12 @@ The "Verify on-chain" link on each dispute card in the dashboard goes directly t
 
 ### 0G — Storage + Compute + KV + Chain
 
-| Feature | How to verify |
-|---|---|
-| 0G Storage upload | Root hash `0x...` returned on attestation — computed from actual 0G merkle tree before upload completes |
-| 0G Compute TEE | Verifier node calls `qwen/qwen-2.5-7b-instruct` via `https://compute-network-6.integratenetwork.work` |
-| 0G KV | `aegis:{agentId}:reputation` written after each attestation |
-| 0G Chain contracts | AegisCourt, AgentRegistry, AegisNameRegistry all on chainId 16602 |
+| Feature            | How to verify                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------- |
+| 0G Storage upload  | Root hash `0x...` returned on attestation — computed from actual 0G merkle tree before upload completes |
+| 0G Compute TEE     | Verifier node calls `qwen/qwen-2.5-7b-instruct` via `https://compute-network-6.integratenetwork.work`   |
+| 0G KV              | `aegis:{agentId}:reputation` written after each attestation                                             |
+| 0G Chain contracts | AegisCourt, AgentRegistry, AegisNameRegistry all on chainId 16602                                       |
 
 ```bash
 # Check 0G chain contract activity
@@ -185,12 +188,12 @@ curl https://evmrpc-testnet.0g.ai \
 curl http://164.92.165.231:9022/topology
 ```
 
-| Node | Port | Peer ID |
-|---|---|---|
+| Node       | Port | Peer ID               |
+| ---------- | ---- | --------------------- |
 | Propagator | 9022 | `f2f2af19af8f20bf...` |
-| Witness | 9002 | `0c0ad1361fc678...` |
-| Verifier | 9012 | `3d702e5b9658f7...` |
-| Memory | 9032 | `6bc1bcd7f66d4e...` |
+| Witness    | 9002 | `0c0ad1361fc678...`   |
+| Verifier   | 9012 | `3d702e5b9658f7...`   |
+| Memory     | 9032 | `6bc1bcd7f66d4e...`   |
 
 Each node has its own ed25519 key in `axl-configs/*.pem`. Messages flow Witness → Propagator → Memory via real AXL peer-to-peer encrypted transport. This is the Gensyn autoresearch broadcast pattern applied to accountability signals.
 
@@ -217,6 +220,7 @@ curl http://164.92.165.231:8080/health
 The CCIP gateway at port 8080 handles EIP-3668 `OffchainLookup` resolution requests from Ethereum ENS clients. When any ENS-aware app resolves `mit-bot.aegis.eth`, the gateway queries `AegisNameRegistry.sol` on 0G and returns the live accountability score.
 
 ENSIP-25 records written at agent registration:
+
 - `agent.registry = 0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` (AgentRegistry.sol)
 - `agent.id = 1` (iNFT token ID)
 
@@ -230,11 +234,11 @@ The workflow integrates with the KeeperHub MCP API shape (`triggerWorkflow`, `ge
 
 ## Contracts
 
-| Contract | Chain | Address |
-|---|---|---|
-| AegisCourt.sol | 0G testnet (16602) | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` |
-| AgentRegistry.sol | 0G testnet (16602) | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` |
-| AegisNameRegistry.sol | 0G testnet (16602) | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` |
+| Contract              | Chain                       | Address                                      |
+| --------------------- | --------------------------- | -------------------------------------------- |
+| AegisCourt.sol        | 0G testnet (16602)          | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` |
+| AgentRegistry.sol     | 0G testnet (16602)          | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` |
+| AegisNameRegistry.sol | 0G testnet (16602)          | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` |
 | AegisCCIPResolver.sol | Ethereum Sepolia (11155111) | `0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC` |
 
 ---

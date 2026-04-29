@@ -40,7 +40,8 @@ const getMarketData = tool(
   },
   {
     name: 'get_market_data',
-    description: 'Get current market price, 24h change, volume, and wallet balance for a trading pair.',
+    description:
+      'Get current market price, 24h change, volume, and wallet balance for a trading pair.',
     schema: z.object({ pair: z.string().describe('Trading pair e.g. OG/USDC') }),
   }
 );
@@ -84,7 +85,11 @@ const llmWithTools = llm.bindTools(tools);
 
 function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
   const last = messages[messages.length - 1];
-  if ('tool_calls' in last && Array.isArray((last as { tool_calls: unknown[] }).tool_calls) && (last as { tool_calls: unknown[] }).tool_calls.length > 0) {
+  if (
+    'tool_calls' in last &&
+    Array.isArray((last as { tool_calls: unknown[] }).tool_calls) &&
+    (last as { tool_calls: unknown[] }).tool_calls.length > 0
+  ) {
     return 'tools';
   }
   return END;
@@ -127,7 +132,11 @@ async function attestToAegis(
   return body.rootHash;
 }
 
-function ruleFallback(pair: string): { action: Record<string, unknown>; reasoning: string; inputs: Record<string, unknown> } {
+function ruleFallback(pair: string): {
+  action: Record<string, unknown>;
+  reasoning: string;
+  inputs: Record<string, unknown>;
+} {
   const price = 0.8 + Math.random() * 1.4;
   const change = (Math.random() - 0.5) * 20;
   const balance = 0.5 + Math.random() * 4.5;
@@ -142,7 +151,12 @@ function ruleFallback(pair: string): { action: Record<string, unknown>; reasonin
   }
   if (change > 8) {
     return {
-      action: { type: 'sell', pair, amount: (balance * 0.15).toFixed(2), strategy: 'momentum_exit' },
+      action: {
+        type: 'sell',
+        pair,
+        amount: (balance * 0.15).toFixed(2),
+        strategy: 'momentum_exit',
+      },
       reasoning: `${pair} up ${change.toFixed(1)}% on momentum — taking 15% profit (${(balance * 0.15).toFixed(2)} OG).`,
       inputs,
     };
@@ -154,7 +168,11 @@ function ruleFallback(pair: string): { action: Record<string, unknown>; reasonin
   };
 }
 
-async function runDecision(agent: ReturnType<typeof buildAgent>, pair: string, index: number): Promise<void> {
+async function runDecision(
+  agent: ReturnType<typeof buildAgent>,
+  pair: string,
+  index: number
+): Promise<void> {
   process.stdout.write(`\n[Decision ${index}] ${pair}\n`);
 
   let action: Record<string, unknown> = { type: 'hold', pair };
@@ -166,20 +184,25 @@ async function runDecision(agent: ReturnType<typeof buildAgent>, pair: string, i
       messages: [
         new HumanMessage(
           `You are mit-bot, a DeFi trading agent on 0G Chain. ` +
-          `Use your tools: check the ${pair} market, get your portfolio, verify risk limits, then decide ONE action. ` +
-          `End your final answer with this JSON on its own line: ` +
-          `{"action":{"type":"<buy|sell|swap|hold>","pair":"${pair}","amount":"<number>","strategy":"<name>"},"reasoning":"<2 sentences>"}`
+            `Use your tools: check the ${pair} market, get your portfolio, verify risk limits, then decide ONE action. ` +
+            `End your final answer with this JSON on its own line: ` +
+            `{"action":{"type":"<buy|sell|swap|hold>","pair":"${pair}","amount":"<number>","strategy":"<name>"},"reasoning":"<2 sentences>"}`
         ),
       ],
     });
 
     const last = result.messages[result.messages.length - 1];
     const text = typeof last.content === 'string' ? last.content : JSON.stringify(last.content);
-    process.stdout.write(`  LangGraph   : ${text.slice(0, 120)}${text.length > 120 ? '...' : ''}\n`);
+    process.stdout.write(
+      `  LangGraph   : ${text.slice(0, 120)}${text.length > 120 ? '...' : ''}\n`
+    );
 
     const jsonMatch = text.match(/\{[\s\S]*"action"[\s\S]*"reasoning"[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]) as { action: Record<string, unknown>; reasoning: string };
+      const parsed = JSON.parse(jsonMatch[0]) as {
+        action: Record<string, unknown>;
+        reasoning: string;
+      };
       action = parsed.action;
       reasoning = parsed.reasoning;
       inputs = { pair, source: 'langgraph_stategraph' };
@@ -202,11 +225,17 @@ async function runDecision(agent: ReturnType<typeof buildAgent>, pair: string, i
 }
 
 async function run(): Promise<void> {
-  process.stdout.write('\n=== mit-bot.aegis.eth — LangGraph StateGraph agent + Aegis attestation ===\n');
+  process.stdout.write(
+    '\n=== mit-bot.aegis.eth — LangGraph StateGraph agent + Aegis attestation ===\n'
+  );
   process.stdout.write(`Framework   : LangGraph 1.x (StateGraph + ToolNode — non-deprecated)\n`);
-  process.stdout.write(`LLM         : ${process.env.ZG_COMPUTE_MODEL ?? 'qwen/qwen-2.5-7b-instruct'} via 0G Compute\n`);
+  process.stdout.write(
+    `LLM         : ${process.env.ZG_COMPUTE_MODEL ?? 'qwen/qwen-2.5-7b-instruct'} via 0G Compute\n`
+  );
   process.stdout.write(`Tools       : get_market_data · get_portfolio · check_risk_limits\n`);
-  process.stdout.write(`Witness     : ${WITNESS_AXL_URL} → peer ${WITNESS_PEER_ID.slice(0, 16)}...\n`);
+  process.stdout.write(
+    `Witness     : ${WITNESS_AXL_URL} → peer ${WITNESS_PEER_ID.slice(0, 16)}...\n`
+  );
 
   const agent = buildAgent();
   const pairs = ['OG/USDC', 'OG/ETH', 'ETH/USDC'];

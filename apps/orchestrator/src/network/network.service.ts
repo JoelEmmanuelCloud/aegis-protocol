@@ -9,7 +9,7 @@ export class NetworkService {
   constructor(
     private readonly agentsService: AgentsService,
     private readonly attestationsService: AttestationsService,
-    private readonly disputesService: DisputesService,
+    private readonly disputesService: DisputesService
   ) {}
 
   getStats(): NetworkStats {

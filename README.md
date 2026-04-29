@@ -48,22 +48,22 @@ If you want to run the full backend locally instead, follow the steps in [Sectio
 8. [Builder Integration](#8-builder-integration--adding-aegis-to-your-bot)
 9. [Running the Example Bot](#9-running-the-example-bot)
 10. [Full End-to-End Test Walkthrough](#10-full-end-to-end-test-walkthrough)
-10b. [Deploy Dashboard to Vercel](#10b-deploy-dashboard-to-vercel)
+    10b. [Deploy Dashboard to Vercel](#10b-deploy-dashboard-to-vercel)
 11. [Demo Video Script (3 min)](#11-demo-video-script-3-min)
 12. [Contracts](#12-contracts)
 13. [Orchestrator API Reference](#13-orchestrator-api-reference)
 14. [Troubleshooting](#14-troubleshooting)
 15. [Repository Structure](#15-repository-structure)
-5. [Start the System](#5-start-the-system)
-6. [Verify All Services Are Live](#6-verify-all-services-are-live)
-7. [Real-World User Flow](#7-real-world-user-flow)
-8. [Builder Integration — Adding Aegis to Your Bot](#8-builder-integration--adding-aegis-to-your-bot)
-9. [Running the Example Bot](#9-running-the-example-bot)
-10. [Demo Video Script (3 min)](#10-demo-video-script-3-min)
-11. [Contracts](#11-contracts)
-12. [Orchestrator API Reference](#12-orchestrator-api-reference)
-13. [Troubleshooting](#13-troubleshooting)
-14. [Repository Structure](#14-repository-structure)
+16. [Start the System](#5-start-the-system)
+17. [Verify All Services Are Live](#6-verify-all-services-are-live)
+18. [Real-World User Flow](#7-real-world-user-flow)
+19. [Builder Integration — Adding Aegis to Your Bot](#8-builder-integration--adding-aegis-to-your-bot)
+20. [Running the Example Bot](#9-running-the-example-bot)
+21. [Demo Video Script (3 min)](#10-demo-video-script-3-min)
+22. [Contracts](#11-contracts)
+23. [Orchestrator API Reference](#12-orchestrator-api-reference)
+24. [Troubleshooting](#13-troubleshooting)
+25. [Repository Structure](#14-repository-structure)
 
 ---
 
@@ -119,8 +119,8 @@ Four AXL nodes, four distinct ed25519 keys, communicating over the Gensyn Yggdra
 
 ### AXL Node Port Map
 
-| Node       | api_port | mgmt_port | tcp_port | TLS Listen | Peer ID                                                              |
-|------------|----------|-----------|----------|------------|----------------------------------------------------------------------|
+| Node       | api_port | mgmt_port | tcp_port | TLS Listen | Peer ID                                                            |
+| ---------- | -------- | --------- | -------- | ---------- | ------------------------------------------------------------------ |
 | Propagator | 9022     | 10022     | 7022     | 9120       | `f2f2af19af8f20bf3ce1cb070d81482fffb44aae32b65a2703dfe6168fc7eac5` |
 | Witness    | 9002     | 10002     | 7002     | —          | `0c0ad1361fc678003b3264705cffee150069fe2926a5190c8bb2692688fbd17e` |
 | Verifier   | 9012     | 10012     | 7012     | —          | `3d702e5b9658f762b60bbb4100a39f9b6fbd12cc08492688b0cdfc7f16e6abb4` |
@@ -150,12 +150,12 @@ aegis.eth  (Ethereum Sepolia)
 
 ## 3. Prerequisites
 
-| Requirement       | Version | Check                                                                              |
-|-------------------|---------|------------------------------------------------------------------------------------|
-| Node.js           | 20+     | `node -v`                                                                          |
-| npm               | 10+     | `npm -v`                                                                           |
-| MetaMask          | any     | browser extension installed                                                        |
-| 0G testnet wallet | funded  | [faucet.0g.ai](https://faucet.0g.ai)                                               |
+| Requirement       | Version | Check                                                                                        |
+| ----------------- | ------- | -------------------------------------------------------------------------------------------- |
+| Node.js           | 20+     | `node -v`                                                                                    |
+| npm               | 10+     | `npm -v`                                                                                     |
+| MetaMask          | any     | browser extension installed                                                                  |
+| 0G testnet wallet | funded  | [faucet.0g.ai](https://faucet.0g.ai)                                                         |
 | Sepolia ETH       | ≥0.05   | [cloud.google.com faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) |
 
 **Fund your wallet before starting.** You need OG testnet tokens for:
@@ -309,6 +309,7 @@ Navigate to **Register** (`/app/register`):
 Click **Mint iNFT** → approve the MetaMask transaction.
 
 When the transaction lands:
+
 - ERC-7857 iNFT minted on AgentRegistry.sol (0G chain)
 - Subname `trading-bot` registered in AegisNameRegistry
 - ENSIP-25 records `agent.registry` and `agent.id` written to AegisNameRegistry
@@ -641,6 +642,7 @@ curl "http://localhost:3000/keeperhub/audit?workflowId=aegis.execute_remedy&limi
 ```
 
 Check that:
+
 - FLAGGED run: `execute_remedy_tx` has `"status":"completed"`
 - CLEARED run: `execute_remedy_tx` has `"status":"skipped"`
 
@@ -702,6 +704,7 @@ vercel --prod
 ```
 
 Or connect via the Vercel dashboard:
+
 1. Import `https://github.com/JoelEmmanuelCloud/aegis-protocol`
 2. Set **Root Directory** to `apps/dashboard`
 3. Vercel auto-detects Vite — no framework override needed
@@ -710,16 +713,16 @@ Or connect via the Vercel dashboard:
 
 In **Project Settings → Environment Variables**, add:
 
-| Variable | Value |
-|---|---|
-| `VITE_ORCHESTRATOR_URL` | `https://your-orchestrator.railway.app` |
-| `VITE_WALLETCONNECT_PROJECT_ID` | From [cloud.walletconnect.com](https://cloud.walletconnect.com) |
-| `VITE_AGENT_REGISTRY_ADDRESS` | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` |
-| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` |
-| `VITE_PUBLIC_RESOLVER_ADDRESS` | `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63` |
-| `VITE_AEGIS_COURT_ADDRESS` | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` |
-| `VITE_0G_EXPLORER_URL` | `https://chainscan-galileo.0g.ai` |
-| `VITE_KEEPERHUB_WORKFLOW_ID` | `aegis.execute_remedy` |
+| Variable                           | Value                                                           |
+| ---------------------------------- | --------------------------------------------------------------- |
+| `VITE_ORCHESTRATOR_URL`            | `https://your-orchestrator.railway.app`                         |
+| `VITE_WALLETCONNECT_PROJECT_ID`    | From [cloud.walletconnect.com](https://cloud.walletconnect.com) |
+| `VITE_AGENT_REGISTRY_ADDRESS`      | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1`                    |
+| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4`                    |
+| `VITE_PUBLIC_RESOLVER_ADDRESS`     | `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63`                    |
+| `VITE_AEGIS_COURT_ADDRESS`         | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6`                    |
+| `VITE_0G_EXPLORER_URL`             | `https://chainscan-galileo.0g.ai`                               |
+| `VITE_KEEPERHUB_WORKFLOW_ID`       | `aegis.execute_remedy`                                          |
 
 Redeploy after setting variables.
 
@@ -727,13 +730,13 @@ Redeploy after setting variables.
 
 Judges need to add the 0G testnet manually:
 
-| Field | Value |
-|---|---|
-| Network Name | 0G Testnet |
-| RPC URL | `https://evmrpc-testnet.0g.ai` |
-| Chain ID | `16602` |
-| Currency Symbol | `OG` |
-| Block Explorer | `https://chainscan-galileo.0g.ai` |
+| Field           | Value                             |
+| --------------- | --------------------------------- |
+| Network Name    | 0G Testnet                        |
+| RPC URL         | `https://evmrpc-testnet.0g.ai`    |
+| Chain ID        | `16602`                           |
+| Currency Symbol | `OG`                              |
+| Block Explorer  | `https://chainscan-galileo.0g.ai` |
 
 Get testnet OG at [faucet.0g.ai](https://faucet.0g.ai).
 
@@ -751,7 +754,6 @@ Writing (register agent, file dispute) requires a connected wallet with 0G testn
 ---
 
 ## 11. Demo Video Script (3 min)
-
 
 **Setup before recording:** All 5 services running, browser at `http://localhost:4000`, MetaMask unlocked with funded 0G testnet wallet.
 
@@ -787,6 +789,7 @@ Run `npx ts-node scripts/mit-bot.ts` in terminal. Switch to dashboard → Attest
 > "Four separate processes. Four distinct ed25519 identity keys. Real encrypted messages over Yggdrasil."
 
 Show four terminal windows. Point to each peer ID:
+
 - Propagator: `f2f2af19...`
 - Witness: `0c0ad136...`
 - Verifier: `3d702e5b...`
@@ -831,16 +834,16 @@ Show: score ring dropped, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1
 
 ### 0G Testnet (chainId 16602)
 
-| Contract              | Address                                      | Explorer                                                                                   |
-|-----------------------|----------------------------------------------|--------------------------------------------------------------------------------------------|
+| Contract              | Address                                      | Explorer                                                                                                   |
+| --------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | AegisCourt.sol        | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` | [View](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction) |
-| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1) |
-| AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4) |
+| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1)                 |
+| AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4)                 |
 
 ### Ethereum Sepolia (chainId 11155111)
 
 | Contract               | Address                                      | Explorer                                                                                |
-|------------------------|----------------------------------------------|-----------------------------------------------------------------------------------------|
+| ---------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
 | AegisCCIPResolver.sol  | `0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC` | [View](https://sepolia.etherscan.io/address/0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC) |
 | ENS Registry (Sepolia) | `0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e` | Standard ENS Registry                                                                   |
 
@@ -972,6 +975,7 @@ This is expected on testnet — the storage nodes need to sync before segments a
 **Verdicts always return CLEARED**
 
 When the 0G file is not yet confirmed in storage, the verifier applies rule-based guardrails:
+
 - Actions in `HIGH_RISK_ACTIONS` (emergency_liquidation, drain, full_withdrawal, etc.) → FLAGGED
 - Actions with `amount` exceeding `AGENT_AMOUNT_LIMIT` (default 100) → FLAGGED
 - Everything else → CLEARED

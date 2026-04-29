@@ -1,5 +1,10 @@
 import { Injectable, BadGatewayException } from '@nestjs/common';
-import type { AttestationRequest, AttestationResponse, AttestationListResponse, AttestationItem } from '@aegis/types';
+import type {
+  AttestationRequest,
+  AttestationResponse,
+  AttestationListResponse,
+  AttestationItem,
+} from '@aegis/types';
 
 @Injectable()
 export class AttestationsService {
@@ -23,7 +28,7 @@ export class AttestationsService {
       throw new BadGatewayException(`Witness node error: ${text}`);
     }
 
-    const result = await response.json() as AttestationResponse;
+    const result = (await response.json()) as AttestationResponse;
     this.log.unshift({
       agentId: dto.agentId,
       rootHash: result.rootHash,
@@ -40,7 +45,11 @@ export class AttestationsService {
     return this.log.length;
   }
 
-  getSummary(agentId: string): { totalDecisions: number; lastVerdict: string; flaggedCount: number } {
+  getSummary(agentId: string): {
+    totalDecisions: number;
+    lastVerdict: string;
+    flaggedCount: number;
+  } {
     const items = this.log.filter((a) => a.agentId === agentId);
     const flagged = items.filter((a) => a.verdict === 'FLAGGED').length;
     return {

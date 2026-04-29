@@ -25,10 +25,16 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     <DemoContext.Provider
       value={{
         isDemoMode,
-        enableDemo: () => { setIsDemoMode(true); setIsBrowseMode(false); },
+        enableDemo: () => {
+          setIsDemoMode(true);
+          setIsBrowseMode(false);
+        },
         disableDemo: () => setIsDemoMode(false),
         isBrowseMode,
-        enableBrowse: () => { setIsBrowseMode(true); setIsDemoMode(false); },
+        enableBrowse: () => {
+          setIsBrowseMode(true);
+          setIsDemoMode(false);
+        },
         disableBrowse: () => setIsBrowseMode(false),
       }}
     >

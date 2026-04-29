@@ -1,0 +1,193 @@
+memory management server on port 10032
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-memory.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 201:50f9:ca0:264a:c6e9:a2eb:4700:8f9c
+[node] Our Public Key: 6bc1bcd7f66d4e4597452e3fdc18e0cf0a4e420330b5daabb160cdd56a40b225
+Listening on 127.0.0.1:9032
+TCP Listener started on port 7032
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:64687
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:64688
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:64686
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:64688; error: read tcp 192.168.0.134:64688->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:64686; error: read tcp 192.168.0.134:64686->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.199:52250
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.199:52251
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.199:52251; error: read tcp 192.168.0.199:52251->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.199:52250; error: read tcp 192.168.0.199:52250->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:50239
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:50238
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:64687; error: read tcp 127.0.0.1:64687->127.0.0.1:9120: wsarecv: An existing connection was forcibly closed by the remote host.
+C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+apps/memory-node/src/index.ts(107,13): error TS2339: Property 'body' does not exist on type 'never[] | AXLEnvelope[]'.
+  Property 'body' does not exist on type 'never[]'.
+apps/memory-node/src/index.ts(108,44): error TS2339: Property 'body' does not exist on type 'never[] | AXLEnvelope[]'.
+  Property 'body' does not exist on type 'never[]'.
+
+    at createTSError (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1839:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) {
+  diagnosticCodes: [ 2339, 2339 ]
+}
+C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+apps/memory-node/src/index.ts(107,13): error TS2339: Property 'body' does not exist on type 'AXLEnvelope[]'.
+apps/memory-node/src/index.ts(108,44): error TS2339: Property 'body' does not exist on type 'AXLEnvelope[]'.
+
+    at createTSError (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1839:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\joel.emmanuel\Desktop\aegis-protocol\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) {
+  diagnosticCodes: [ 2339, 2339 ]
+}
+memory management server on port 10032
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-memory.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 201:50f9:ca0:264a:c6e9:a2eb:4700:8f9c
+[node] Our Public Key: 6bc1bcd7f66d4e4597452e3fdc18e0cf0a4e420330b5daabb160cdd56a40b225
+Listening on 127.0.0.1:9032
+TCP Listener started on port 7032
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:53988
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:53990
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:54009
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:54009; error: read tcp 127.0.0.1:54009->127.0.0.1:9120: wsarecv: An existing connection was forcibly closed by the remote host.
+memory management server on port 10032
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-memory.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 201:50f9:ca0:264a:c6e9:a2eb:4700:8f9c
+[node] Our Public Key: 6bc1bcd7f66d4e4597452e3fdc18e0cf0a4e420330b5daabb160cdd56a40b225
+Listening on 127.0.0.1:9032
+TCP Listener started on port 7032
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:60300
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:60301
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:60302
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:60300; error: read tcp 127.0.0.1:60300->127.0.0.1:9120: wsarecv: An existing connection was forcibly closed by the remote host.
+memory management server on port 10032
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-memory.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 201:50f9:ca0:264a:c6e9:a2eb:4700:8f9c
+[node] Our Public Key: 6bc1bcd7f66d4e4597452e3fdc18e0cf0a4e420330b5daabb160cdd56a40b225
+Listening on 127.0.0.1:9032
+TCP Listener started on port 7032
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:61767
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:61766
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:61765
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:61767; error: read tcp 127.0.0.1:61767->127.0.0.1:9120: wsarecv: An existing connection was forcibly closed by the remote host.
+memory management server on port 10032
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-memory.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 201:50f9:ca0:264a:c6e9:a2eb:4700:8f9c
+[node] Our Public Key: 6bc1bcd7f66d4e4597452e3fdc18e0cf0a4e420330b5daabb160cdd56a40b225
+Listening on 127.0.0.1:9032
+TCP Listener started on port 7032
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:63387
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:63389
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:63388
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:63389; error: read tcp 192.168.0.134:63389->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:63388; error: read tcp 192.168.0.134:63388->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:59412
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:59411
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:59412; error: read tcp 192.168.0.134:59412->136.111.135.206:9001: i/o timeout
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:59411; error: read tcp 192.168.0.134:59411->34.46.48.224:9001: i/o timeout
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:49988
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:49989
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:49989; error: read tcp 192.168.0.134:49989->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:49988; error: read tcp 192.168.0.134:49988->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.198:51908
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.198:51902
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.198:51902; error: read tcp 192.168.0.198:51902->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.198:51908; error: read tcp 192.168.0.198:51908->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.198:64413
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.198:64526
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.198:64526; error: read tcp 192.168.0.198:64526->136.111.135.206:9001: wsarecv: An existing connection was forcibly closed by the remote host.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.198:64413; error: read tcp 192.168.0.198:64413->34.46.48.224:9001: wsarecv: An existing connection was forcibly closed by the remote host.
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.198:61077
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.198:61076
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.198:61077; error: read tcp 192.168.0.198:61077->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.198:61076
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:63387
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:60905
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:51185
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:55001
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:51185; error: read tcp 192.168.0.134:51185->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:55001; error: read tcp 192.168.0.134:55001->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:57441
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:57442
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:57441
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:57442
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:56772
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:56769
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:56769; error: read tcp 192.168.0.200:56769->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:56772; error: read tcp 192.168.0.200:56772->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:58200
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:58197
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:58197; error: read tcp 192.168.0.200:58197->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:58200; error: read tcp 192.168.0.200:58200->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:58380
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:59546
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:58380; error: read tcp 192.168.0.200:58380->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:59546; error: read tcp 192.168.0.200:59546->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:55612
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:55616
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:55616; error: read tcp 192.168.0.200:55616->136.111.135.206:9001: wsarecv: An existing connection was forcibly closed by the remote host.
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:55612; error: read tcp 192.168.0.200:55612->34.46.48.224:9001: wsarecv: An existing connection was forcibly closed by the remote host.
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:62692
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:62695
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:62695; error: read tcp 192.168.0.200:62695->34.46.48.224:9001: i/o timeout
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:58240
+[node] Disconnected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.200:58240; error: read tcp 192.168.0.200:58240->34.46.48.224:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Disconnected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.200:62692; error: read tcp 192.168.0.200:62692->136.111.135.206:9001: wsarecv: An established connection was aborted by the software in your host machine.
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:54412
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:54414

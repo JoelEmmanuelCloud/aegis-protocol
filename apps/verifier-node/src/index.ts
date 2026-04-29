@@ -7,7 +7,13 @@ import express, { Request, Response } from 'express';
 import { downloadObject, writeKVObject, readKVObject } from '@aegis/0g-client';
 import { replayDecision } from '@aegis/0g-compute';
 import { send, recv } from '@aegis/axl-client';
-import type { VerifyRequest, VerifyResponse, DecisionRecord, ReputationRecord, Verdict } from '@aegis/types';
+import type {
+  VerifyRequest,
+  VerifyResponse,
+  DecisionRecord,
+  ReputationRecord,
+  Verdict,
+} from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
 const MGMT_PORT = PORT + 1000;
@@ -71,14 +77,20 @@ process.on('SIGTERM', () => {
 });
 
 const HIGH_RISK_ACTIONS = new Set([
-  'emergency_liquidation', 'drain', 'full_withdrawal',
-  'unauthorized_transfer', 'rug', 'self_destruct',
+  'emergency_liquidation',
+  'drain',
+  'full_withdrawal',
+  'unauthorized_transfer',
+  'rug',
+  'self_destruct',
 ]);
 
 const AMOUNT_LIMIT = parseFloat(process.env.AGENT_AMOUNT_LIMIT ?? '100');
 
 function ruleBasedVerdict(action: Record<string, unknown>): Verdict {
-  const type = String(action.type ?? '').toLowerCase().replace(/[- ]/g, '_');
+  const type = String(action.type ?? '')
+    .toLowerCase()
+    .replace(/[- ]/g, '_');
   if (HIGH_RISK_ACTIONS.has(type)) return 'FLAGGED';
   const amount = parseFloat(String(action.amount ?? '0'));
   if (!isNaN(amount) && amount > AMOUNT_LIMIT) return 'FLAGGED';
@@ -119,14 +131,17 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
   }
 
   void (async () => {
-    const existing = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(() => null);
+    const existing = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(
+      () => null
+    );
     const reputation: ReputationRecord = {
       score:
         replay.verdict === 'FLAGGED'
           ? Math.max(0, (existing?.score ?? 100) - 10)
           : Math.min(100, (existing?.score ?? 100) + 1),
       totalDecisions: existing?.totalDecisions ?? 1,
-      flagged: replay.verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
+      flagged:
+        replay.verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
       lastVerified: Date.now(),
     };
     writeKVObject(`aegis:${body.agentId}:reputation`, reputation).catch(() => {});

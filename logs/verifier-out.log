@@ -1,0 +1,22 @@
+verifier management server on port 10012
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-verifier.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 202:147e:8d23:4d38:44ea:4fa2:25f7:fae3
+[node] Our Public Key: 3d702e5b9658f762b60bbb4100a39f9b6fbd12cc08492688b0cdfc7f16e6abb4
+Listening on 127.0.0.1:9012
+TCP Listener started on port 7012
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:58984
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:58985
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:59008
+Getting file locations for root hash: 041df7230ceb912c0ab6af3fbc2abb52f18dd23c12af2fba7eadc5e617e32125
+Getting file locations for root hash: 041df7230ceb912c0ab6af3fbc2abb52f18dd23c12af2fba7eadc5e617e32125
+Getting file locations for root hash: 13fe43a02495de1e1d541ae7bea51ff2224a4cf4caeef656430e5d0ccac8aec4
+Getting file locations for root hash: 13fe43a02495de1e1d541ae7bea51ff2224a4cf4caeef656430e5d0ccac8aec4
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:59008; error: read tcp 127.0.0.1:59008->127.0.0.1:9120: wsarecv: An existing connection was forcibly closed by the remote host.

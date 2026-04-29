@@ -1,0 +1,18 @@
+witness management server on port 10002
+[node] Loaded node config from C:\Users\JOEL~1.EMM\AppData\Local\Temp\axl-witness.json
+[node] Max message size: 16777216 bytes
+[node] Max concurrent connections: 128
+[node] Connection read timeout: 1m0s
+[node] Connection idle timeout: 5m0s
+[node] Configured peer: tls://127.0.0.1:9120
+[node] Configured peer: tls://34.46.48.224:9001
+[node] Configured peer: tls://136.111.135.206:9001
+[node] Gensyn Node Started!
+[node] Our IPv6: 204:7ea5:d93c:730:fff8:99b3:71f4:6002
+[node] Our Public Key: 0c0ad1361fc678003b3264705cffee150069fe2926a5190c8bb2692688fbd17e
+Listening on 127.0.0.1:9002
+TCP Listener started on port 7002
+[node] Connected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:60011
+[node] Connected outbound: 202:5912:49b4:13a2:f9bd:b166:6a6e:fa2e@34.46.48.224:9001, source 192.168.0.134:60010
+[node] Connected outbound: 206:f757:7717:51b8:5af:1a53:c548:8867@136.111.135.206:9001, source 192.168.0.134:60012
+[node] Disconnected outbound: 200:1a1a:a1cc:a0e1:be81:863c:69f1:e4fd@127.0.0.1:9120, source 127.0.0.1:60011; error: read tcp 127.0.0.1:60011->127.0.0.1:9120: wsarecv: An existing connection was forcibly closed by the remote host.

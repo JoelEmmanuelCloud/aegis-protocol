@@ -87,7 +87,9 @@ async function handlePropagateAttestation(body: PropagateMessage): Promise<void>
   };
   await writeKVObject(key, history).catch(() => {});
 
-  const reputation = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(() => null);
+  const reputation = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(
+    () => null
+  );
 
   if (body.agentId.endsWith('.aegis.eth')) {
     await setTextRecords(body.agentId, {

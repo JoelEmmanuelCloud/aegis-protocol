@@ -15,14 +15,20 @@ const VERDICT_TO_UINT: Record<Verdict, number> = { PENDING: 0, CLEARED: 1, FLAGG
 const UINT_TO_VERDICT: Verdict[] = ['PENDING', 'CLEARED', 'FLAGGED'];
 
 const HIGH_RISK_ACTIONS = new Set([
-  'emergency_liquidation', 'drain', 'full_withdrawal',
-  'unauthorized_transfer', 'rug', 'self_destruct',
+  'emergency_liquidation',
+  'drain',
+  'full_withdrawal',
+  'unauthorized_transfer',
+  'rug',
+  'self_destruct',
 ]);
 
 const AMOUNT_LIMIT = parseFloat(process.env.AGENT_AMOUNT_LIMIT ?? '100');
 
 function ruleBasedVerdict(action: Record<string, unknown>): Verdict {
-  const type = String(action.type ?? '').toLowerCase().replace(/[- ]/g, '_');
+  const type = String(action.type ?? '')
+    .toLowerCase()
+    .replace(/[- ]/g, '_');
   if (HIGH_RISK_ACTIONS.has(type)) return 'FLAGGED';
   const amount = parseFloat(String(action.amount ?? '0'));
   if (!isNaN(amount) && amount > AMOUNT_LIMIT) return 'FLAGGED';
@@ -102,7 +108,11 @@ export class DisputesService {
       const res = await fetch(`${this.verifierUrl}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'VERIFY_DECISION', rootHash: dto.rootHash, agentId: dto.agentId }),
+        body: JSON.stringify({
+          type: 'VERIFY_DECISION',
+          rootHash: dto.rootHash,
+          agentId: dto.agentId,
+        }),
       });
       if (res.ok) {
         const teeResult = (await res.json()) as VerifyResponse;

@@ -1,6 +1,10 @@
 import { useKeeperAudit } from '../hooks/useKeeperAudit';
 
-type StepRecord = { action: string; status: 'completed' | 'skipped' | 'failed'; completedAt: number };
+type StepRecord = {
+  action: string;
+  status: 'completed' | 'skipped' | 'failed';
+  completedAt: number;
+};
 
 type Run = {
   runId: string;
@@ -42,10 +46,25 @@ function StepRow({ step }: { step: StepRecord }) {
         padding: '5px 0',
       }}
     >
-      <span style={{ fontSize: 12, color, fontWeight: 700, width: 14, textAlign: 'center', flexShrink: 0 }}>
+      <span
+        style={{
+          fontSize: 12,
+          color,
+          fontWeight: 700,
+          width: 14,
+          textAlign: 'center',
+          flexShrink: 0,
+        }}
+      >
         {mark}
       </span>
-      <span style={{ fontSize: 12, color: step.status === 'skipped' ? 'var(--app-text-muted)' : 'var(--app-text-2)', flex: 1 }}>
+      <span
+        style={{
+          fontSize: 12,
+          color: step.status === 'skipped' ? 'var(--app-text-muted)' : 'var(--app-text-2)',
+          flex: 1,
+        }}
+      >
         {STEP_LABELS[step.action] ?? step.action}
       </span>
       <span
@@ -79,7 +98,9 @@ export default function KeeperAuditTrail() {
         </h1>
         <p style={{ fontSize: 13, color: 'var(--app-text-muted)' }}>
           Automated remedy execution log for{' '}
-          <code style={{ fontSize: 12, color: 'var(--app-accent-light)' }}>aegis.execute_remedy</code>
+          <code style={{ fontSize: 12, color: 'var(--app-accent-light)' }}>
+            aegis.execute_remedy
+          </code>
         </p>
       </div>
 
@@ -91,9 +112,18 @@ export default function KeeperAuditTrail() {
         }}
       >
         {[
-          { label: 'Automated Execution', desc: 'Triggered automatically on every verdict — no manual intervention required' },
-          { label: 'On-chain Remedy', desc: 'execute_remedy_tx fires a contract call when verdict is FLAGGED; skipped for CLEARED' },
-          { label: 'Fully Auditable', desc: 'Every run, step outcome, and agent are logged here and verifiable on AegisCourt' },
+          {
+            label: 'Automated Execution',
+            desc: 'Triggered automatically on every verdict — no manual intervention required',
+          },
+          {
+            label: 'On-chain Remedy',
+            desc: 'execute_remedy_tx fires a contract call when verdict is FLAGGED; skipped for CLEARED',
+          },
+          {
+            label: 'Fully Auditable',
+            desc: 'Every run, step outcome, and agent are logged here and verifiable on AegisCourt',
+          },
         ].map(({ label, desc }) => (
           <div
             key={label}
@@ -107,10 +137,10 @@ export default function KeeperAuditTrail() {
               gap: 4,
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
-              {label}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>{label}</div>
+            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>
+              {desc}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>{desc}</div>
           </div>
         ))}
       </div>
@@ -123,7 +153,14 @@ export default function KeeperAuditTrail() {
             ))}
           </div>
         ) : runs.length === 0 ? (
-          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--app-text-muted)', fontSize: 13 }}>
+          <div
+            style={{
+              padding: '48px',
+              textAlign: 'center',
+              color: 'var(--app-text-muted)',
+              fontSize: 13,
+            }}
+          >
             No remedy runs yet. File a dispute to trigger the workflow.
           </div>
         ) : (
@@ -136,13 +173,32 @@ export default function KeeperAuditTrail() {
                   borderBottom: i < runs.length - 1 ? '1px solid var(--app-border)' : 'none',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
+                  }}
+                >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--app-text-muted)' }}>
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        color: 'var(--app-text-muted)',
+                      }}
+                    >
                       {r.runId}
                     </span>
                     {r.payload && (
-                      <span style={{ fontSize: 11, color: 'var(--app-text-2)', fontFamily: 'monospace' }}>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: 'var(--app-text-2)',
+                          fontFamily: 'monospace',
+                        }}
+                      >
                         {r.payload.agentId} — verdict:{' '}
                         <span
                           style={{
@@ -203,7 +259,12 @@ export default function KeeperAuditTrail() {
                       href={`${ZG_EXPLORER}/tx/${r.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: 11, color: 'var(--app-accent)', fontFamily: 'monospace', textDecoration: 'none' }}
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--app-accent)',
+                        fontFamily: 'monospace',
+                        textDecoration: 'none',
+                      }}
                     >
                       {r.txHash.slice(0, 14)}… ↗
                     </a>

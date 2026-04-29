@@ -22,7 +22,11 @@ export interface WorkflowRun {
   gasUsed?: number;
   retryCount: number;
   payload?: Record<string, unknown>;
-  steps?: Array<{ action: string; status: 'completed' | 'skipped' | 'failed'; completedAt: number }>;
+  steps?: Array<{
+    action: string;
+    status: 'completed' | 'skipped' | 'failed';
+    completedAt: number;
+  }>;
 }
 
 const runs: WorkflowRun[] = [];

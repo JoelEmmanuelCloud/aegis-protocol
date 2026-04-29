@@ -415,9 +415,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
             )}
             {isBrowseMode && !isDemoMode && !address && (
-              <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>
-                Read-only
-              </span>
+              <span style={{ fontSize: 12, color: 'var(--app-text-muted)' }}>Read-only</span>
             )}
           </div>
         </header>
