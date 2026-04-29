@@ -131,10 +131,10 @@ export default function DisputeUI() {
         }}
       >
         {[
-          { icon: '⬡', label: 'On-chain Enforcement', desc: 'Disputes submitted to AegisCourt.sol on 0G — immutable, permissionless' },
-          { icon: '🔒', label: 'TEE Verification', desc: 'Verifier node replays decisions inside 0G Compute trusted execution environment' },
-          { icon: '🪪', label: 'ENS Identity', desc: 'Every agent has a verified .aegis.eth on-chain identity that cannot be impersonated' },
-        ].map(({ icon, label, desc }) => (
+          { label: 'On-chain Enforcement', desc: 'Disputes submitted to AegisCourt.sol on 0G — immutable, permissionless' },
+          { label: 'TEE Verification', desc: 'Verifier node replays decisions inside 0G Compute trusted execution environment' },
+          { label: 'ENS Identity', desc: 'Every agent has a verified .aegis.eth on-chain identity that cannot be impersonated' },
+        ].map(({ label, desc }) => (
           <div
             key={label}
             style={{
@@ -147,8 +147,8 @@ export default function DisputeUI() {
               gap: 4,
             }}
           >
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>{icon}</span>{label}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--app-text)' }}>
+              {label}
             </div>
             <div style={{ fontSize: 11, color: 'var(--app-text-muted)', lineHeight: 1.5 }}>{desc}</div>
           </div>
@@ -446,11 +446,11 @@ export default function DisputeUI() {
                           textDecoration: 'none',
                         }}
                       >
-                        ⬡ Verify on-chain
+                        Verify on-chain ↗
                       </a>
                     ) : (
                       <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
-                        Pending on-chain confirmation
+                        Pending on-chain
                       </span>
                     )}
                   </div>
