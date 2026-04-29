@@ -1,49 +1,111 @@
 services:
-  axl-witness:
-    build: ./apps/witness-node
-    ports:
-      - '${AXL_WITNESS_PORT}:${AXL_WITNESS_PORT}'
-    env_file: .env
-    volumes:
-      - ./axl-configs:/axl-configs:ro
-
-  axl-verifier:
-    build: ./apps/verifier-node
-    ports:
-      - '${AXL_VERIFIER_PORT}:${AXL_VERIFIER_PORT}'
-    env_file: .env
-    volumes:
-      - ./axl-configs:/axl-configs:ro
-
   axl-propagator:
-    build: ./apps/propagator-node
+    build:
+      context: .
+      dockerfile: apps/propagator-node/Dockerfile
     ports:
       - '${AXL_PROPAGATOR_PORT}:${AXL_PROPAGATOR_PORT}'
+      - '10022:10022'
     env_file: .env
     volumes:
-      - ./axl-configs:/axl-configs:ro
+      - ./axl-configs:/app/axl-configs:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10022/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  axl-witness:
+    build:
+      context: .
+      dockerfile: apps/witness-node/Dockerfile
+    ports:
+      - '${AXL_WITNESS_PORT}:${AXL_WITNESS_PORT}'
+      - '10002:10002'
+    env_file: .env
+    environment:
+      AXL_PEER_HOST: axl-propagator
+    volumes:
+      - ./axl-configs:/app/axl-configs:ro
+    depends_on:
+      axl-propagator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10002/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  axl-verifier:
+    build:
+      context: .
+      dockerfile: apps/verifier-node/Dockerfile
+    ports:
+      - '${AXL_VERIFIER_PORT}:${AXL_VERIFIER_PORT}'
+      - '10012:10012'
+    env_file: .env
+    environment:
+      AXL_PEER_HOST: axl-propagator
+    volumes:
+      - ./axl-configs:/app/axl-configs:ro
+    depends_on:
+      axl-propagator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10012/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
 
   axl-memory:
-    build: ./apps/memory-node
+    build:
+      context: .
+      dockerfile: apps/memory-node/Dockerfile
     ports:
       - '${AXL_MEMORY_PORT}:${AXL_MEMORY_PORT}'
+      - '10032:10032'
     env_file: .env
+    environment:
+      AXL_PEER_HOST: axl-propagator
     volumes:
-      - ./axl-configs:/axl-configs:ro
+      - ./axl-configs:/app/axl-configs:ro
+    depends_on:
+      axl-propagator:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:10032/health']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
 
   orchestrator:
-    build: ./apps/orchestrator
+    build:
+      context: .
+      dockerfile: apps/orchestrator/Dockerfile
     ports:
       - '3000:3000'
     env_file: .env
+    environment:
+      WITNESS_MGMT_URL: http://axl-witness:10002
+      VERIFIER_MGMT_URL: http://axl-verifier:10012
     depends_on:
-      - axl-witness
-      - axl-verifier
-      - axl-propagator
-      - axl-memory
+      axl-witness:
+        condition: service_healthy
+      axl-verifier:
+        condition: service_healthy
+      axl-propagator:
+        condition: service_healthy
+      axl-memory:
+        condition: service_healthy
 
   dashboard:
-    build: ./apps/dashboard
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
     ports:
       - '4000:4000'
     env_file: .env
