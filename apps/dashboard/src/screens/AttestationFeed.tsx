@@ -14,7 +14,7 @@ type Attestation = {
 function VerdictBadge({ verdict }: { verdict: string }) {
   if (verdict === 'CLEARED') return <span className="badge-cleared">Cleared</span>;
   if (verdict === 'FLAGGED') return <span className="badge-flagged">Flagged</span>;
-  return <span className="badge-pending">Pending</span>;
+  return <span className="badge-pending">Attested</span>;
 }
 
 function summarizeAction(action?: Record<string, unknown>): string {
@@ -50,10 +50,15 @@ export default function AttestationFeed() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {['ALL', 'PENDING', 'CLEARED', 'FLAGGED'].map((v) => (
+          {[
+            { value: 'ALL', label: 'All' },
+            { value: 'PENDING', label: 'Attested' },
+            { value: 'CLEARED', label: 'Cleared' },
+            { value: 'FLAGGED', label: 'Flagged' },
+          ].map(({ value, label }) => (
             <button
-              key={v}
-              onClick={() => setFilter(v)}
+              key={value}
+              onClick={() => setFilter(value)}
               style={{
                 padding: '6px 14px',
                 borderRadius: 6,
@@ -61,12 +66,12 @@ export default function AttestationFeed() {
                 fontWeight: 600,
                 cursor: 'pointer',
                 border: '1px solid',
-                borderColor: filter === v ? 'var(--app-accent)' : 'var(--app-border)',
-                background: filter === v ? 'var(--accent-dim)' : 'transparent',
-                color: filter === v ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
+                borderColor: filter === value ? 'var(--app-accent)' : 'var(--app-border)',
+                background: filter === value ? 'var(--accent-dim)' : 'transparent',
+                color: filter === value ? 'var(--app-accent-light)' : 'var(--app-text-muted)',
               }}
             >
-              {v}
+              {label}
             </button>
           ))}
         </div>

@@ -14,7 +14,7 @@ type Entry = {
 function VerdictBadge({ verdict }: { verdict: string }) {
   if (verdict === 'CLEARED') return <span className="badge-cleared">Cleared</span>;
   if (verdict === 'FLAGGED') return <span className="badge-flagged">Flagged</span>;
-  return <span className="badge-pending">Pending</span>;
+  return <span className="badge-pending">Attested</span>;
 }
 
 function summarizeAction(action?: Record<string, unknown>): string {
