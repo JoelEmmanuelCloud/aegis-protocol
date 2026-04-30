@@ -120,14 +120,17 @@ export class AgentsService implements OnModuleInit {
     const ensName = `${dto.label}.aegis.eth`;
 
     this._activeAgentCount++;
-    const stats = await readKVObject<NetworkStats>('aegis:network:stats');
-    await writeKVObject('aegis:network:stats', {
-      totalAttestations: stats?.totalAttestations ?? 0,
-      disputes: stats?.disputes ?? 0,
-      activeAgents: this._activeAgentCount,
-    }).catch(() => {});
 
-    await setTextRecords(ensName, {
+    void (async () => {
+      const stats = await readKVObject<NetworkStats>('aegis:network:stats').catch(() => null);
+      writeKVObject('aegis:network:stats', {
+        totalAttestations: stats?.totalAttestations ?? 0,
+        disputes: stats?.disputes ?? 0,
+        activeAgents: this._activeAgentCount,
+      }).catch(() => {});
+    })();
+
+    setTextRecords(ensName, {
       'agent.registry': process.env.AGENT_REGISTRY_ADDRESS ?? '',
       'agent.id': tokenId.toString(),
       'aegis.reputation': '100',
