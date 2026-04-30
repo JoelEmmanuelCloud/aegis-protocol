@@ -334,20 +334,20 @@ export default function Slides() {
             </button>
           ) : (
             <a
-              href="/app"
+              href="/"
               style={{
                 padding: '10px 24px',
                 borderRadius: 8,
-                border: 'none',
-                background: 'var(--app-green)',
-                color: '#fff',
+                border: '1px solid var(--app-border)',
+                background: 'var(--app-elevated)',
+                color: 'var(--app-text)',
                 cursor: 'pointer',
                 fontSize: 14,
                 fontWeight: 600,
                 textDecoration: 'none',
               }}
             >
-              See Live Demo
+              Back to Home
             </a>
           )}
         </div>
