@@ -308,7 +308,7 @@ When you open a `recordVerdict` transaction on chainscan-galileo, the calldata i
 2. The full record contains: `agentId`, `inputs`, `reasoning`, `action`, `verdict`, `attestedBy`, `timestamp`
 3. The `agentId` is always the ENS name (e.g. `domsday.aegis.eth`) — visible in the dispute history on the dashboard
 
-**Contract source verification:** `AgentRegistry.sol` is source-verified on chainscan-galileo (compiler `v0.8.24`, optimisation enabled 200 runs, EVM cancun). The remaining contracts use the same settings — flattened source files are in `contracts/flattened/` for manual verification. Source code for all contracts is also in the `/contracts` directory of this repository.
+**Contract source verification:** All three 0G testnet contracts are source-verified on chainscan-galileo (compiler `v0.8.24`, optimisation enabled 200 runs, EVM cancun). Flattened source files are in `contracts/flattened/`.
 
 ---
 

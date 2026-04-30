@@ -1017,7 +1017,7 @@ This is correct. **Attested** means the decision is committed to 0G Storage and 
 
 **Contract source verification**
 
-Contracts are verified on chainscan-galileo using single-file verification at `https://chainscan-galileo.0g.ai/contract-verification`. Flattened source files are in `contracts/flattened/`. Compiler: `v0.8.24`, Optimisation: enabled 200 runs, EVM: cancun.
+All three 0G testnet contracts are source-verified on chainscan-galileo. Compiler: `v0.8.24`, Optimisation: enabled 200 runs, EVM: cancun. Flattened source files are in `contracts/flattened/`.
 
 **KeeperHub workflow not triggering**
 
