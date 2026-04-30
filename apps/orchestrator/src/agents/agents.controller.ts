@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { AgentsService, RegisterAgentDto } from './agents.service';
 
 @Controller('agents')
@@ -9,6 +9,11 @@ export class AgentsController {
   @HttpCode(HttpStatus.CREATED)
   register(@Body() dto: RegisterAgentDto) {
     return this.agentsService.register(dto);
+  }
+
+  @Get('recent')
+  getRecent(@Query('limit') limit?: string) {
+    return this.agentsService.getRecent(limit ? parseInt(limit, 10) : 20);
   }
 
   @Get('label/:label')

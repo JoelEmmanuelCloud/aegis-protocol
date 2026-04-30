@@ -27,6 +27,18 @@ export function fetchAgent(label: string): Promise<AgentRecord> {
   return apiFetch<AgentRecord>(`/agents/label/${encodeURIComponent(label)}`);
 }
 
+export interface RecentAgent {
+  tokenId: string;
+  ensName: string;
+  owner: string;
+  mintedAt: number;
+}
+
+export function fetchRecentAgents(limit?: number): Promise<RecentAgent[]> {
+  const qs = limit !== undefined ? `?limit=${limit}` : '';
+  return apiFetch<RecentAgent[]>(`/agents/recent${qs}`);
+}
+
 export function fetchAgentsByOwner(address: string): Promise<AgentRecord[]> {
   return apiFetch<AgentRecord[]>(`/agents/owner/${encodeURIComponent(address)}`);
 }

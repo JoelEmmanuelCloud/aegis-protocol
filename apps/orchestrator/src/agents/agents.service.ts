@@ -66,18 +66,47 @@ export class AgentsService implements OnModuleInit {
     return this._readRegistry;
   }
 
+  private _recentAgents: Array<{
+    tokenId: string;
+    ensName: string;
+    owner: string;
+    mintedAt: number;
+  }> = [];
+
   async onModuleInit(): Promise<void> {
     try {
       const filter = this.readRegistry.filters.AgentMinted();
       const events = await this.readRegistry.queryFilter(filter, 0, 'latest');
       this._activeAgentCount = events.length;
+      this._recentAgents = events
+        .slice()
+        .reverse()
+        .slice(0, 50)
+        .map((e) => {
+          const parsed = this.readRegistry.interface.parseLog({
+            topics: e.topics as string[],
+            data: e.data,
+          });
+          return {
+            tokenId: parsed?.args.tokenId?.toString() ?? '',
+            ensName: parsed?.args.ensName ?? '',
+            owner: parsed?.args.owner ?? '',
+            mintedAt: 0,
+          };
+        })
+        .filter((a) => a.ensName);
     } catch {
       this._activeAgentCount = 0;
+      this._recentAgents = [];
     }
   }
 
   getActiveAgentCount(): number {
     return this._activeAgentCount;
+  }
+
+  getRecent(limit = 20) {
+    return this._recentAgents.slice(0, limit);
   }
 
   async register(
