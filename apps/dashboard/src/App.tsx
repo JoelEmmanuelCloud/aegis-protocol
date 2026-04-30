@@ -11,6 +11,7 @@ import AppShell from './components/AppShell';
 import ConnectGate from './components/ConnectGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import Landing from './pages/Landing';
+import Slides from './screens/Slides';
 import Overview from './screens/Overview';
 import AgentProfile from './screens/AgentProfile';
 import AttestationFeed from './screens/AttestationFeed';
@@ -27,6 +28,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/slides" element={<Slides />} />
       <Route
         path="/app/*"
         element={
