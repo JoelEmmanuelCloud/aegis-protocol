@@ -480,6 +480,28 @@ task = Task(description='...', callback=after_task)
 
 The attestation call is fire-and-forget. If Aegis is unreachable, the agent continues normally.
 
+**Framework integration points:**
+
+| Framework             | Where to add                                       |
+| --------------------- | -------------------------------------------------- |
+| LangChain / LangGraph | `onAgentFinish` callback or after `agent.invoke()` |
+| CrewAI                | Task `callback` parameter                          |
+| ElizaOS               | Action handler after execution                     |
+| AutoGen               | Agent reply hook                                   |
+
+**Bot marketplace integration:**
+
+Any marketplace that reads ENS can display Aegis reputation scores without calling the Aegis API:
+
+```typescript
+// Any ENS-aware app — resolve from Ethereum via CCIP-read
+const reputation = await resolveENSText('trading-bot.aegis.eth', 'aegis.reputation');
+const lastVerdict = await resolveENSText('trading-bot.aegis.eth', 'aegis.lastVerdict');
+const flaggedCount = await resolveENSText('trading-bot.aegis.eth', 'aegis.flaggedCount');
+```
+
+The ENSIP-25 records (`agent.registry` + `agent.id`) prove the ENS name is linked to a real on-chain iNFT — verifiable by any app without trusting the Aegis backend.
+
 Alternatively, POST directly to the orchestrator (also saves to the dashboard feed immediately):
 
 ```bash
@@ -988,6 +1010,14 @@ When the 0G file is not yet confirmed in storage, the verifier applies rule-base
 - Everything else → CLEARED
 
 Set `AGENT_AMOUNT_LIMIT` in `.env` to control the threshold.
+
+**All attestations show "Attested" status**
+
+This is correct. **Attested** means the decision is committed to 0G Storage and the root hash receipt has been issued. It is not a pending/broken state — it means no dispute has been filed yet. The verdict only changes to CLEARED or FLAGGED after a dispute is filed and the Verifier processes it.
+
+**Contract source code not showing on chainscan-galileo**
+
+chainscan-galileo (0G testnet explorer) does not expose the standard Etherscan source verification API. Contracts are deployed and functional — all transactions are verifiable on-chain. Source code for all contracts is in the `/contracts` directory of this repository.
 
 **KeeperHub workflow not triggering**
 
