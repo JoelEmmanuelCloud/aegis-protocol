@@ -32,7 +32,8 @@ if (!label) {
   process.exit(0);
 }
 
-const AGENT_ID = label.endsWith('.aegis.eth') ? label : `${label}.aegis.eth`;
+const rawLabel = label.replace(/\.aegis\.eth$/, '');
+const AGENT_ID = `${rawLabel}.aegis.eth`;
 
 function log(msg: string) {
   process.stdout.write(`${msg}\n`);
@@ -77,13 +78,13 @@ async function run() {
   log(`  API       : ${API}`);
   log(`  Agent     : ${AGENT_ID}`);
 
-  const agentRes = await fetch(`${API}/agents/label/${encodeURIComponent(label)}`).catch(
+  const agentRes = await fetch(`${API}/agents/label/${encodeURIComponent(rawLabel)}`).catch(
     () => null
   );
   if (!agentRes || !agentRes.ok) {
     log(`\n  Agent "${AGENT_ID}" not found.`);
     log(`  Register it first at ${DASHBOARD}/app/register`);
-    log(`  then run: npx ts-node scripts/judge-demo.ts ${label}\n`);
+    log(`  then run: npx ts-node scripts/judge-demo.ts ${rawLabel}\n`);
     process.exit(1);
   }
   const agent = (await agentRes.json()) as { ensName: string; tokenId: string; active: boolean };
