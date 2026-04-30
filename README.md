@@ -856,11 +856,40 @@ Show: score ring dropped, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1
 
 ### 0G Testnet (chainId 16602)
 
-| Contract              | Address                                      | Explorer                                                                                                   |
-| --------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| AegisCourt.sol        | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` | [View](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction) |
-| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1) · **Verified**  |
-| AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4)                 |
+| Contract              | Address                                      | Explorer                                                                                                                  |
+| --------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| AegisCourt.sol        | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` | [View](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction) · **Verified** |
+| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1) · **Verified**                 |
+| AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4) · **Verified**                 |
+
+### Verifying contracts on chainscan-galileo
+
+All contracts are source-verified. To re-verify after redeployment:
+
+1. Go to **https://chainscan-galileo.0g.ai/contract-verification**
+2. Fill in the form:
+
+| Field            | Value                     |
+| ---------------- | ------------------------- |
+| Contract Address | the deployed address      |
+| Contract Name    | e.g. `AegisCourt`         |
+| License          | MIT                       |
+| Compiler         | `v0.8.24+commit.e11b9ed9` |
+| Optimization     | Enabled                   |
+| Runs             | `200`                     |
+| EVM Version      | `cancun`                  |
+
+3. Click **Upload Contract File** and upload the corresponding file from `contracts/flattened/`:
+
+| Contract              | Flat file                                        |
+| --------------------- | ------------------------------------------------ |
+| AegisCourt.sol        | `contracts/flattened/AegisCourt_flat.sol`        |
+| AgentRegistry.sol     | `contracts/flattened/AgentRegistry_flat.sol`     |
+| AegisNameRegistry.sol | `contracts/flattened/AegisNameRegistry_flat.sol` |
+
+4. Click **Submit** — verification usually completes in under 30 seconds.
+
+> The flattened files were generated with `npx hardhat flatten` and cleaned to remove duplicate `pragma` and `SPDX` statements. Constructor arguments are not required by the 0GScan verifier.
 
 ### Ethereum Sepolia (chainId 11155111)
 
