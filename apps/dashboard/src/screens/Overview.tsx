@@ -260,7 +260,7 @@ export default function Overview() {
         </div>
       </div>
 
-      {(address || (myAgents && myAgents.length > 0)) && (
+      {address && (
         <div className="app-card" style={{ padding: '20px' }}>
           <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>My Agents</div>
           {!myAgents || myAgents.length === 0 ? (

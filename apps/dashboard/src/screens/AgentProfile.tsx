@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useReadContracts } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { namehash } from 'viem';
 import { useAgent } from '../hooks/useAgent';
+import { useMyAgents } from '../hooks/useMyAgents';
 import { useDemoMode } from '../context/DemoContext';
-import { fetchAgentSummary, fetchAgentReputation } from '../lib/orchestratorApi';
+import {
+  fetchAgentSummary,
+  fetchAgentReputation,
+  fetchRecentAgents,
+  type RecentAgent,
+} from '../lib/orchestratorApi';
 import { demoAgentSummary, demoAgentReputation } from '../lib/demoData';
 
 const PUBLIC_RESOLVER_ABI = [
@@ -123,10 +130,26 @@ function Row({ label, value }: { label: string; value?: string }) {
 
 export default function AgentProfile() {
   const { isDemoMode } = useDemoMode();
+  const { address } = useAccount();
   const [label, setLabel] = useState<string | null>(isDemoMode ? 'trading-bot' : null);
   const [input, setInput] = useState('');
   const [inputTouched, setInputTouched] = useState(false);
   const [searchAttempted, setSearchAttempted] = useState(false);
+
+  const { data: myAgents = [] } = useMyAgents();
+
+  const { data: recentAgents = [] } = useQuery<RecentAgent[]>({
+    queryKey: ['recentAgents'],
+    queryFn: () => fetchRecentAgents(20),
+    staleTime: 60_000,
+    enabled: !isDemoMode,
+  });
+
+  const selectAgent = (ensName: string) => {
+    const lbl = ensName.replace(/\.aegis\.eth$/, '');
+    setLabel(lbl);
+    setInput(ensName);
+  };
 
   const inputError = !input.trim() ? 'Enter an agent label or ENS name to look up' : '';
   const showInputError = (inputTouched || searchAttempted) && !!inputError;
@@ -194,6 +217,18 @@ export default function AgentProfile() {
     setLabel(cleaned);
   };
 
+  const agentCardStyle = (active: boolean): React.CSSProperties => ({
+    padding: '12px 16px',
+    background: active ? 'var(--app-accent-dim)' : 'var(--app-elevated)',
+    border: `1px solid ${active ? 'rgba(212,148,26,0.3)' : 'var(--app-border)'}`,
+    borderRadius: 10,
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    transition: 'all 0.15s',
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
@@ -204,6 +239,101 @@ export default function AgentProfile() {
           ENS identity and live reputation for any registered agent
         </p>
       </div>
+
+      {address && myAgents.length > 0 && (
+        <div>
+          <div
+            style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 10 }}
+          >
+            My Agents
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: 10,
+            }}
+          >
+            {myAgents.map((a) => (
+              <div
+                key={a.tokenId}
+                style={agentCardStyle(label === a.ensName.replace(/\.aegis\.eth$/, ''))}
+                onClick={() => selectAgent(a.ensName)}
+              >
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: 'var(--app-text)',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  {a.ensName}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                    Token #{a.tokenId}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: a.active ? 'var(--app-green)' : 'var(--app-red)',
+                      background: a.active ? 'var(--app-green-dim)' : 'var(--app-red-dim)',
+                      padding: '1px 6px',
+                      borderRadius: 3,
+                    }}
+                  >
+                    {a.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!isDemoMode && recentAgents.length > 0 && (
+        <div>
+          <div
+            style={{ fontSize: 12, fontWeight: 600, color: 'var(--app-text-2)', marginBottom: 10 }}
+          >
+            {address ? 'All Registered Agents' : 'Registered Agents'}
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: 10,
+            }}
+          >
+            {recentAgents.map((a) => {
+              const lbl = a.ensName.replace(/\.aegis\.eth$/, '');
+              return (
+                <div
+                  key={a.tokenId}
+                  style={agentCardStyle(label === lbl)}
+                  onClick={() => selectAgent(a.ensName)}
+                >
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: 'var(--app-text)',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {a.ensName}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--app-text-muted)' }}>
+                    Token #{a.tokenId}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ display: 'flex', gap: 8 }}>
