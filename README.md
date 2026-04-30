@@ -777,78 +777,142 @@ docker compose up -d --build
 
 ## 12. Demo Video Script (3 min)
 
-**Setup before recording:** All 5 services running, browser at `http://localhost:4000`, MetaMask unlocked with funded 0G testnet wallet.
+**Setup before recording:**
+
+- Browser open at **https://app.aegisprotocol.uk** (hosted on DigitalOcean, served via Cloudflare — HTTPS, live)
+- MetaMask unlocked on 0G testnet with funded wallet
+- Terminal open, repo cloned and `npm install` done
+- SSH session to `164.92.165.231` ready (to show 4 live Docker nodes for Gensyn)
+
+> Use the hosted deployment, not localhost. The live URL is more professional, MetaMask works without HTTPS warnings, and the 4 AXL nodes running in production Docker on the DigitalOcean server is stronger Gensyn evidence than 4 local terminals.
+
+---
 
 ### 0:00 – 0:20 · The Problem
 
 > "Every agent framework in 2026 solves how agents reason and decide. None of them solve what happens after. One bad decision. No receipt. No proof. No appeal. Aegis is the accountability layer."
 
-Show: Landing page. Point to "Prove every AI decision." Point to the 4-node animated mesh.
+Show: **https://app.aegisprotocol.uk** landing page. Point to "Prove every AI decision." Point to the 4-node animated mesh.
+
+---
 
 ### 0:20 – 0:50 · Register (Normal User Flow)
 
-> "A user registers their trading bot in under a minute."
+> "A user registers their trading bot in under a minute — on-chain, from their own wallet."
 
-1. Click **Register Your Agent** — MetaMask connects
+1. Click **Register Your Agent** — MetaMask connects to 0G testnet
 2. Go to **Register** (`/app/register`) — type `trading-bot`
 3. Show live preview: `trading-bot.aegis.eth`
 4. Drag accountability split to 60/40
-5. Click **Mint iNFT** — approve MetaMask transaction
-6. Green banner: `trading-bot.aegis.eth issued`
+5. Click **Mint iNFT** — MetaMask opens, user signs and pays gas
+6. Green banner: `trading-bot.aegis.eth · Token #X · View tx on-chain ↗`
 
-> "iNFT minted on 0G chain. ENSIP-25 records written. The bot has a permanent on-chain identity."
+> "iNFT minted. The user signed this transaction — they own it. ENSIP-25 records written on 0G chain."
+
+---
 
 ### 0:50 – 1:20 · Live Attestation
 
-> "The bot added one AXL call. Every decision is now committed to 0G Storage permanently."
+> "The bot added one line. Every decision is now committed to 0G Storage permanently."
 
-Run `npx ts-node scripts/mit-bot.ts` in terminal. Switch to dashboard → Attestation Feed — cards appear with action text and reasoning.
+Run in terminal:
 
-> "That root hash is the cryptographic receipt. Unforgeable. The full decision record is in 0G Storage."
+```bash
+npx ts-node scripts/mit-bot.ts
+```
 
-### 1:20 – 1:50 · AXL Propagation — Four Separate Nodes
+Switch to dashboard → **Attestation Feed** at `https://app.aegisprotocol.uk/app/attestations` — cards appear with real LangGraph decisions, action text, and reasoning.
 
-> "Four separate processes. Four distinct ed25519 identity keys. Real encrypted messages over Yggdrasil."
+> "That root hash — computed from the 0G merkle tree — is the unforgeable receipt. The full decision record is in 0G Storage."
 
-Show four terminal windows. Point to each peer ID:
+---
 
-- Propagator: `f2f2af19...`
-- Witness: `0c0ad136...`
-- Verifier: `3d702e5b...`
-- Memory: `6bc1bcd7...`
+### 1:20 – 1:50 · Four AXL Nodes — Live on Production Server (Gensyn Track)
 
-> "Attestation traveled Witness → Propagator → Memory. Three separate processes, three peer IDs. Gensyn autoresearch broadcast pattern applied to accountability signals."
+> "Four separate processes. Four distinct ed25519 identity keys. Real encrypted P2P messages over Yggdrasil. Running in production Docker on a DigitalOcean server."
 
-### 1:50 – 2:20 · Dispute + Verdict
+Show in terminal (SSH to server or split screen):
 
-> "User disputes a decision. The Verifier replays it via 0G Compute TEE."
+```bash
+# Live container status — 4 healthy nodes
+docker ps --format "table {{.Names}}\t{{.Status}}"
 
-Go to **Disputes** (`/app/disputes`) → click **File Dispute** tab. Paste the root hash from an attestation card (the File Dispute shortcut pre-fills it). Write a reason. Click **File Dispute**.
+# Live topology — all 4 peer IDs connected
+curl http://164.92.165.231:9022/topology | grep -o '"public_key":"[^"]*"\|"up":[^,}]*'
+```
 
-Verdict card appears with FLAGGED or CLEARED badge and "Verify on-chain" link.
+Point to each peer ID in the output:
 
-> "The Verifier fetched the original record, applied guardrails, and recorded the verdict permanently on AegisCourt.sol."
+| Node       | Peer ID               |
+| ---------- | --------------------- |
+| Propagator | `f2f2af19af8f20bf...` |
+| Witness    | `0c0ad1361fc678...`   |
+| Verifier   | `3d702e5b9658f7...`   |
+| Memory     | `6bc1bcd7f66d4e...`   |
+
+Then show the 4 health endpoints responding:
+
+```bash
+curl http://164.92.165.231:10002/health  # witness
+curl http://164.92.165.231:10012/health  # verifier
+curl http://164.92.165.231:10022/health  # propagator
+curl http://164.92.165.231:10032/health  # memory
+```
+
+> "Attestation traveled Witness → Propagator → Memory — three separate processes, three peer IDs, all on real AXL encrypted transport. This is the Gensyn autoresearch broadcast pattern applied to accountability signals."
+
+---
+
+### 1:50 – 2:20 · Dispute + 5-Step Progress Tracker
+
+> "A user disputes a decision. Watch the system process it in real time."
+
+Go to `https://app.aegisprotocol.uk/app/attestations` → click **File Dispute** on any card (auto-fills the form). Write a reason. Click **File Dispute**.
+
+Show the **5-step progress tracker** lighting up:
+
+```
+  ● Submitting to AegisCourt
+  ● Applying risk guardrails
+  ● Verifier replaying via 0G Compute TEE
+  ● Recording verdict on-chain
+  ● Triggering KeeperHub workflow
+```
+
+Verdict card appears with FLAGGED badge and **"Verify on-chain"** link → click it → chainscan-galileo.0g.ai shows the real transaction.
+
+> "Verifier applied guardrails and recorded the verdict on AegisCourt.sol. Source-verified. Permanent."
+
+---
 
 ### 2:20 – 2:45 · KeeperHub — Automatic Remedy
 
-> "The moment the verdict landed, KeeperHub fired the remedy automatically."
+> "The moment the verdict landed, KeeperHub fired the remedy automatically. No manual trigger."
 
-Show **KeeperHub Audit** (`/app/audit`):
+Show **KeeperHub Audit** at `/app/audit`:
 
 ```
-aegis.execute_remedy   completed
-execute_remedy_tx      completed   ← fired because verdict was FLAGGED
+aegis.execute_remedy   completed   (verdict: FLAGGED)
+  [OK] aegis.fetch_verdict
+  [OK] aegis.notify_agent_owner
+  [OK] aegis.execute_remedy_tx      ← fired because FLAGGED
+  [OK] aegis.update_ens_reputation
+  [OK] aegis.update_reputation
 ```
 
-> "No manual trigger. The court ruled, the bailiff executed."
+> "Five steps. All automated. The court ruled, the bailiff executed."
+
+---
 
 ### 2:45 – 3:00 · ENS as Live Trust Signal
 
-Go to **Agent Profile** (`/app/agents`) → search `trading-bot`.
+Go to **Agent Profile** (`/app/agents`) — agent appears in the grid, click to load instantly.
 
-Show: score ring dropped, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1`.
+Show: score ring dropped to 90, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1`.
 
-> "Any wallet. Any DeFi protocol. Resolve trading-bot.aegis.eth from Ethereum via CCIP-read — live accountability score without touching our backend. ENS is now the trust signal for AI agents."
+> "Any wallet. Any DeFi protocol. Resolve trading-bot.aegis.eth from Ethereum via CCIP-read — live accountability score, no Aegis API call needed. ENS is now the trust signal for every AI agent."
+
+**End frame:** Overview screen with all metrics live. Domain `app.aegisprotocol.uk` visible in the browser bar.
 
 ---
 
