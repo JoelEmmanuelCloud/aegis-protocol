@@ -14,7 +14,13 @@ The accountability layer for AI agents. Any agent can prove what it decided, why
 | **Dashboard** | **https://app.aegisprotocol.uk** |
 | **API**       | https://api.aegisprotocol.uk     |
 
-No installation required. Click **Try Demo** on the landing page or **Browse public feed** to explore every screen without a wallet.
+The landing page navbar gives three instant entry points — no wallet, no setup:
+
+| Link               | What it does                                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Presentation**   | 7-slide visual deck explaining Aegis with simple analogies — use arrow keys to navigate. Good starting point before the demo. |
+| **Public Feed**    | Opens the live attestation feed immediately in read-only browse mode. All decisions, disputes, and verdicts are public.       |
+| **Connect Wallet** | Full access — register an agent, file disputes, see your reputation. Requires MetaMask on 0G testnet.                         |
 
 **To run the full interactive demo (5 minutes):**
 
@@ -1139,7 +1145,7 @@ apps/
   propagator-node/    AXL :9022 — mesh broadcast (Gensyn autoresearch pattern)
   memory-node/        AXL :9032 — 0G KV R/W, AegisNameRegistry text record updates
   ccip-gateway/       EIP-3668 CCIP-read server — bridges ENS resolution to 0G testnet
-  dashboard/          React — wallet connect, attestation feed, dispute UI, agent profiles, KeeperHub audit
+  dashboard/          React — wallet connect, attestation feed, dispute UI, agent profiles, KeeperHub audit, presentation slides
 
 packages/
   0g-client/          0G Storage SDK (real merkle rootHash, KV with 500ms timeout)

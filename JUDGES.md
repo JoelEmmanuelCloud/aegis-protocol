@@ -32,10 +32,15 @@ await fetch('http://witness:9002/send', {
 |                         | URL                                                                                                |
 | ----------------------- | -------------------------------------------------------------------------------------------------- |
 | **Dashboard**           | **https://app.aegisprotocol.uk**                                                                   |
+| **Presentation slides** | https://app.aegisprotocol.uk/slides                                                                |
 | **API**                 | https://api.aegisprotocol.uk                                                                       |
 | **AegisCourt contract** | https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction |
 
-No installation required to browse. Click **Try Demo** on the landing page or **Browse public feed** on the connect screen for full read-only access without a wallet.
+No installation required to browse. The landing page navbar has three quick-access links:
+
+- **Presentation** — 7-slide deck explaining Aegis with simple analogies (navigate with arrow keys)
+- **Public Feed** — opens the live attestation feed instantly without a wallet
+- **Connect Wallet** — full access including agent registration and dispute filing
 
 ---
 
