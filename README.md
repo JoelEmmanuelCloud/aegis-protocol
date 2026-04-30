@@ -296,14 +296,15 @@ Navigate to **Register** (`/app/register`):
 - **Builder address** — optional; leave blank to use your own wallet
 - **Accountability split** — drag to set who is liable if the bot is flagged (e.g. 60% user / 40% builder). Encoded in the iNFT permanently.
 
-Click **Mint iNFT** → approve the MetaMask transaction.
+Click **Mint iNFT** — MetaMask opens with the `AgentRegistry.mint()` transaction. You sign it from your own wallet, you pay gas, you own the iNFT.
 
 When the transaction lands:
 
-- ERC-7857 iNFT minted on AgentRegistry.sol (0G chain)
+- ERC-7857 iNFT minted on AgentRegistry.sol — your wallet is the owner
 - Subname `trading-bot` registered in AegisNameRegistry
 - ENSIP-25 records `agent.registry` and `agent.id` written to AegisNameRegistry
 - Subname is now resolvable from Ethereum via the CCIP gateway
+- A clickable "View tx on-chain" link appears linking to chainscan-galileo.0g.ai
 
 ### Step 2 — Bot attests its decisions
 
@@ -319,7 +320,7 @@ Root hash: 0x7f33e531…
 
 ### Step 3 — View agent reputation
 
-**Agent Profile** (`/app/agents`) → type `trading-bot` → **Lookup**.
+**Agent Profile** (`/app/agents`) — your agent appears immediately in the **My Agents** grid at the top. Click it to load the full profile, or type a name in the search box to look up any agent. All registered agents are shown in the grid below — no need to know a name upfront.
 
 The profile loads live from both the on-chain ENS text records (via CCIP gateway) and the orchestrator's in-memory reputation tracker (updates every 5 seconds):
 
@@ -895,6 +896,13 @@ GET  /disputes/:rootHash
 POST /agents
   Body:    { label, agentOwner, builderAddress, userPercent, builderPercent }
   Returns: { tokenId, ensName, txHash }
+  Note:    Registration is now wallet-signed via useWriteContract on the frontend.
+           This endpoint is kept for backwards compatibility but the dashboard
+           calls AgentRegistry.mint() directly from the user's MetaMask.
+
+GET  /agents/recent
+  Query:   limit? (default 20)
+  Returns: [ { tokenId, ensName, owner, mintedAt } ] — all registered agents, newest first
 
 GET  /agents/label/:label
   Returns: agent iNFT record from AgentRegistry.sol

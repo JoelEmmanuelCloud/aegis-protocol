@@ -68,18 +68,21 @@ Open **https://app.aegisprotocol.uk/app/register**
    - Preview shows: `alice-bot.aegis.eth`
 3. Set the accountability split — e.g. 60% user / 40% builder
    - This is encoded permanently in the iNFT contract at mint time
-4. Click **Mint iNFT** and approve the MetaMask transaction
+4. Click **Mint iNFT**
 
-When the transaction lands you'll see:
+MetaMask opens with the `AgentRegistry.mint()` transaction — **you sign it, you pay gas, you own the iNFT.** This is a real on-chain action from your wallet.
+
+When the transaction lands:
 
 ```
 Agent registered
-alice-bot.aegis.eth issued
+alice-bot.aegis.eth · Token #6
+View tx on-chain ↗
 ```
 
 What just happened on-chain:
 
-- ERC-7857 iNFT minted on `AgentRegistry.sol` (0G chain)
+- ERC-7857 iNFT minted on `AgentRegistry.sol` — your wallet is the owner
 - Subname `alice-bot` registered in `AegisNameRegistry.sol`
 - ENSIP-25 records written: `agent.registry` and `agent.id`
 - Subname is now resolvable from Ethereum via EIP-3668 CCIP-read
@@ -97,7 +100,7 @@ npm install
 npx ts-node scripts/judge-demo.ts alice-bot
 ```
 
-Replace `alice-bot` with the label you registered in Step 2.
+Replace `alice-bot` with the label you registered in Step 2. Both `alice-bot` and `alice-bot.aegis.eth` work as arguments.
 
 The script will:
 
@@ -187,12 +190,22 @@ Step 4 — KeeperHub automated remedy
 
 ### Step 6 — Explore the dashboard
 
-| Page                              | What to look for                                                                           |
-| --------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/app/attestations`               | Both decision cards with action text, reasoning, and root hash                             |
-| `/app/disputes` → History tab     | CLEARED card with green badge + on-chain link; FLAGGED card with red badge + on-chain link |
-| `/app/agents` → search your label | Reputation score ring at 91, flaggedCount: 1, lastVerdict: FLAGGED                         |
-| `/app/audit`                      | KeeperHub run breakdown — `execute_remedy_tx` completed on FLAGGED, skipped on CLEARED     |
+| Page                          | What to look for                                                                                                                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/app/attestations`           | Both decision cards with action text, reasoning, and root hash                                                                                                                                         |
+| `/app/disputes` → History tab | CLEARED card with green badge + on-chain link; FLAGGED card with red badge + on-chain link                                                                                                             |
+| `/app/agents`                 | Your agent appears in **My Agents** at the top — click it to load instantly. The full grid of all registered agents is shown below. Reputation score ring at 91, flaggedCount: 1, lastVerdict: FLAGGED |
+| `/app/audit`                  | KeeperHub run breakdown — `execute_remedy_tx` completed on FLAGGED, skipped on CLEARED                                                                                                                 |
+
+**What's public vs wallet-gated:**
+
+| Public — no wallet needed         | Wallet-gated                  |
+| --------------------------------- | ----------------------------- |
+| Attestation feed — all decisions  | Register an agent (Mint iNFT) |
+| All agent profiles and reputation | File a dispute                |
+| Dispute history and verdicts      | My Agents section on Overview |
+| KeeperHub audit trail             |                               |
+| Network stats                     |                               |
 
 ---
 
