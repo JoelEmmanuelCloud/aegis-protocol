@@ -299,6 +299,71 @@ All 0G testnet contracts are source-verified on chainscan-galileo (compiler `v0.
 
 ---
 
+## Security Model and Guardrails
+
+### What prevents a bad bot from acting without accountability?
+
+Every decision a bot makes is committed to 0G Storage immediately via the Witness Node. The root hash is an unforgeable receipt — the record cannot be altered after commitment. Any user who interacts with the bot can dispute any decision at any time using that root hash.
+
+### What prevents false disputes (users filing disputes just to flag a bot)?
+
+This is the most important security property. **A false dispute on a legitimate action rewards the bot, not punishes it.**
+
+| Scenario                                    | Verdict                          | Effect on bot score | Cost to disputer    |
+| ------------------------------------------- | -------------------------------- | ------------------- | ------------------- |
+| Dispute a legitimate swap                   | **CLEARED** — TEE replay matches | +1 reputation       | Gas wasted          |
+| Dispute a prohibited action                 | **FLAGGED** — guardrail fires    | −10 reputation      | Gas spent correctly |
+| Dispute any normal action with false reason | **CLEARED** — objective replay   | +1 reputation       | Gas wasted          |
+
+Filing a false dispute on a correctly-behaving bot literally improves that bot's score and costs the disputer real OG tokens. The protocol is economically self-correcting for honest bots.
+
+### Guardrails in the verifier
+
+Two deterministic checks fire before the TEE replay on every dispute:
+
+**1. Prohibited action types**
+
+```
+emergency_liquidation · drain · full_withdrawal
+unauthorized_transfer · rug · self_destruct
+```
+
+Any decision with one of these action types is FLAGGED immediately — no TEE needed. These are actions no legitimate agent mandate would include.
+
+**2. Daily amount limit**
+
+Actions with `amount` exceeding `AGENT_AMOUNT_LIMIT` (default: 100 OG) are FLAGGED. The limit is configurable per deployment via the `.env` file.
+
+**3. 0G Compute TEE replay**
+
+When the decision record is available in 0G Storage, the verifier runs the exact same model (`qwen/qwen-2.5-7b-instruct`) with the exact same inputs inside a Trusted Execution Environment. The TEE cryptographically signs its output. If the replay matches what the agent did → CLEARED. If it diverges → FLAGGED. This verdict is objective — it does not depend on who filed the dispute or what reason they gave.
+
+### On-chain accountability for disputers
+
+Every dispute records the disputer's wallet address permanently in `AegisCourt.sol`. A pattern of frivolous disputes (CLEARED verdicts) is publicly visible on-chain. The `disputedBy` address and all verdicts are queryable at:
+
+**https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction**
+
+### Gas cost as spam deterrent
+
+Filing a dispute triggers two on-chain transactions (`submitDispute` + `recordVerdict`), both requiring OG tokens for gas. Spamming disputes is not free.
+
+### Accountability split — consequences are pre-agreed
+
+When an agent is registered, the user sets the accountability split (e.g. 60% user / 40% builder). This is encoded permanently in the ERC-7857 iNFT at mint time and cannot be changed. Any remedy executed on a FLAGGED verdict is proportional to this pre-agreed split — there is no ambiguity about who bears responsibility.
+
+### Known limitations (honest gaps for v1)
+
+| Gap                          | Mitigation planned                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| No dispute bond/stake        | Requiring disputers to lock tokens they lose on CLEARED verdicts would make false disputing truly costly |
+| No dispute cooldown          | A minimum interval between disputes on the same decision would prevent rapid-fire spam                   |
+| No disputer reputation score | An on-chain score for wallets that repeatedly file frivolous disputes (CLEARED verdicts)                 |
+
+These are the next layer for production. For the hackathon, gas cost + the CLEARED penalty (wasted gas + bot gets +1) is the primary economic deterrent.
+
+---
+
 ## Understanding Attestation Status
 
 Attestations display three possible states:
