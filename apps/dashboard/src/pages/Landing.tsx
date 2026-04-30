@@ -238,7 +238,7 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
-  const { enableDemo } = useDemoMode();
+  const { enableDemo, enableBrowse } = useDemoMode();
   const [noWallet, setNoWallet] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -322,10 +322,23 @@ export default function Landing() {
               {item.label}
             </a>
           ))}
+          <a href="/slides" className="nav-link" style={{ fontSize: 14 }}>
+            Presentation
+          </a>
         </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <ThemeToggle />
+          <button
+            onClick={() => {
+              enableBrowse();
+              navigate('/app/attestations');
+            }}
+            className="cta-secondary"
+            style={{ fontSize: 13, padding: '7px 16px', cursor: 'pointer' }}
+          >
+            Public Feed
+          </button>
           <a
             href="https://github.com/JoelEmmanuelCloud/aegis-protocol"
             target="_blank"
