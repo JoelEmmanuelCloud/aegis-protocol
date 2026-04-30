@@ -1,8 +1,37 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
-import { registerAgent } from '../lib/orchestratorApi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEventLogs } from 'viem';
 import { useDemoMode } from '../context/DemoContext';
+
+const AGENT_REGISTRY_ADDRESS = import.meta.env.VITE_AGENT_REGISTRY_ADDRESS as `0x${string}`;
+
+const AGENT_REGISTRY_ABI = [
+  {
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'agentOwner', type: 'address' },
+      { name: 'builderAddress', type: 'address' },
+      { name: 'label', type: 'string' },
+      { name: 'userPercent', type: 'uint8' },
+      { name: 'builderPercent', type: 'uint8' },
+    ],
+    outputs: [{ name: 'tokenId', type: 'uint256' }],
+  },
+  {
+    name: 'AgentMinted',
+    type: 'event',
+    inputs: [
+      { name: 'tokenId', type: 'uint256', indexed: true },
+      { name: 'owner', type: 'address', indexed: true },
+      { name: 'ensName', type: 'string', indexed: false },
+      { name: 'ensNode', type: 'bytes32', indexed: false },
+      { name: 'userPercent', type: 'uint8', indexed: false },
+      { name: 'builderPercent', type: 'uint8', indexed: false },
+    ],
+  },
+] as const;
 
 function isValidEthAddress(val: string): boolean {
   return /^0x[0-9a-fA-F]{40}$/.test(val);
@@ -40,27 +69,45 @@ export default function Register() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [touched, setTouched] = useState({ label: false, builder: false });
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [demoResult, setDemoResult] = useState<{
+    tokenId: string;
+    ensName: string;
+    txHash: string;
+  } | null>(null);
 
-  const { mutate, isPending, isSuccess, error, data, reset } = useMutation({
-    mutationFn: (vars: {
-      agentOwner: string;
-      builderAddress: string;
-      label: string;
-      userPercent: number;
-      builderPercent: number;
-    }) =>
-      isDemoMode
-        ? Promise.resolve({
-            tokenId: String(Math.floor(Math.random() * 900) + 43),
-            ensName: `${vars.label}.aegis.eth`,
-            txHash:
-              '0x' +
-              Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(
-                ''
-              ),
-          })
-        : registerAgent(vars),
+  const {
+    writeContract,
+    data: txHash,
+    isPending: isWritePending,
+    error: writeError,
+    reset,
+  } = useWriteContract();
+
+  const {
+    isLoading: isConfirming,
+    isSuccess,
+    data: receipt,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
   });
+
+  const isPending = isWritePending || isConfirming;
+
+  const mintedEvent =
+    isSuccess && receipt
+      ? (() => {
+          try {
+            const logs = parseEventLogs({
+              abi: AGENT_REGISTRY_ABI,
+              eventName: 'AgentMinted',
+              logs: receipt.logs,
+            });
+            return logs[0]?.args ?? null;
+          } catch {
+            return null;
+          }
+        })()
+      : null;
 
   const labelError = (() => {
     if (!label.trim()) return 'Agent label is required';
@@ -89,29 +136,44 @@ export default function Register() {
     if (!isDemoMode && !address) return;
     if (!formValid) return;
     reset();
-    mutate({
-      agentOwner: address ?? '0x0000000000000000000000000000000000000000',
-      builderAddress: builder || (address ?? '0x0000000000000000000000000000000000000000'),
-      label,
-      userPercent: userPct,
-      builderPercent: 100 - userPct,
+    setDemoResult(null);
+
+    if (isDemoMode) {
+      setDemoResult({
+        tokenId: String(Math.floor(Math.random() * 900) + 43),
+        ensName: `${label}.aegis.eth`,
+        txHash:
+          '0x' +
+          Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      });
+      return;
+    }
+
+    const builderAddr = (builder || address) as `0x${string}`;
+    writeContract({
+      address: AGENT_REGISTRY_ADDRESS,
+      abi: AGENT_REGISTRY_ABI,
+      functionName: 'mint',
+      args: [address as `0x${string}`, builderAddr, label, userPct, 100 - userPct],
     });
   };
 
-  const errorMessage = error
+  const succeeded = isSuccess || !!demoResult;
+  const resultEnsName = mintedEvent?.ensName ?? demoResult?.ensName ?? `${label}.aegis.eth`;
+  const resultTokenId = mintedEvent?.tokenId?.toString() ?? demoResult?.tokenId ?? '';
+  const resultTxHash = txHash ?? demoResult?.txHash ?? '';
+
+  const errorMessage = writeError
     ? (() => {
-        const msg = String(error instanceof Error ? error.message : error);
-        if (msg.includes('503'))
-          return 'Registry not configured on the orchestrator — contact the protocol admin.';
-        if (
-          msg.includes('409') ||
-          msg.includes('already registered') ||
-          msg.includes('EnsNameTaken') ||
-          msg.includes('a8791367')
-        )
+        const msg = String(writeError instanceof Error ? writeError.message : writeError);
+        if (msg.includes('User rejected') || msg.includes('user rejected'))
+          return 'Transaction rejected — please approve in MetaMask to mint your agent.';
+        if (msg.includes('EnsNameTaken') || msg.includes('a8791367'))
           return 'That label is already registered — choose a different name.';
         if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f'))
           return 'Invalid accountability split — percentages must total 100.';
+        if (msg.includes('insufficient funds'))
+          return 'Insufficient OG balance — get tokens at faucet.0g.ai';
         return msg.slice(0, 200);
       })()
     : null;
@@ -142,7 +204,7 @@ export default function Register() {
         </div>
       )}
 
-      {isSuccess && data && (
+      {succeeded && (
         <div
           style={{
             padding: '16px 20px',
@@ -162,18 +224,54 @@ export default function Register() {
               marginBottom: 4,
             }}
           >
-            {data.ensName} · Token #{data.tokenId}
+            {resultEnsName} · Token #{resultTokenId}
           </div>
-          <div
-            style={{
-              fontSize: 11,
-              color: 'var(--app-text-muted)',
-              fontFamily: 'monospace',
-              wordBreak: 'break-all',
-            }}
-          >
-            tx: {data.txHash}
-          </div>
+          {resultTxHash && (
+            <a
+              href={`https://chainscan-galileo.0g.ai/tx/${resultTxHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 11,
+                color: 'var(--app-accent)',
+                fontFamily: 'monospace',
+                wordBreak: 'break-all',
+                textDecoration: 'none',
+              }}
+            >
+              View tx on-chain ↗
+            </a>
+          )}
+        </div>
+      )}
+
+      {isWritePending && (
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'var(--app-elevated)',
+            border: '1px solid var(--app-border)',
+            borderRadius: 8,
+            fontSize: 13,
+            color: 'var(--app-text-2)',
+          }}
+        >
+          Waiting for MetaMask confirmation...
+        </div>
+      )}
+
+      {isConfirming && (
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'var(--app-elevated)',
+            border: '1px solid var(--app-border)',
+            borderRadius: 8,
+            fontSize: 13,
+            color: 'var(--app-text-2)',
+          }}
+        >
+          Transaction submitted — confirming on 0G chain...
         </div>
       )}
 
@@ -384,7 +482,13 @@ export default function Register() {
             cursor: isPending || (!isDemoMode && !address) ? 'not-allowed' : 'pointer',
           }}
         >
-          {isPending ? 'Registering…' : error ? 'Try Again' : 'Mint iNFT'}
+          {isWritePending
+            ? 'Approve in MetaMask…'
+            : isConfirming
+              ? 'Confirming on-chain…'
+              : writeError
+                ? 'Try Again'
+                : 'Mint iNFT'}
         </button>
       </div>
     </div>
