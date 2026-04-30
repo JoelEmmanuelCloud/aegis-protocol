@@ -859,7 +859,7 @@ Show: score ring dropped, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1
 | Contract              | Address                                      | Explorer                                                                                                   |
 | --------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | AegisCourt.sol        | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` | [View](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction) |
-| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1)                 |
+| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1) · **Verified**  |
 | AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4)                 |
 
 ### Ethereum Sepolia (chainId 11155111)
@@ -1015,9 +1015,9 @@ Set `AGENT_AMOUNT_LIMIT` in `.env` to control the threshold.
 
 This is correct. **Attested** means the decision is committed to 0G Storage and the root hash receipt has been issued. It is not a pending/broken state — it means no dispute has been filed yet. The verdict only changes to CLEARED or FLAGGED after a dispute is filed and the Verifier processes it.
 
-**Contract source code not showing on chainscan-galileo**
+**Contract source verification**
 
-chainscan-galileo (0G testnet explorer) does not expose the standard Etherscan source verification API. Contracts are deployed and functional — all transactions are verifiable on-chain. Source code for all contracts is in the `/contracts` directory of this repository.
+Contracts are verified on chainscan-galileo using single-file verification at `https://chainscan-galileo.0g.ai/contract-verification`. Flattened source files are in `contracts/flattened/`. Compiler: `v0.8.24`, Optimisation: enabled 200 runs, EVM: cancun.
 
 **KeeperHub workflow not triggering**
 
