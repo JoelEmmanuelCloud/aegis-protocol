@@ -1,41 +1,7 @@
 import { useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEventLogs } from 'viem';
+import { useAccount } from 'wagmi';
 import { useDemoMode } from '../context/DemoContext';
-
-const AGENT_REGISTRY_ADDRESS = import.meta.env.VITE_AGENT_REGISTRY_ADDRESS as `0x${string}`;
-
-const AGENT_REGISTRY_ABI = [
-  {
-    name: 'mint',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'agentOwner', type: 'address' },
-      { name: 'builderAddress', type: 'address' },
-      { name: 'label', type: 'string' },
-      { name: 'userPercent', type: 'uint8' },
-      { name: 'builderPercent', type: 'uint8' },
-    ],
-    outputs: [{ name: 'tokenId', type: 'uint256' }],
-  },
-  {
-    name: 'AgentMinted',
-    type: 'event',
-    inputs: [
-      { name: 'tokenId', type: 'uint256', indexed: true },
-      { name: 'owner', type: 'address', indexed: true },
-      { name: 'ensName', type: 'string', indexed: false },
-      { name: 'ensNode', type: 'bytes32', indexed: false },
-      { name: 'userPercent', type: 'uint8', indexed: false },
-      { name: 'builderPercent', type: 'uint8', indexed: false },
-    ],
-  },
-] as const;
-
-function isValidEthAddress(val: string): boolean {
-  return /^0x[0-9a-fA-F]{40}$/.test(val);
-}
+import { registerAgent } from '../lib/orchestratorApi';
 
 function FieldError({ msg }: { msg: string }) {
   return (
@@ -60,6 +26,10 @@ function FieldError({ msg }: { msg: string }) {
   );
 }
 
+function isValidEthAddress(val: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(val);
+}
+
 export default function Register() {
   const { address } = useAccount();
   const { isDemoMode } = useDemoMode();
@@ -69,45 +39,14 @@ export default function Register() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [touched, setTouched] = useState({ label: false, builder: false });
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [demoResult, setDemoResult] = useState<{
+
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [regError, setRegError] = useState<string | null>(null);
+  const [regResult, setRegResult] = useState<{
     tokenId: string;
     ensName: string;
     txHash: string;
   } | null>(null);
-
-  const {
-    writeContract,
-    data: txHash,
-    isPending: isWritePending,
-    error: writeError,
-    reset,
-  } = useWriteContract();
-
-  const {
-    isLoading: isConfirming,
-    isSuccess,
-    data: receipt,
-  } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
-
-  const isPending = isWritePending || isConfirming;
-
-  const mintedEvent =
-    isSuccess && receipt
-      ? (() => {
-          try {
-            const logs = parseEventLogs({
-              abi: AGENT_REGISTRY_ABI,
-              eventName: 'AgentMinted',
-              logs: receipt.logs,
-            });
-            return logs[0]?.args ?? null;
-          } catch {
-            return null;
-          }
-        })()
-      : null;
 
   const labelError = (() => {
     if (!label.trim()) return 'Agent label is required';
@@ -130,16 +69,16 @@ export default function Register() {
 
   const touch = (field: keyof typeof touched) => setTouched((prev) => ({ ...prev, [field]: true }));
 
-  const handleMint = () => {
+  const handleMint = async () => {
     setSubmitAttempted(true);
     setTouched({ label: true, builder: true });
     if (!isDemoMode && !address) return;
     if (!formValid) return;
-    reset();
-    setDemoResult(null);
+    setRegError(null);
+    setRegResult(null);
 
     if (isDemoMode) {
-      setDemoResult({
+      setRegResult({
         tokenId: String(Math.floor(Math.random() * 900) + 43),
         ensName: `${label}.aegis.eth`,
         txHash:
@@ -149,34 +88,35 @@ export default function Register() {
       return;
     }
 
-    const builderAddr = (builder || address) as `0x${string}`;
-    writeContract({
-      address: AGENT_REGISTRY_ADDRESS,
-      abi: AGENT_REGISTRY_ABI,
-      functionName: 'mint',
-      args: [address as `0x${string}`, builderAddr, label, userPct, 100 - userPct],
-    });
+    const builderAddr = builder || address!;
+    setIsRegistering(true);
+    try {
+      const result = await registerAgent({
+        agentOwner: address!,
+        builderAddress: builderAddr,
+        label,
+        userPercent: userPct,
+        builderPercent: 100 - userPct,
+      });
+      setRegResult(result);
+    } catch (err) {
+      const msg = String(err instanceof Error ? err.message : err);
+      if (msg.includes('already registered') || msg.includes('EnsNameTaken') || msg.includes('409'))
+        setRegError('That label is already registered — choose a different name.');
+      else if (msg.includes('percentages') || msg.includes('InvalidSplit') || msg.includes('400'))
+        setRegError('Invalid accountability split — percentages must total 100.');
+      else if (msg.includes('503') || msg.includes('unavailable') || msg.includes('AGENT_REGISTRY'))
+        setRegError('Registry contract not configured — contact support.');
+      else setRegError(msg.slice(0, 200));
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
-  const succeeded = isSuccess || !!demoResult;
-  const resultEnsName = mintedEvent?.ensName ?? demoResult?.ensName ?? `${label}.aegis.eth`;
-  const resultTokenId = mintedEvent?.tokenId?.toString() ?? demoResult?.tokenId ?? '';
-  const resultTxHash = txHash ?? demoResult?.txHash ?? '';
-
-  const errorMessage = writeError
-    ? (() => {
-        const msg = String(writeError instanceof Error ? writeError.message : writeError);
-        if (msg.includes('User rejected') || msg.includes('user rejected'))
-          return 'Transaction rejected — please approve in MetaMask to mint your agent.';
-        if (msg.includes('EnsNameTaken') || msg.includes('a8791367'))
-          return 'That label is already registered — choose a different name.';
-        if (msg.includes('InvalidSplit') || msg.includes('bcd55b0f'))
-          return 'Invalid accountability split — percentages must total 100.';
-        if (msg.includes('insufficient funds'))
-          return 'Insufficient OG balance — get tokens at faucet.0g.ai';
-        return msg.slice(0, 200);
-      })()
-    : null;
+  const succeeded = !!regResult;
+  const resultEnsName = regResult?.ensName ?? `${label}.aegis.eth`;
+  const resultTokenId = regResult?.tokenId ?? '';
+  const resultTxHash = regResult?.txHash ?? '';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 560 }}>
@@ -245,7 +185,7 @@ export default function Register() {
         </div>
       )}
 
-      {isWritePending && (
+      {isRegistering && (
         <div
           style={{
             padding: '14px 16px',
@@ -256,22 +196,7 @@ export default function Register() {
             color: 'var(--app-text-2)',
           }}
         >
-          Waiting for MetaMask confirmation...
-        </div>
-      )}
-
-      {isConfirming && (
-        <div
-          style={{
-            padding: '14px 16px',
-            background: 'var(--app-elevated)',
-            border: '1px solid var(--app-border)',
-            borderRadius: 8,
-            fontSize: 13,
-            color: 'var(--app-text-2)',
-          }}
-        >
-          Transaction submitted — confirming on 0G chain...
+          Registering agent on-chain...
         </div>
       )}
 
@@ -451,7 +376,7 @@ export default function Register() {
           </div>
         </div>
 
-        {errorMessage && (
+        {regError && (
           <div
             style={{
               padding: '14px 16px',
@@ -466,7 +391,7 @@ export default function Register() {
               Registration failed
             </div>
             <div style={{ fontSize: 12, color: 'var(--app-red)', opacity: 0.85, lineHeight: 1.6 }}>
-              {errorMessage}
+              {regError}
             </div>
           </div>
         )}
@@ -474,21 +399,15 @@ export default function Register() {
         <button
           className="app-btn-primary"
           onClick={handleMint}
-          disabled={isPending || (!isDemoMode && !address)}
+          disabled={isRegistering || (!isDemoMode && !address)}
           style={{
             width: '100%',
             padding: '12px',
-            opacity: isPending || (!isDemoMode && !address) ? 0.5 : 1,
-            cursor: isPending || (!isDemoMode && !address) ? 'not-allowed' : 'pointer',
+            opacity: isRegistering || (!isDemoMode && !address) ? 0.5 : 1,
+            cursor: isRegistering || (!isDemoMode && !address) ? 'not-allowed' : 'pointer',
           }}
         >
-          {isWritePending
-            ? 'Approve in MetaMask…'
-            : isConfirming
-              ? 'Confirming on-chain…'
-              : writeError
-                ? 'Try Again'
-                : 'Mint iNFT'}
+          {isRegistering ? 'Registering…' : regError ? 'Try Again' : 'Mint iNFT'}
         </button>
       </div>
     </div>
