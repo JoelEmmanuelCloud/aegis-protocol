@@ -103,6 +103,7 @@ export function registerAgent(body: {
   label: string;
   userPercent: number;
   builderPercent: number;
+  signature: string;
 }): Promise<{ tokenId: string; ensName: string; txHash: string }> {
   return apiFetch('/agents', { method: 'POST', body: JSON.stringify(body) });
 }

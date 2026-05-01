@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage } from 'wagmi';
 import { useDemoMode } from '../context/DemoContext';
 import { registerAgent } from '../lib/orchestratorApi';
 
@@ -33,6 +33,7 @@ function isValidEthAddress(val: string): boolean {
 export default function Register() {
   const { address } = useAccount();
   const { isDemoMode } = useDemoMode();
+  const { signMessageAsync } = useSignMessage();
   const [label, setLabel] = useState('');
   const [builder, setBuilder] = useState('');
   const [userPct, setUserPct] = useState(60);
@@ -91,17 +92,22 @@ export default function Register() {
     const builderAddr = builder || address!;
     setIsRegistering(true);
     try {
+      const message = `Aegis Protocol: Register agent "${label}" for ${address!}`;
+      const signature = await signMessageAsync({ message });
       const result = await registerAgent({
         agentOwner: address!,
         builderAddress: builderAddr,
         label,
         userPercent: userPct,
         builderPercent: 100 - userPct,
+        signature,
       });
       setRegResult(result);
     } catch (err) {
       const msg = String(err instanceof Error ? err.message : err);
-      if (msg.includes('already registered') || msg.includes('EnsNameTaken') || msg.includes('409'))
+      if (msg.includes('User rejected') || msg.includes('user rejected') || msg.includes('4001'))
+        setRegError('Signature rejected — you must sign the message in MetaMask to register.');
+      else if (msg.includes('already registered') || msg.includes('EnsNameTaken') || msg.includes('409'))
         setRegError('That label is already registered — choose a different name.');
       else if (msg.includes('percentages') || msg.includes('InvalidSplit') || msg.includes('400'))
         setRegError('Invalid accountability split — percentages must total 100.');
@@ -407,7 +413,7 @@ export default function Register() {
             cursor: isRegistering || (!isDemoMode && !address) ? 'not-allowed' : 'pointer',
           }}
         >
-          {isRegistering ? 'Registering…' : regError ? 'Try Again' : 'Mint iNFT'}
+          {isRegistering ? 'Waiting for signature…' : regError ? 'Try Again' : 'Sign & Mint iNFT'}
         </button>
       </div>
     </div>

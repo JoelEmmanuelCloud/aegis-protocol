@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UnauthorizedException,
   ConflictException,
   ServiceUnavailableException,
   OnModuleInit,
@@ -29,6 +30,7 @@ export interface RegisterAgentDto {
   label: string;
   userPercent: number;
   builderPercent: number;
+  signature: string;
 }
 
 @Injectable()
@@ -112,6 +114,12 @@ export class AgentsService implements OnModuleInit {
   async register(
     dto: RegisterAgentDto
   ): Promise<{ tokenId: string; ensName: string; txHash: string }> {
+    const message = `Aegis Protocol: Register agent "${dto.label}" for ${dto.agentOwner}`;
+    const recovered = ethers.verifyMessage(message, dto.signature);
+    if (recovered.toLowerCase() !== dto.agentOwner.toLowerCase()) {
+      throw new UnauthorizedException('Signature does not match agentOwner address');
+    }
+
     if (dto.userPercent + dto.builderPercent !== 100) {
       throw new BadRequestException('userPercent + builderPercent must equal 100');
     }
