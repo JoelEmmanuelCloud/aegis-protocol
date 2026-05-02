@@ -234,8 +234,8 @@ All transactions are visible on the AegisCourt contract:
 
 | Feature        | How to verify                                                                                                |
 | -------------- | ------------------------------------------------------------------------------------------------------------ |
-| 0G Storage     | Root hash `0x...` returned instantly — computed from the real 0G merkle tree; upload completes in background |
-| 0G Compute TEE | Verifier replays decisions via `qwen/qwen-2.5-7b-instruct` at `compute-network-6.integratenetwork.work`      |
+| 0G Storage     | Upload is awaited before `COMMITTED` is returned — rootHash is immediately retrievable. Fetch any decision record: `curl "https://indexer-storage-testnet-turbo.0g.ai/file?root=<rootHash>"` |
+| 0G Compute TEE | Verifier replays decisions via `qwen/qwen-2.5-7b-instruct` at `compute-network-6.integratenetwork.work` with `verify_tee: true`. The `teeProof` field on every verdict is the chatId (UUID) returned in the `ZG-Res-Key` response header — the cryptographic reference to the TEE signature. |
 | 0G KV          | `aegis:{agentId}:reputation` written after each attestation                                                  |
 | 0G Chain       | AegisCourt, AgentRegistry, AegisNameRegistry all deployed on chainId 16602                                   |
 
@@ -387,11 +387,25 @@ The root hash on each card links the decision permanently to 0G Storage. The ful
 
 ## Reading On-Chain Transaction Data
 
-When you open a `recordVerdict` transaction on chainscan-galileo, the calldata is ABI-encoded bytes. To read the context:
+When you open a `recordVerdict` transaction on chainscan-galileo, the calldata carries three fields: `rootHash`, `verdict` (0 = PENDING, 1 = CLEARED, 2 = FLAGGED), and `teeProof`.
 
-1. The `rootHash` in the calldata is the key — use it to fetch the full decision record from 0G Storage
-2. The full record contains: `agentId`, `inputs`, `reasoning`, `action`, `verdict`, `attestedBy`, `timestamp`
-3. The `agentId` is always the ENS name (e.g. `domsday.aegis.eth`) — visible in the dispute history on the dashboard
+**Fetch the full decision record from 0G Storage using the rootHash:**
+
+```bash
+curl "https://indexer-storage-testnet-turbo.0g.ai/file?root=<rootHash>"
+```
+
+Returns the complete record: `agentId`, `inputs`, `reasoning`, `action`, `verdict`, `attestedBy`, `timestamp`.
+
+**Verify the TEE proof independently using the teeProof chatId:**
+
+```bash
+curl "https://compute-network-6.integratenetwork.work/v1/proxy/signature/<teeProof>?model=qwen/qwen-2.5-7b-instruct"
+```
+
+Returns `{ text, signature, signing_address, signing_algo, provider_identity, tls_cert_fingerprint }`. The ECDSA `signature` can be verified against `signing_address` — this is the cryptographic proof that the TEE replay ran inside a hardware enclave and produced that specific output.
+
+The `agentId` in every record is the ENS name (e.g. `alice-bot.aegis.eth`) — visible in the dispute history on the dashboard.
 
 **Contract source verification:** All three 0G testnet contracts are source-verified on chainscan-galileo (compiler `v0.8.24`, optimisation enabled 200 runs, EVM cancun). Flattened source files are in `contracts/flattened/`.
 
@@ -443,7 +457,7 @@ The ENSIP-25 records (`agent.registry` + `agent.id`) link the ENS name to the on
 Your Bot (any framework)
   │  one fetch call  →  AXL Witness Node :9002
   ▼
-Witness  ──→  0G Storage (real merkle rootHash returned immediately)
+Witness  ──→  0G Storage (upload awaited — rootHash is live on confirmation)
   │  AXL P2P mesh (Gensyn)
   ▼
 Propagator :9022  ──→  broadcasts to all peers
