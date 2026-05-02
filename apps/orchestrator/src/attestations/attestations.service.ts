@@ -34,11 +34,16 @@ export class AttestationsService {
       rootHash: result.rootHash,
       verdict: 'PENDING',
       timestamp: dto.timestamp,
+      inputs: dto.inputs,
       action: dto.action,
       reasoning: dto.reasoning,
     });
     if (this.log.length > 500) this.log.pop();
     return result;
+  }
+
+  getLocalItem(rootHash: string): AttestationItem | null {
+    return this.log.find((i) => i.rootHash === rootHash) ?? null;
   }
 
   totalCount(): number {

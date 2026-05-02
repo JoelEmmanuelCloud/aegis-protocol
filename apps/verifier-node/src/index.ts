@@ -98,23 +98,32 @@ function ruleBasedVerdict(action: Record<string, unknown>): Verdict {
 }
 
 async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse> {
+  process.stdout.write(`[verifier] verify request rootHash=${body.rootHash} agentId=${body.agentId}\n`);
+
   let record: DecisionRecord | null = null;
   try {
     record = await downloadObject<DecisionRecord>(body.rootHash);
-  } catch {}
+    process.stdout.write(`[verifier] record downloaded agentId=${record.agentId}\n`);
+  } catch (err) {
+    process.stdout.write(`[verifier] download failed: ${err}\n`);
+  }
 
   let replay: { verdict: Verdict; teeProof: string };
   try {
     if (!record) {
+      process.stdout.write(`[verifier] no record, defaulting to CLEARED\n`);
       replay = { verdict: 'CLEARED' as const, teeProof: '' };
     } else {
+      process.stdout.write(`[verifier] replaying via 0G Compute\n`);
       const teeResult = await replayDecision(
         { inputs: record.inputs, reasoning: record.reasoning, action: record.action },
         record.action
       );
+      process.stdout.write(`[verifier] replay done verdict=${teeResult.verdict} teeProof=${teeResult.teeProof}\n`);
       replay = teeResult;
     }
-  } catch {
+  } catch (err) {
+    process.stdout.write(`[verifier] replayDecision threw: ${err}\n`);
     replay = record
       ? { verdict: ruleBasedVerdict(record.action), teeProof: '' }
       : { verdict: 'CLEARED' as const, teeProof: '' };

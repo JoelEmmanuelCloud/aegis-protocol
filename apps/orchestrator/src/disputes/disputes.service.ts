@@ -93,13 +93,10 @@ export class DisputesService {
       })
       .catch(() => {});
 
-    const knownAction = await this.attestationsService
-      .list(dto.agentId)
-      .then((r) => r.items.find((i) => i.rootHash === dto.rootHash)?.action ?? null)
-      .catch(() => null);
+    const knownItem = this.attestationsService.getLocalItem(dto.rootHash);
 
     let verification: VerifyResponse = {
-      verdict: knownAction ? ruleBasedVerdict(knownAction) : 'CLEARED',
+      verdict: knownItem?.action ? ruleBasedVerdict(knownItem.action) : 'CLEARED',
       teeProof: '',
       rootHash: dto.rootHash,
     };
