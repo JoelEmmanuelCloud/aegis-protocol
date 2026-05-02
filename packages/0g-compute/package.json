@@ -8,7 +8,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@aegis/types": "*",
-    "openai": "^4.0.0"
+    "@aegis/types": "*"
   }
 }
