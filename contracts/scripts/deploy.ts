@@ -7,17 +7,17 @@ async function main() {
 
   const aegisEthNode = ethers.namehash('aegis.eth');
 
-  const AegisCourt = await ethers.getContractFactory('AegisCourt');
+  const AegisCourt = await ethers.getContractFactory('AegisCourt.sol:AegisCourt');
   const court = await AegisCourt.deploy(deployer.address);
   await court.waitForDeployment();
   const courtAddress = await court.getAddress();
 
-  const AegisNameRegistry = await ethers.getContractFactory('AegisNameRegistry');
+  const AegisNameRegistry = await ethers.getContractFactory('AegisNameRegistry.sol:AegisNameRegistry');
   const nameRegistry = await AegisNameRegistry.deploy(aegisEthNode);
   await nameRegistry.waitForDeployment();
   const nameRegistryAddress = await nameRegistry.getAddress();
 
-  const AgentRegistry = await ethers.getContractFactory('AgentRegistry');
+  const AgentRegistry = await ethers.getContractFactory('AgentRegistry.sol:AgentRegistry');
   const registry = await AgentRegistry.deploy();
   await registry.waitForDeployment();
   const registryAddress = await registry.getAddress();
