@@ -70,6 +70,7 @@ services:
     env_file: .env
     environment:
       AXL_PEER_HOST: axl-propagator
+      VERIFIER_MGMT_URL: http://axl-verifier:10012
     volumes:
       - ./axl-configs:/app/axl-configs:ro
     depends_on:
