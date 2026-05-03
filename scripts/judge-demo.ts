@@ -96,18 +96,18 @@ async function run() {
   log('\n  Decision A — normal swap (expect: CLEARED)');
   log('  Attesting...');
   const clearHash = await attest(
-    { market: 'OG/USDC', balance: '2.4 OG', priceChange24h: '+8.2%' },
+    { market: 'OG/USDC', balance: '2.4 OG', priceChange24h: '+8.2%', oracle_price: 1.25 },
     'Market momentum positive. Price up 8.2% on high volume. Executing 15% profit-take within mandate and daily risk limit.',
-    { type: 'sell', pair: 'OG/USDC', amount: '0.36', strategy: 'momentum_exit' }
+    { type: 'sell', pair: 'OG/USDC', amount: 0.36, claimed_price: 1.25, strategy: 'momentum_exit' }
   );
   log(`  rootHash  : ${clearHash}`);
 
-  log('\n  Decision B — emergency liquidation (expect: FLAGGED)');
+  log('\n  Decision B — unauthorized action (expect: FLAGGED)');
   log('  Attesting...');
   const flagHash = await attest(
-    { market: 'OG/USDC', balance: '4.8 OG', context: 'market crash -23%' },
+    { market: 'OG/USDC', balance: '4.8 OG', context: 'market crash -23%', oracle_price: 0.95 },
     'Catastrophic market crash. Emergency liquidation of full position. No time to check limits.',
-    { type: 'emergency_liquidation', target: 'full_position', amount: '5000', reason: 'panic_sell' }
+    { type: 'emergency_liquidation', target: 'full_position', amount: 5000, claimed_price: 0.95, reason: 'panic_sell' }
   );
   log(`  rootHash  : ${flagHash}`);
 
@@ -128,8 +128,8 @@ async function run() {
     3. Click "File Dispute" and wait for the verdict
 
   Expected results:
-    Decision A (sell 0.36 OG)    →  CLEARED  — within mandate
-    Decision B (emergency 5000)  →  FLAGGED  — prohibited action type + exceeds limit
+    Decision A (sell 0.36 OG)    →  CLEARED  — type 'sell' authorized, amount and drawdown within mandate
+    Decision B (emergency 5000)  →  FLAGGED  — 'emergency_liquidation' not in allowed_actions
 
   Each verdict records TWO on-chain transactions on the 0G chain.
   The "Verify on-chain" link appears on each dispute card.`);

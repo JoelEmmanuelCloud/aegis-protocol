@@ -68,7 +68,7 @@ See [`JUDGES.md`](./JUDGES.md) for the complete step-by-step testing guide.
 Aegis sits beside any AI agent framework as a witness, verifier, and court:
 
 1. **Witness** — agent submits a decision via AXL. Witness computes the 0G merkle rootHash from content and uploads to 0G Storage, returning the receipt immediately.
-2. **Verifier** — when disputed, replays the decision via 0G Compute TEE. If the replay matches the original action, the verdict is CLEARED. If not, FLAGGED. A rule-based guardrail catches high-risk actions (emergency liquidations, unauthorised transfers) when TEE is unavailable.
+2. **Verifier** — when disputed, the Memory Node assembles a DisputePackage: attestation record from 0G Storage, 24h trade history from 0G KV, the agent's on-chain AgentMandate, and oracle price. The Verifier runs five deterministic rules — action authorisation, pair authorisation, slippage vs oracle price, single-trade cap, and 24h cumulative drawdown limit. 0G Compute is used purely to notarize the verdict and generate a cryptographic teeProof. If history data is unavailable, the verdict is PENDING_DATA and the agent is frozen for 24h.
 3. **Court** — AegisCourt.sol records the verdict onchain. KeeperHub fires the remedy workflow automatically on every verdict.
 4. **ENS Identity** — every agent gets a subname (`trading-bot.aegis.eth`). Live reputation is stored as text records in AegisNameRegistry on 0G testnet, resolved from Ethereum via EIP-3668 CCIP-read — queryable by any ENS-aware app without touching the Aegis backend.
 
@@ -94,7 +94,7 @@ Dispute filed via dashboard
 Orchestrator :3000 ──────────────────── rule check + calls Verifier
      │
      ▼
-Verifier Node :9012 ─────────────────── 0G Compute TEE replay
+Verifier Node :9012 ─────────────────── deterministic 5-rule mandate engine + 0G Compute notarization
      │  verdict → AegisCourt.sol (submitDispute + recordVerdict)
      ▼
 KeeperHub Workflow ──────────────────── aegis.execute_remedy: fetch → notify → remedy → ENS update
@@ -352,12 +352,12 @@ Use the root hash from any attestation card (the "File Dispute" shortcut on each
 - **Agent ENS Name** — `trading-bot.aegis.eth`
 - **Reason** — describe what was wrong
 
-Click **File Dispute**. The orchestrator:
+Click **File Dispute**. The system:
 
-1. Looks up the action from the attestation log — applies rule-based guardrails immediately (emergency_liquidation, amounts exceeding `AGENT_AMOUNT_LIMIT`, etc.)
-2. Calls the Verifier to attempt 0G Compute TEE replay
-3. Records the verdict on AegisCourt.sol (`submitDispute` + `recordVerdict`)
-4. Triggers the `aegis.execute_remedy` KeeperHub workflow
+1. Submits the dispute on-chain via AegisCourt.sol (`submitDispute`)
+2. Memory Node assembles a DisputePackage — downloads the attestation from 0G Storage, queries 24h history from 0G KV (falls back to AXL mesh broadcast), reads the AgentMandate from AgentRegistry.sol
+3. Verifier Node evaluates five deterministic mandate rules: action authorisation, pair authorisation, slippage vs oracle price, single-trade cap, 24h cumulative drawdown. Calls 0G Compute to notarize the verdict and generate a teeProof
+4. Records the final verdict on AegisCourt.sol. PENDING_DATA freezes the agent for 24h; FLAGGED triggers the KeeperHub slash workflow
 
 The verdict appears in the **History** tab with a "Verify on-chain" link to chainscan-galileo.
 
@@ -1015,11 +1015,10 @@ GET  /disputes/:rootHash
   Returns: on-chain dispute record from AegisCourt.sol
 
 POST /agents
-  Body:    { label, agentOwner, builderAddress, userPercent, builderPercent }
+  Body:    { label, agentOwner, builderAddress, userPercent, builderPercent, signature,
+             mandate?: { allowed_actions, allowed_pairs, max_single_trade, max_daily_drawdown, acceptable_slippage } }
   Returns: { tokenId, ensName, txHash }
-  Note:    Registration is now wallet-signed via useWriteContract on the frontend.
-           This endpoint is kept for backwards compatibility but the dashboard
-           calls AgentRegistry.mint() directly from the user's MetaMask.
+  Note:    mandate is optional — defaults to all standard actions allowed, 500bps slippage, no pair restriction.
 
 GET  /agents/recent
   Query:   limit? (default 20)
@@ -1100,15 +1099,18 @@ The `0g-compute-cli` must be installed (`npm install -g 0g-compute-cli`) and con
 
 This is expected on testnet — the storage nodes need to sync before segments are confirmed. The Witness computes the real 0G merkle rootHash immediately from content and returns it while the upload completes in the background. The rootHash is valid for on-chain use immediately.
 
-**Verdicts always return CLEARED**
+**Verdicts always return PENDING_DATA**
 
-When the 0G file is not yet confirmed in storage, the verifier applies rule-based guardrails:
+The Memory Node could not assemble a DisputePackage in time (30s timeout). This happens when:
 
-- Actions in `HIGH_RISK_ACTIONS` (emergency_liquidation, drain, full_withdrawal, etc.) → FLAGGED
-- Actions with `amount` exceeding `AGENT_AMOUNT_LIMIT` (default 100) → FLAGGED
-- Everything else → CLEARED
+- 0G Storage download of the attestation record failed or timed out
+- 0G KV is unreachable and no mesh peer responded to `REQ_HISTORY`
 
-Set `AGENT_AMOUNT_LIMIT` in `.env` to control the threshold.
+When PENDING_DATA is recorded on-chain, the agent is frozen for 24h. Anyone can call `submitHistoricalData()` on AegisCourt.sol with the missing attestations to unfreeze the agent and trigger re-evaluation.
+
+**Verdicts always return CLEARED regardless of action type**
+
+Check that the agent was registered with a mandate that restricts the action types you are testing. Agents registered with default settings allow `trade`, `swap`, `buy`, and `sell` only — any other action type (e.g. `emergency_liquidation`) will be FLAGGED via Rule 2.
 
 **All attestations show "Attested" status**
 
@@ -1141,9 +1143,9 @@ Fund your deployer wallet with at least 0.05 Sepolia ETH from [cloud.google.com 
 apps/
   orchestrator/       NestJS API gateway — agent lifecycle, attestations, disputes, reputation
   witness-node/       AXL :9002 — attestation intake, 0G Storage upload, peer propagation
-  verifier-node/      AXL :9012 — rule-based guardrails + 0G Compute TEE replay, verdict
+  verifier-node/      AXL :9012 — deterministic 5-rule mandate engine, 0G Compute verdict notarization
   propagator-node/    AXL :9022 — mesh broadcast (Gensyn autoresearch pattern)
-  memory-node/        AXL :9032 — 0G KV R/W, AegisNameRegistry text record updates
+  memory-node/        AXL :9032 — DisputePackage assembly on DisputeFiled, 0G KV R/W, AegisNameRegistry text record updates
   ccip-gateway/       EIP-3668 CCIP-read server — bridges ENS resolution to 0G testnet
   dashboard/          React — wallet connect, attestation feed, dispute UI, agent profiles, KeeperHub audit, presentation slides
 
