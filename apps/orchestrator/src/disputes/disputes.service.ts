@@ -117,7 +117,7 @@ export class DisputesService {
       if (res.ok) {
         const teeResult = (await res.json()) as VerifyResponse;
         if (teeResult.teeProof) {
-          verification = teeResult;
+          verification.teeProof = teeResult.teeProof;
         }
       }
     } catch {}
