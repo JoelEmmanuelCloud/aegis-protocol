@@ -133,18 +133,24 @@ async function fetchMandate(agentId: string): Promise<AgentMandate | null> {
 
 async function fetchHistory(agentId: string): Promise<HistoryEntry[] | null> {
   const key = `aegis:${agentId}:history`;
-  const stored = await readKVObject<AgentHistory>(key).catch(() => null);
-  if (stored?.entries?.length) {
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-    const recent = stored.entries.filter((e) => e.timestamp >= cutoff);
-    return recent.map((e) => ({
+  let stored: AgentHistory | null;
+  try {
+    stored = await readKVObject<AgentHistory>(key);
+  } catch {
+    return null;
+  }
+  if (!stored?.entries?.length) {
+    return [];
+  }
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  return stored.entries
+    .filter((e) => e.timestamp >= cutoff)
+    .map((e) => ({
       rootHash: e.rootHash,
       action: e.action ?? { type: '', pair: '', amount: 0, claimed_price: 0 },
       timestamp: e.timestamp,
       verdict: e.verdict,
     }));
-  }
-  return null;
 }
 
 async function broadcastHistoryRequest(agentId: string): Promise<HistoryEntry[] | null> {
