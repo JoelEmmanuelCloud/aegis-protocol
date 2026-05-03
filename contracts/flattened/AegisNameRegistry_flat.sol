@@ -39,6 +39,7 @@ abstract contract Context {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -138,6 +139,7 @@ abstract contract Ownable is Context {
 // File AegisNameRegistry.sol
 
 // Original license: SPDX_License_Identifier: MIT
+pragma solidity ^0.8.24;
 contract AegisNameRegistry is Ownable {
     bytes32 public immutable baseNode;
 

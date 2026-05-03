@@ -39,6 +39,7 @@ abstract contract Context {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -140,6 +141,7 @@ abstract contract Ownable is Context {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.5.0) (interfaces/draft-IERC6093.sol)
 
+pragma solidity >=0.8.4;
 
 /**
  * @dev Standard ERC-20 Errors
@@ -305,6 +307,7 @@ interface IERC1155Errors {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (utils/introspection/IERC165.sol)
 
+pragma solidity >=0.4.16;
 
 /**
  * @dev Interface of the ERC-165 standard, as defined in the
@@ -333,6 +336,7 @@ interface IERC165 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (token/ERC721/IERC721.sol)
 
+pragma solidity >=0.6.2;
 
 /**
  * @dev Required interface of an ERC-721 compliant contract.
@@ -469,6 +473,7 @@ interface IERC721 is IERC165 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (token/ERC721/extensions/IERC721Metadata.sol)
 
+pragma solidity >=0.6.2;
 
 /**
  * @title ERC-721 Non-Fungible Token Standard, optional metadata extension
@@ -497,6 +502,7 @@ interface IERC721Metadata is IERC721 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (token/ERC721/IERC721Receiver.sol)
 
+pragma solidity >=0.5.0;
 
 /**
  * @title ERC-721 token receiver interface
@@ -528,6 +534,7 @@ interface IERC721Receiver {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.5.0) (token/ERC721/utils/ERC721Utils.sol)
 
+pragma solidity ^0.8.20;
 
 
 /**
@@ -579,6 +586,7 @@ library ERC721Utils {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (utils/introspection/ERC165.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -606,6 +614,7 @@ abstract contract ERC165 is IERC165 {
 // OpenZeppelin Contracts (last updated v5.6.0) (utils/math/SafeCast.sol)
 // This file was procedurally generated from scripts/generate/templates/SafeCast.js.
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Wrappers over Solidity's uintXX/intXX/bool casting operators with added overflow
@@ -1770,6 +1779,7 @@ library SafeCast {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.1.0) (utils/Panic.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Helper library for emitting standardized panic codes.
@@ -1830,6 +1840,7 @@ library Panic {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.6.0) (utils/math/Math.sol)
 
+pragma solidity ^0.8.20;
 
 
 /**
@@ -2594,6 +2605,7 @@ library Math {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.6.0) (utils/Bytes.sol)
 
+pragma solidity ^0.8.24;
 
 /**
  * @dev Bytes operations.
@@ -2927,6 +2939,7 @@ library Bytes {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.1.0) (utils/math/SignedMath.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Standard signed math utilities missing in the Solidity language.
@@ -2996,6 +3009,7 @@ library SignedMath {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.6.0) (utils/Strings.sol)
 
+pragma solidity ^0.8.24;
 
 
 
@@ -3529,6 +3543,7 @@ library Strings {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.6.0) (token/ERC721/ERC721.sol)
 
+pragma solidity ^0.8.24;
 
 
 
@@ -3961,6 +3976,7 @@ abstract contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Er
 // File AgentRegistry.sol
 
 // Original license: SPDX_License_Identifier: MIT
+pragma solidity ^0.8.24;
 interface IAegisNameRegistry {
     function register(string calldata label, address subnodeOwner) external;
 }
@@ -3971,6 +3987,14 @@ contract AgentRegistry is ERC721, Ownable {
         uint8 builderPercent;
     }
 
+    struct AgentMandate {
+        string[] allowedActions;
+        address[] allowedPairs;
+        uint256 maxSingleTrade;
+        uint256 maxDailyDrawdown;
+        uint256 acceptableSlippage;
+    }
+
     struct AgentRecord {
         string ensName;
         bytes32 ensNode;
@@ -3979,6 +4003,7 @@ contract AgentRegistry is ERC721, Ownable {
         AccountabilitySplit split;
         bool active;
         uint256 mintedAt;
+        AgentMandate mandate;
     }
 
     address public nameRegistry;
@@ -3996,6 +4021,13 @@ contract AgentRegistry is ERC721, Ownable {
         bytes32 ensNode,
         uint8 userPercent,
         uint8 builderPercent
+    );
+
+    event AgentRegistered(
+        uint256 indexed tokenId,
+        address indexed owner,
+        string ensName,
+        bytes32 ensNode
     );
 
     event StorageRootUpdated(uint256 indexed tokenId, string storageRoot);
@@ -4018,7 +4050,8 @@ contract AgentRegistry is ERC721, Ownable {
         address builderAddress,
         string calldata label,
         uint8 userPercent,
-        uint8 builderPercent
+        uint8 builderPercent,
+        AgentMandate calldata mandate
     ) external onlyOwner returns (uint256 tokenId) {
         if (userPercent + builderPercent != 100) revert InvalidSplit();
         if (_ensNameToTokenId[label] != 0) revert EnsNameTaken();
@@ -4037,7 +4070,8 @@ contract AgentRegistry is ERC721, Ownable {
             builderAddress: builderAddress,
             split: AccountabilitySplit(userPercent, builderPercent),
             active: true,
-            mintedAt: block.timestamp
+            mintedAt: block.timestamp,
+            mandate: mandate
         });
 
         _ensNameToTokenId[label] = tokenId;
@@ -4048,6 +4082,7 @@ contract AgentRegistry is ERC721, Ownable {
         }
 
         emit AgentMinted(tokenId, agentOwner, ensName, ensNode, userPercent, builderPercent);
+        emit AgentRegistered(tokenId, agentOwner, ensName, ensNode);
     }
 
     function updateStorageRoot(uint256 tokenId, string calldata storageRoot) external onlyOwner {
@@ -4082,6 +4117,11 @@ contract AgentRegistry is ERC721, Ownable {
     function getAgent(uint256 tokenId) external view returns (AgentRecord memory) {
         if (!_exists(tokenId)) revert TokenNotFound();
         return _agents[tokenId];
+    }
+
+    function getMandate(uint256 tokenId) external view returns (AgentMandate memory) {
+        if (!_exists(tokenId)) revert TokenNotFound();
+        return _agents[tokenId].mandate;
     }
 
     function getTokenByEnsLabel(string calldata label) external view returns (uint256) {
