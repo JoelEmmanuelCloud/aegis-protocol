@@ -4,7 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import express, { Request, Response } from 'express';
-import { writeKVObject, readKVObject } from '@aegis/0g-client';
+import { writeKVObject, readKVObject, downloadObject } from '@aegis/0g-client';
 import { notarizeVerdict } from '@aegis/0g-compute';
 import { send, recv } from '@aegis/axl-client';
 import type {
@@ -14,8 +14,6 @@ import type {
   ReputationRecord,
   Verdict,
   DisputePackage,
-  TradeAction,
-  AgentMandate,
 } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
@@ -174,7 +172,6 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
     process.stdout.write(`[verifier] no dispute package after ${PACKAGE_WAIT_MS}ms, fetching record\n`);
     let record: DecisionRecord | null = null;
     try {
-      const { downloadObject } = await import('@aegis/0g-client');
       record = await downloadObject<DecisionRecord>(body.rootHash);
       process.stdout.write(`[verifier] record downloaded agentId=${record.agentId}\n`);
     } catch (err) {

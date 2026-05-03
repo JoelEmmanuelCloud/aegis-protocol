@@ -109,7 +109,7 @@ contract AegisCourt {
 
     function submitHistoricalData(
         bytes32 rootHash,
-        bytes calldata attestations
+        bytes calldata
     ) external {
         Dispute storage dispute = disputes[rootHash];
         if (!dispute.exists) revert DisputeNotFound();
@@ -121,8 +121,6 @@ contract AegisCourt {
         dispute.dataDeadline = 0;
 
         emit DataResolved(rootHash, dispute.agentId, msg.sender);
-
-        attestations;
     }
 
     function getDispute(bytes32 rootHash) external view returns (Dispute memory) {
