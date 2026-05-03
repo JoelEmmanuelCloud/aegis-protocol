@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aegis/types": "*",
+    "@aegis/ens-client": "*",
     "ethers": "^6.11.0"
   }
 }

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { ethers } from 'ethers';
+import { setTextRecords } from '@aegis/ens-client';
 import type { Verdict } from '@aegis/types';
 
 export interface WorkflowStep {
@@ -79,6 +80,14 @@ async function executeStep(
   if (step.action === 'aegis.execute_remedy_tx') {
     const txHash = await executeSuspend(payload.agentId);
     return { status: 'completed', txHash };
+  }
+
+  if (step.action === 'aegis.update_ens_reputation') {
+    await setTextRecords(payload.agentId, {
+      'aegis.lastVerdict': payload.verdict,
+      'aegis.storageIndex': payload.rootHash,
+    });
+    return { status: 'completed' };
   }
 
   return { status: 'completed' };
