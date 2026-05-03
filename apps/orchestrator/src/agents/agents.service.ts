@@ -10,15 +10,17 @@ import {
 import { ethers } from 'ethers';
 import { readKVObject, writeKVObject } from '@aegis/0g-client';
 import { setTextRecords } from '@aegis/ens-client';
-import type { NetworkStats } from '@aegis/types';
+import type { NetworkStats, AgentMandate } from '@aegis/types';
 
 const AGENT_REGISTRY_ABI = [
-  'function mint(address agentOwner, address builderAddress, string label, uint8 userPercent, uint8 builderPercent) returns (uint256 tokenId)',
-  'function getAgent(uint256 tokenId) view returns (tuple(string ensName, bytes32 ensNode, string storageRoot, address builderAddress, tuple(uint8 userPercent, uint8 builderPercent) split, bool active, uint256 mintedAt) record)',
+  'function mint(address agentOwner, address builderAddress, string label, uint8 userPercent, uint8 builderPercent, tuple(string[] allowedActions, address[] allowedPairs, uint256 maxSingleTrade, uint256 maxDailyDrawdown, uint256 acceptableSlippage) mandate) returns (uint256 tokenId)',
+  'function getAgent(uint256 tokenId) view returns (tuple(string ensName, bytes32 ensNode, string storageRoot, address builderAddress, tuple(uint8 userPercent, uint8 builderPercent) split, bool active, uint256 mintedAt, tuple(string[] allowedActions, address[] allowedPairs, uint256 maxSingleTrade, uint256 maxDailyDrawdown, uint256 acceptableSlippage) mandate) record)',
   'function getTokenByEnsLabel(string label) view returns (uint256 tokenId)',
+  'function getMandate(uint256 tokenId) view returns (tuple(string[] allowedActions, address[] allowedPairs, uint256 maxSingleTrade, uint256 maxDailyDrawdown, uint256 acceptableSlippage) mandate)',
   'function updateReputation(uint256 tokenId, string reputation, string totalDecisions, string lastVerdict, string flaggedCount)',
   'function getOwnerTokenIds(address agentOwner) view returns (uint256[])',
   'event AgentMinted(uint256 indexed tokenId, address indexed owner, string ensName, bytes32 ensNode, uint8 userPercent, uint8 builderPercent)',
+  'event AgentRegistered(uint256 indexed tokenId, address indexed owner, string ensName, bytes32 ensNode)',
   'error InvalidSplit()',
   'error EnsNameTaken()',
   'error TokenNotFound()',
@@ -31,6 +33,13 @@ export interface RegisterAgentDto {
   userPercent: number;
   builderPercent: number;
   signature: string;
+  mandate?: {
+    allowed_actions?: string[];
+    allowed_pairs?: string[];
+    max_single_trade?: number;
+    max_daily_drawdown?: number;
+    acceptable_slippage?: number;
+  };
 }
 
 @Injectable()
@@ -124,6 +133,14 @@ export class AgentsService implements OnModuleInit {
       throw new BadRequestException('userPercent + builderPercent must equal 100');
     }
 
+    const mandate = {
+      allowedActions: dto.mandate?.allowed_actions ?? ['trade', 'swap', 'buy', 'sell'],
+      allowedPairs: dto.mandate?.allowed_pairs ?? [],
+      maxSingleTrade: BigInt(Math.floor(dto.mandate?.max_single_trade ?? 1_000_000)),
+      maxDailyDrawdown: BigInt(Math.floor(dto.mandate?.max_daily_drawdown ?? 10_000_000)),
+      acceptableSlippage: BigInt(Math.floor(dto.mandate?.acceptable_slippage ?? 500)),
+    };
+
     let tx: ethers.ContractTransactionResponse;
     try {
       tx = await this.registry.mint(
@@ -131,7 +148,8 @@ export class AgentsService implements OnModuleInit {
         dto.builderAddress,
         dto.label,
         dto.userPercent,
-        dto.builderPercent
+        dto.builderPercent,
+        mandate
       );
     } catch (err) {
       const decoded = this.decodeContractError(err);
@@ -193,6 +211,13 @@ export class AgentsService implements OnModuleInit {
       builderPercent: Number(record.split.builderPercent),
       active: record.active,
       mintedAt: Number(record.mintedAt),
+      mandate: {
+        allowed_actions: Array.from(record.mandate.allowedActions as string[]),
+        allowed_pairs: Array.from(record.mandate.allowedPairs as string[]),
+        max_single_trade: Number(record.mandate.maxSingleTrade),
+        max_daily_drawdown: Number(record.mandate.maxDailyDrawdown),
+        acceptable_slippage: Number(record.mandate.acceptableSlippage),
+      } as AgentMandate,
     };
   }
 
@@ -210,6 +235,13 @@ export class AgentsService implements OnModuleInit {
           builderPercent: Number(record.split.builderPercent),
           active: record.active,
           mintedAt: Number(record.mintedAt),
+          mandate: {
+            allowed_actions: Array.from(record.mandate.allowedActions as string[]),
+            allowed_pairs: Array.from(record.mandate.allowedPairs as string[]),
+            max_single_trade: Number(record.mandate.maxSingleTrade),
+            max_daily_drawdown: Number(record.mandate.maxDailyDrawdown),
+            acceptable_slippage: Number(record.mandate.acceptableSlippage),
+          } as AgentMandate,
         };
       })
     );

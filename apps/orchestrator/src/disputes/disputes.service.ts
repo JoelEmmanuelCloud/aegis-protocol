@@ -7,12 +7,18 @@ import type { VerifyResponse, Verdict } from '@aegis/types';
 const AEGIS_COURT_ABI = [
   'function submitDispute(bytes32 rootHash, string agentId, string reason)',
   'function recordVerdict(bytes32 rootHash, uint8 verdict, bytes teeProof)',
-  'function getDispute(bytes32 rootHash) view returns (tuple(bytes32 rootHash, string agentId, address disputedBy, string reason, uint256 timestamp, uint8 verdict, bytes teeProof, bool exists) dispute)',
+  'function getDispute(bytes32 rootHash) view returns (tuple(bytes32 rootHash, string agentId, address disputedBy, string reason, uint256 timestamp, uint8 verdict, bytes teeProof, bool exists, uint256 frozenAt, uint256 dataDeadline) dispute)',
+  'function submitHistoricalData(bytes32 rootHash, bytes attestations)',
   'function getDisputeCount() view returns (uint256)',
 ];
 
-const VERDICT_TO_UINT: Record<Verdict, number> = { PENDING: 0, CLEARED: 1, FLAGGED: 2 };
-const UINT_TO_VERDICT: Verdict[] = ['PENDING', 'CLEARED', 'FLAGGED'];
+const VERDICT_TO_UINT: Record<Verdict, number> = {
+  PENDING: 0,
+  CLEARED: 1,
+  FLAGGED: 2,
+  PENDING_DATA: 3,
+};
+const UINT_TO_VERDICT: Verdict[] = ['PENDING', 'CLEARED', 'FLAGGED', 'PENDING_DATA'];
 
 const HIGH_RISK_ACTIONS = new Set([
   'emergency_liquidation',
@@ -132,7 +138,7 @@ export class DisputesService {
         .catch(() => {});
     }
 
-    if (process.env.KEEPERHUB_WORKFLOW_ID) {
+    if (verification.verdict === 'FLAGGED' && process.env.KEEPERHUB_WORKFLOW_ID) {
       await triggerWorkflow(process.env.KEEPERHUB_WORKFLOW_ID, {
         rootHash: dto.rootHash,
         agentId: dto.agentId,
@@ -205,6 +211,8 @@ export class DisputesService {
       timestamp: bigint;
       verdict: number;
       teeProof: string;
+      frozenAt: bigint;
+      dataDeadline: bigint;
     };
     try {
       dispute = await this.court.getDispute(rootHash32);
@@ -222,6 +230,8 @@ export class DisputesService {
       timestamp: Number(dispute.timestamp),
       verdict: UINT_TO_VERDICT[dispute.verdict] ?? 'PENDING',
       teeProof: ethers.toUtf8String(dispute.teeProof),
+      frozenAt: Number(dispute.frozenAt) || undefined,
+      dataDeadline: Number(dispute.dataDeadline) || undefined,
     };
   }
 }
