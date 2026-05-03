@@ -193,7 +193,7 @@ const axlMessageHandlers = new Map<string, AXLHandler>();
 async function assembleDisputePackage(
   rootHash: string,
   agentId: string
-): Promise<DisputePackage> {
+): Promise<DisputePackage | null> {
   process.stdout.write(`[memory] assembling dispute package rootHash=${rootHash} agentId=${agentId}\n`);
 
   let record: DecisionRecord | null = null;
@@ -202,6 +202,7 @@ async function assembleDisputePackage(
     process.stdout.write(`[memory] record downloaded agentId=${record.agentId}\n`);
   } catch (err) {
     process.stdout.write(`[memory] record download failed: ${err}\n`);
+    return null;
   }
 
   const rawAction = record?.action ?? {};
@@ -305,7 +306,11 @@ function watchDisputeEvents(): void {
     process.stdout.write(`[memory] DisputeFiled rootHash=${rootHash} agentId=${agentId}\n`);
     try {
       const pkg = await assembleDisputePackage(rootHash, agentId);
-      await sendPackageToVerifier(pkg);
+      if (pkg) {
+        await sendPackageToVerifier(pkg);
+      } else {
+        process.stdout.write(`[memory] record unavailable, skipping package — verifier will PENDING_DATA rootHash=${rootHash}\n`);
+      }
     } catch (err) {
       process.stdout.write(`[memory] dispute assembly error: ${err}\n`);
     }
@@ -315,7 +320,11 @@ function watchDisputeEvents(): void {
     process.stdout.write(`[memory] DataResolved rootHash=${rootHash} agentId=${agentId}, re-assembling package\n`);
     try {
       const pkg = await assembleDisputePackage(rootHash, agentId);
-      await sendPackageToVerifier(pkg);
+      if (pkg) {
+        await sendPackageToVerifier(pkg);
+      } else {
+        process.stdout.write(`[memory] record still unavailable after DataResolved rootHash=${rootHash}\n`);
+      }
     } catch (err) {
       process.stdout.write(`[memory] DataResolved re-assembly error: ${err}\n`);
     }
