@@ -120,7 +120,7 @@ export class DisputesService {
       if (res.ok) {
         const teeResult = (await res.json()) as VerifyResponse;
         if (teeResult.teeProof) {
-          verification.teeProof = teeResult.teeProof;
+          verification = teeResult;
         }
       }
     } catch {}
