@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { ethers } from 'ethers';
 import type { Verdict } from '@aegis/types';
 
 export interface WorkflowStep {
@@ -29,6 +30,11 @@ export interface WorkflowRun {
   }>;
 }
 
+const AGENT_REGISTRY_ABI = [
+  'function getTokenByEnsLabel(string label) view returns (uint256)',
+  'function suspendAgent(uint256 tokenId)',
+];
+
 const runs: WorkflowRun[] = [];
 
 const REMEDY_STEPS: WorkflowStep[] = [
@@ -39,10 +45,29 @@ const REMEDY_STEPS: WorkflowStep[] = [
   { action: 'aegis.update_reputation' },
 ];
 
+async function executeSuspend(agentId: string): Promise<string> {
+  const provider = new ethers.JsonRpcProvider(process.env.ZG_RPC_URL!);
+  const signer = new ethers.Wallet(process.env.ZG_PRIVATE_KEY!, provider);
+  const registry = new ethers.Contract(
+    process.env.AGENT_REGISTRY_ADDRESS!,
+    AGENT_REGISTRY_ABI,
+    signer
+  );
+
+  const label = agentId.replace(/\.aegis\.eth$/, '');
+  const tokenId: bigint = await registry.getTokenByEnsLabel(label);
+  if (tokenId === 0n) throw new Error(`agent not found: ${agentId}`);
+
+  const tx: ethers.TransactionResponse = await registry.suspendAgent(tokenId);
+  const receipt = await tx.wait();
+  if (!receipt) throw new Error('transaction receipt null');
+  return receipt.hash;
+}
+
 async function executeStep(
   step: WorkflowStep,
   payload: { rootHash: string; agentId: string; verdict: Verdict }
-): Promise<{ status: 'completed' | 'skipped' | 'failed' }> {
+): Promise<{ status: 'completed' | 'skipped' | 'failed'; txHash?: string }> {
   if (step.if) {
     const parts = step.if.split('===');
     const key = parts[0]?.trim() ?? '';
@@ -50,6 +75,12 @@ async function executeStep(
     const payloadVal = (payload as unknown as Record<string, string>)[key];
     if (payloadVal !== value) return { status: 'skipped' };
   }
+
+  if (step.action === 'aegis.execute_remedy_tx') {
+    const txHash = await executeSuspend(payload.agentId);
+    return { status: 'completed', txHash };
+  }
+
   return { status: 'completed' };
 }
 
@@ -63,6 +94,7 @@ async function executeWorkflow(
   for (const step of steps) {
     const result = await executeStep(step, payload).catch(() => ({ status: 'failed' as const }));
     executedSteps.push({ action: step.action, status: result.status, completedAt: Date.now() });
+    if (result.txHash) run.txHash = result.txHash;
     if (result.status === 'failed') {
       run.status = 'failed';
       run.completedAt = Date.now();

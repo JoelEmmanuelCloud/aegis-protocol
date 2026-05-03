@@ -8,6 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@aegis/types": "*"
+    "@aegis/types": "*",
+    "ethers": "^6.11.0"
   }
 }
