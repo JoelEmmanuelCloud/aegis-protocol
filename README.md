@@ -55,11 +55,10 @@ See [`JUDGES.md`](./JUDGES.md) for the complete step-by-step testing guide.
 9. [Running the Example Bot](#9-running-the-example-bot)
 10. [Full End-to-End Test Walkthrough](#10-full-end-to-end-test-walkthrough)
 11. [Production Deployment](#11-production-deployment)
-12. [Demo Video Script (3 min)](#12-demo-video-script-3-min)
-13. [Contracts](#13-contracts)
-14. [Orchestrator API Reference](#14-orchestrator-api-reference)
-15. [Troubleshooting](#15-troubleshooting)
-16. [Repository Structure](#16-repository-structure)
+12. [Contracts](#12-contracts)
+13. [Orchestrator API Reference](#13-orchestrator-api-reference)
+14. [Troubleshooting](#14-troubleshooting)
+15. [Repository Structure](#15-repository-structure)
 
 ---
 
@@ -257,12 +256,7 @@ Open `http://localhost:4000`.
 cd apps/ccip-gateway && npx ts-node src/index.ts
 ```
 
-The gateway runs on port `8080`. For ENS resolution to work from Ethereum, this port must be publicly reachable. Use localtunnel or ngrok:
-
-```bash
-npx localtunnel --port 8080
-# Copy the printed URL into .env as CCIP_GATEWAY_URL
-```
+The gateway runs on port `8080`. For production it is hosted at `https://ccip.aegisprotocol.uk` via the Cloudflare tunnel. For local development, expose port 8080 publicly and set `CCIP_GATEWAY_URL` in `.env`.
 
 ---
 
@@ -606,7 +600,7 @@ curl -X POST http://localhost:3000/disputes \
   }'
 ```
 
-Expected: `"verdict":"CLEARED"` with `submitTxHash` and `recordTxHash` — both verifiable at [chainscan-galileo.0g.ai](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction).
+Expected: `"verdict":"CLEARED"` with `submitTxHash` and `recordTxHash` — both verifiable at [chainscan-galileo.0g.ai](https://chainscan-galileo.0g.ai/address/0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479?tab=transaction).
 
 ### Part D — File a FLAGGED dispute (high-risk action)
 
@@ -695,8 +689,9 @@ The live deployment runs all 5 services on a DigitalOcean droplet (Ubuntu 24.04,
 
 ```
 Cloudflare Zero Trust tunnel (permanent HTTPS)
-  ├─ app.aegisprotocol.uk  →  localhost:4000  (dashboard)
-  └─ api.aegisprotocol.uk  →  localhost:3000  (orchestrator)
+  ├─ app.aegisprotocol.uk   →  localhost:4000  (dashboard)
+  ├─ api.aegisprotocol.uk   →  localhost:3000  (orchestrator)
+  └─ ccip.aegisprotocol.uk  →  localhost:8080  (ccip-gateway)
 
 DigitalOcean droplet  164.92.165.231
   └─ docker compose up -d
@@ -705,6 +700,7 @@ DigitalOcean droplet  164.92.165.231
        ├─ axl-verifier     :9012 / :10012
        ├─ axl-memory       :9032 / :10032
        ├─ orchestrator     :3000
+       ├─ ccip-gateway     :8080
        └─ dashboard        :4000
 ```
 
@@ -765,10 +761,10 @@ docker compose up -d dashboard
 | Variable                           | Value                                        |
 | ---------------------------------- | -------------------------------------------- |
 | `VITE_ORCHESTRATOR_URL`            | `https://api.yourdomain.com`                 |
-| `VITE_AGENT_REGISTRY_ADDRESS`      | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` |
-| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` |
+| `VITE_AGENT_REGISTRY_ADDRESS`      | `0x1D32bcfE84ed05237AdFA351686EF60dcdC6dF1f` |
+| `VITE_AEGIS_NAME_REGISTRY_ADDRESS` | `0x7b6a90ABCed25B98A591668B7E97fCc546fE0F17` |
 | `VITE_PUBLIC_RESOLVER_ADDRESS`     | `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63` |
-| `VITE_AEGIS_COURT_ADDRESS`         | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` |
+| `VITE_AEGIS_COURT_ADDRESS`         | `0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479` |
 | `VITE_0G_EXPLORER_URL`             | `https://chainscan-galileo.0g.ai`            |
 | `VITE_KEEPERHUB_WORKFLOW_ID`       | `aegis.execute_remedy`                       |
 
@@ -781,156 +777,15 @@ docker compose up -d --build
 
 ---
 
-## 12. Demo Video Script (3 min)
-
-**Setup before recording:**
-
-- Browser open at **https://app.aegisprotocol.uk** (hosted on DigitalOcean, served via Cloudflare — HTTPS, live)
-- MetaMask unlocked on 0G testnet with funded wallet
-- Terminal open, repo cloned and `npm install` done
-- SSH session to `164.92.165.231` ready (to show 4 live Docker nodes for Gensyn)
-
-> Use the hosted deployment, not localhost. The live URL is more professional, MetaMask works without HTTPS warnings, and the 4 AXL nodes running in production Docker on the DigitalOcean server is stronger Gensyn evidence than 4 local terminals.
-
----
-
-### 0:00 – 0:20 · The Problem
-
-> "Every agent framework in 2026 solves how agents reason and decide. None of them solve what happens after. One bad decision. No receipt. No proof. No appeal. Aegis is the accountability layer."
-
-Show: **https://app.aegisprotocol.uk** landing page. Point to "Prove every AI decision." Point to the 4-node animated mesh.
-
----
-
-### 0:20 – 0:50 · Register (Normal User Flow)
-
-> "A user registers their trading bot in under a minute — on-chain, from their own wallet."
-
-1. Click **Register Your Agent** — MetaMask connects to 0G testnet
-2. Go to **Register** (`/app/register`) — type `trading-bot`
-3. Show live preview: `trading-bot.aegis.eth`
-4. Drag accountability split to 60/40
-5. Click **Mint iNFT** — MetaMask opens, user signs and pays gas
-6. Green banner: `trading-bot.aegis.eth · Token #X · View tx on-chain ↗`
-
-> "iNFT minted. The user signed this transaction — they own it. ENSIP-25 records written on 0G chain."
-
----
-
-### 0:50 – 1:20 · Live Attestation
-
-> "The bot added one line. Every decision is now committed to 0G Storage permanently."
-
-Run in terminal:
-
-```bash
-npx ts-node scripts/mit-bot.ts
-```
-
-Switch to dashboard → **Attestation Feed** at `https://app.aegisprotocol.uk/app/attestations` — cards appear with real LangGraph decisions, action text, and reasoning.
-
-> "That root hash — computed from the 0G merkle tree — is the unforgeable receipt. The full decision record is in 0G Storage."
-
----
-
-### 1:20 – 1:50 · Four AXL Nodes — Live on Production Server (Gensyn Track)
-
-> "Four separate processes. Four distinct ed25519 identity keys. Real encrypted P2P messages over Yggdrasil. Running in production Docker on a DigitalOcean server."
-
-Show in terminal (SSH to server or split screen):
-
-```bash
-# Live container status — 4 healthy nodes
-docker ps --format "table {{.Names}}\t{{.Status}}"
-
-# Live topology — all 4 peer IDs connected
-curl http://164.92.165.231:9022/topology | grep -o '"public_key":"[^"]*"\|"up":[^,}]*'
-```
-
-Point to each peer ID in the output:
-
-| Node       | Peer ID               |
-| ---------- | --------------------- |
-| Propagator | `f2f2af19af8f20bf...` |
-| Witness    | `0c0ad1361fc678...`   |
-| Verifier   | `3d702e5b9658f7...`   |
-| Memory     | `6bc1bcd7f66d4e...`   |
-
-Then show the 4 health endpoints responding:
-
-```bash
-curl http://164.92.165.231:10002/health  # witness
-curl http://164.92.165.231:10012/health  # verifier
-curl http://164.92.165.231:10022/health  # propagator
-curl http://164.92.165.231:10032/health  # memory
-```
-
-> "Attestation traveled Witness → Propagator → Memory — three separate processes, three peer IDs, all on real AXL encrypted transport. This is the Gensyn autoresearch broadcast pattern applied to accountability signals."
-
----
-
-### 1:50 – 2:20 · Dispute + 5-Step Progress Tracker
-
-> "A user disputes a decision. Watch the system process it in real time."
-
-Go to `https://app.aegisprotocol.uk/app/attestations` → click **File Dispute** on any card (auto-fills the form). Write a reason. Click **File Dispute**.
-
-Show the **5-step progress tracker** lighting up:
-
-```
-  ● Submitting to AegisCourt
-  ● Applying risk guardrails
-  ● Verifier replaying via 0G Compute TEE
-  ● Recording verdict on-chain
-  ● Triggering KeeperHub workflow
-```
-
-Verdict card appears with FLAGGED badge and **"Verify on-chain"** link → click it → chainscan-galileo.0g.ai shows the real transaction.
-
-> "Verifier applied guardrails and recorded the verdict on AegisCourt.sol. Source-verified. Permanent."
-
----
-
-### 2:20 – 2:45 · KeeperHub — Automatic Remedy
-
-> "The moment the verdict landed, KeeperHub fired the remedy automatically. No manual trigger."
-
-Show **KeeperHub Audit** at `/app/audit`:
-
-```
-aegis.execute_remedy   completed   (verdict: FLAGGED)
-  [OK] aegis.fetch_verdict
-  [OK] aegis.notify_agent_owner
-  [OK] aegis.execute_remedy_tx      ← fired because FLAGGED
-  [OK] aegis.update_ens_reputation
-  [OK] aegis.update_reputation
-```
-
-> "Five steps. All automated. The court ruled, the bailiff executed."
-
----
-
-### 2:45 – 3:00 · ENS as Live Trust Signal
-
-Go to **Agent Profile** (`/app/agents`) — agent appears in the grid, click to load instantly.
-
-Show: score ring dropped to 90, `aegis.lastVerdict = FLAGGED`, `aegis.flaggedCount = 1`.
-
-> "Any wallet. Any DeFi protocol. Resolve trading-bot.aegis.eth from Ethereum via CCIP-read — live accountability score, no Aegis API call needed. ENS is now the trust signal for every AI agent."
-
-**End frame:** Overview screen with all metrics live. Domain `app.aegisprotocol.uk` visible in the browser bar.
-
----
-
-## 13. Contracts
+## 12. Contracts
 
 ### 0G Testnet (chainId 16602)
 
 | Contract              | Address                                      | Explorer                                                                                                                  |
 | --------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| AegisCourt.sol        | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` | [View](https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction) · **Verified** |
-| AgentRegistry.sol     | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` | [View](https://chainscan-galileo.0g.ai/address/0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1) · **Verified**                 |
-| AegisNameRegistry.sol | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` | [View](https://chainscan-galileo.0g.ai/address/0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4) · **Verified**                 |
+| AegisCourt.sol        | `0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479` | [View](https://chainscan-galileo.0g.ai/address/0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479?tab=transaction)                |
+| AgentRegistry.sol     | `0x1D32bcfE84ed05237AdFA351686EF60dcdC6dF1f` | [View](https://chainscan-galileo.0g.ai/address/0x1D32bcfE84ed05237AdFA351686EF60dcdC6dF1f)                                |
+| AegisNameRegistry.sol | `0x7b6a90ABCed25B98A591668B7E97fCc546fE0F17` | [View](https://chainscan-galileo.0g.ai/address/0x7b6a90ABCed25B98A591668B7E97fCc546fE0F17)                                |
 
 ### Verifying contracts on chainscan-galileo
 
@@ -984,7 +839,7 @@ npm run setup:ens-sepolia
 
 ---
 
-## 14. Orchestrator API Reference
+## 13. Orchestrator API Reference
 
 ```
 POST /attestations
@@ -1052,7 +907,7 @@ GET  /:sender/:calldata
 
 ---
 
-## 15. Troubleshooting
+## 14. Troubleshooting
 
 **AXL node fails to start / port already in use**
 
@@ -1137,7 +992,7 @@ Fund your deployer wallet with at least 0.05 Sepolia ETH from [cloud.google.com 
 
 ---
 
-## 16. Repository Structure
+## 15. Repository Structure
 
 ```
 apps/
