@@ -92,7 +92,7 @@ async function executeWorkflow(
   const executedSteps: NonNullable<WorkflowRun['steps']> = [];
 
   for (const step of steps) {
-    const result = await executeStep(step, payload).catch(() => ({ status: 'failed' as const }));
+    const result = await executeStep(step, payload).catch(() => ({ status: 'failed' as const, txHash: undefined }));
     executedSteps.push({ action: step.action, status: result.status, completedAt: Date.now() });
     if (result.txHash) run.txHash = result.txHash;
     if (result.status === 'failed') {
