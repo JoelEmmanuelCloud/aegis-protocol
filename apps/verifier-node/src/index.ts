@@ -4,8 +4,8 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import express, { Request, Response } from 'express';
-import { downloadObject, writeKVObject, readKVObject } from '@aegis/0g-client';
-import { replayDecision } from '@aegis/0g-compute';
+import { writeKVObject, readKVObject } from '@aegis/0g-client';
+import { notarizeVerdict } from '@aegis/0g-compute';
 import { send, recv } from '@aegis/axl-client';
 import type {
   VerifyRequest,
@@ -13,6 +13,9 @@ import type {
   DecisionRecord,
   ReputationRecord,
   Verdict,
+  DisputePackage,
+  TradeAction,
+  AgentMandate,
 } from '@aegis/types';
 
 const PORT = parseInt(process.env.AXL_VERIFIER_PORT ?? '9012', 10);
@@ -28,6 +31,8 @@ const BINARY = path.resolve(
   '../../../bin',
   process.platform === 'win32' ? 'axl-node.exe' : 'axl-node'
 );
+const PACKAGE_WAIT_MS = 30_000;
+const PACKAGE_POLL_MS = 500;
 
 const nodeConfig = {
   PrivateKeyPath: path.join(CONFIG_DIR, 'verifier.pem').replace(/\\/g, '/'),
@@ -76,57 +81,116 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-const HIGH_RISK_ACTIONS = new Set([
-  'emergency_liquidation',
-  'drain',
-  'full_withdrawal',
-  'unauthorized_transfer',
-  'rug',
-  'self_destruct',
-]);
+const pendingPackages = new Map<string, DisputePackage>();
 
-const AMOUNT_LIMIT = parseFloat(process.env.AGENT_AMOUNT_LIMIT ?? '100');
+async function waitForPackage(rootHash: string): Promise<DisputePackage | null> {
+  const deadline = Date.now() + PACKAGE_WAIT_MS;
+  while (Date.now() < deadline) {
+    const pkg = pendingPackages.get(rootHash);
+    if (pkg) {
+      pendingPackages.delete(rootHash);
+      return pkg;
+    }
+    await new Promise<void>((r) => setTimeout(r, PACKAGE_POLL_MS));
+  }
+  return null;
+}
 
-function ruleBasedVerdict(action: Record<string, unknown>): Verdict {
-  const type = String(action.type ?? '')
-    .toLowerCase()
-    .replace(/[- ]/g, '_');
-  if (HIGH_RISK_ACTIONS.has(type)) return 'FLAGGED';
-  const amount = parseFloat(String(action.amount ?? '0'));
-  if (!isNaN(amount) && amount > AMOUNT_LIMIT) return 'FLAGGED';
+function evaluateRules(pkg: DisputePackage): Verdict {
+  if (pkg.history === null) {
+    process.stdout.write(`[verifier] rule1 PENDING_DATA: history=null\n`);
+    return 'PENDING_DATA';
+  }
+
+  const action = pkg.action;
+  const mandate = pkg.mandate;
+
+  const actionType = String(action.type ?? '').toLowerCase().replace(/[- ]/g, '_');
+  const allowedActions = mandate.allowed_actions.map((a) =>
+    a.toLowerCase().replace(/[- ]/g, '_')
+  );
+  const actionAllowed = allowedActions.length === 0 || allowedActions.includes(actionType);
+  const pairAllowed =
+    mandate.allowed_pairs.length === 0 ||
+    mandate.allowed_pairs.map((p) => p.toLowerCase()).includes(
+      String(action.pair ?? '').toLowerCase()
+    );
+
+  if (!actionAllowed || !pairAllowed) {
+    process.stdout.write(
+      `[verifier] rule2 FLAGGED: action=${action.type} pair=${action.pair} actionAllowed=${actionAllowed} pairAllowed=${pairAllowed}\n`
+    );
+    return 'FLAGGED';
+  }
+
+  const slippageDiff = Math.abs(action.claimed_price - pkg.oracle_price);
+  const slippageAllowance = (pkg.oracle_price * mandate.acceptable_slippage) / 10_000;
+  if (slippageDiff > slippageAllowance) {
+    process.stdout.write(
+      `[verifier] rule3 FLAGGED: slippageDiff=${slippageDiff} allowance=${slippageAllowance}\n`
+    );
+    return 'FLAGGED';
+  }
+
+  if (action.amount > mandate.max_single_trade) {
+    process.stdout.write(
+      `[verifier] rule4 FLAGGED: amount=${action.amount} max=${mandate.max_single_trade}\n`
+    );
+    return 'FLAGGED';
+  }
+
+  const now = Date.now();
+  const cutoff = now - 24 * 60 * 60 * 1000;
+  const recentEntries = pkg.history.filter((e) => e.timestamp >= cutoff);
+  const historicalLoss = recentEntries.reduce((sum, e) => {
+    const loss = e.action.potential_loss ?? 0;
+    return sum + (loss > 0 ? loss : 0);
+  }, 0);
+  const currentLoss = action.potential_loss ?? 0;
+  const totalDrawdown = historicalLoss + (currentLoss > 0 ? currentLoss : 0);
+
+  if (totalDrawdown > mandate.max_daily_drawdown) {
+    process.stdout.write(
+      `[verifier] rule5 FLAGGED: totalDrawdown=${totalDrawdown} max=${mandate.max_daily_drawdown}\n`
+    );
+    return 'FLAGGED';
+  }
+
   return 'CLEARED';
 }
 
 async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse> {
-  process.stdout.write(`[verifier] verify request rootHash=${body.rootHash} agentId=${body.agentId}\n`);
+  process.stdout.write(
+    `[verifier] verify request rootHash=${body.rootHash} agentId=${body.agentId}\n`
+  );
 
-  let record: DecisionRecord | null = null;
-  try {
-    record = await downloadObject<DecisionRecord>(body.rootHash);
-    process.stdout.write(`[verifier] record downloaded agentId=${record.agentId}\n`);
-  } catch (err) {
-    process.stdout.write(`[verifier] download failed: ${err}\n`);
+  const pkg = await waitForPackage(body.rootHash);
+
+  let verdict: Verdict;
+  if (pkg) {
+    process.stdout.write(`[verifier] dispute package received, running rule engine\n`);
+    verdict = evaluateRules(pkg);
+  } else {
+    process.stdout.write(`[verifier] no dispute package after ${PACKAGE_WAIT_MS}ms, fetching record\n`);
+    let record: DecisionRecord | null = null;
+    try {
+      const { downloadObject } = await import('@aegis/0g-client');
+      record = await downloadObject<DecisionRecord>(body.rootHash);
+      process.stdout.write(`[verifier] record downloaded agentId=${record.agentId}\n`);
+    } catch (err) {
+      process.stdout.write(`[verifier] download failed: ${err}\n`);
+    }
+    verdict = record ? (record.verdict ?? 'PENDING_DATA') : 'PENDING_DATA';
   }
 
-  let replay: { verdict: Verdict; teeProof: string };
+  process.stdout.write(`[verifier] verdict=${verdict}, notarizing via 0G Compute\n`);
+
+  let teeProof = '';
   try {
-    if (!record) {
-      process.stdout.write(`[verifier] no record, defaulting to CLEARED\n`);
-      replay = { verdict: 'CLEARED' as const, teeProof: '' };
-    } else {
-      process.stdout.write(`[verifier] replaying via 0G Compute\n`);
-      const teeResult = await replayDecision(
-        { inputs: record.inputs, reasoning: record.reasoning, action: record.action },
-        record.action
-      );
-      process.stdout.write(`[verifier] replay done verdict=${teeResult.verdict} teeProof=${teeResult.teeProof}\n`);
-      replay = teeResult;
-    }
+    teeProof = await notarizeVerdict(body.agentId, body.rootHash, verdict, Date.now());
+    process.stdout.write(`[verifier] teeProof=${teeProof}\n`);
   } catch (err) {
-    process.stdout.write(`[verifier] replayDecision threw: ${err}\n`);
-    replay = record
-      ? { verdict: ruleBasedVerdict(record.action), teeProof: '' }
-      : { verdict: 'CLEARED' as const, teeProof: '' };
+    process.stdout.write(`[verifier] notarize failed: ${err}\n`);
   }
 
   if (PROPAGATOR_PEER_ID) {
@@ -134,29 +198,28 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
       type: 'PROPAGATE_ATTESTATION',
       rootHash: body.rootHash,
       agentId: body.agentId,
-      verdict: replay.verdict,
+      verdict,
       timestamp: Date.now(),
     }).catch(() => {});
   }
 
   void (async () => {
-    const existing = await readKVObject<ReputationRecord>(`aegis:${body.agentId}:reputation`).catch(
-      () => null
-    );
+    const existing = await readKVObject<ReputationRecord>(
+      `aegis:${body.agentId}:reputation`
+    ).catch(() => null);
     const reputation: ReputationRecord = {
       score:
-        replay.verdict === 'FLAGGED'
+        verdict === 'FLAGGED'
           ? Math.max(0, (existing?.score ?? 100) - 10)
           : Math.min(100, (existing?.score ?? 100) + 1),
-      totalDecisions: existing?.totalDecisions ?? 1,
-      flagged:
-        replay.verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
+      totalDecisions: (existing?.totalDecisions ?? 0) + 1,
+      flagged: verdict === 'FLAGGED' ? (existing?.flagged ?? 0) + 1 : (existing?.flagged ?? 0),
       lastVerified: Date.now(),
     };
     writeKVObject(`aegis:${body.agentId}:reputation`, reputation).catch(() => {});
   })();
 
-  return { verdict: replay.verdict, teeProof: replay.teeProof, rootHash: body.rootHash };
+  return { verdict, teeProof, rootHash: body.rootHash };
 }
 
 setInterval(async () => {
@@ -170,6 +233,17 @@ setInterval(async () => {
 
 const app = express();
 app.use(express.json());
+
+app.post('/packages', (req: Request, res: Response): void => {
+  const pkg = req.body as DisputePackage;
+  if (!pkg?.rootHash) {
+    res.status(400).json({ error: 'missing rootHash' });
+    return;
+  }
+  pendingPackages.set(pkg.rootHash, pkg);
+  process.stdout.write(`[verifier] package stored rootHash=${pkg.rootHash}\n`);
+  res.json({ ok: true });
+});
 
 app.post('/verify', async (req: Request, res: Response): Promise<void> => {
   try {
