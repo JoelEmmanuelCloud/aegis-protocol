@@ -1,4 +1,37 @@
-export type Verdict = 'PENDING' | 'CLEARED' | 'FLAGGED';
+export type Verdict = 'PENDING' | 'CLEARED' | 'FLAGGED' | 'PENDING_DATA';
+
+export interface AgentMandate {
+  allowed_actions: string[];
+  allowed_pairs: string[];
+  max_single_trade: number;
+  max_daily_drawdown: number;
+  acceptable_slippage: number;
+}
+
+export interface TradeAction {
+  type: string;
+  pair: string;
+  amount: number;
+  claimed_price: number;
+  potential_loss?: number;
+}
+
+export interface HistoryEntry {
+  rootHash: string;
+  action: TradeAction;
+  timestamp: number;
+  verdict: Verdict;
+}
+
+export interface DisputePackage {
+  rootHash: string;
+  agentId: string;
+  action: TradeAction;
+  mandate: AgentMandate;
+  oracle_price: number;
+  history: HistoryEntry[] | null;
+  block_number?: number;
+}
 
 export interface DecisionRecord {
   agentId: string;
