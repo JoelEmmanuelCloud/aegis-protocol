@@ -103,6 +103,20 @@ services:
       axl-memory:
         condition: service_healthy
 
+  ccip-gateway:
+    build:
+      context: .
+      dockerfile: apps/ccip-gateway/Dockerfile
+    ports:
+      - '8080:8080'
+    env_file: .env
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
   dashboard:
     build:
       context: .
