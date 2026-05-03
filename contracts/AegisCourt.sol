@@ -5,7 +5,8 @@ contract AegisCourt {
     enum Verdict {
         PENDING,
         CLEARED,
-        FLAGGED
+        FLAGGED,
+        PENDING_DATA
     }
 
     struct Dispute {
@@ -17,7 +18,11 @@ contract AegisCourt {
         Verdict verdict;
         bytes teeProof;
         bool exists;
+        uint256 frozenAt;
+        uint256 dataDeadline;
     }
+
+    uint256 public constant DATA_WINDOW = 24 hours;
 
     address public owner;
     address public verifier;
@@ -27,11 +32,15 @@ contract AegisCourt {
 
     event DisputeFiled(bytes32 indexed rootHash, string agentId, address indexed disputedBy);
     event VerdictEmitted(bytes32 indexed rootHash, string agentId, Verdict verdict, bytes teeProof);
+    event DataAvailabilityChallenge(bytes32 indexed rootHash, string agentId, uint256 deadline);
+    event DataResolved(bytes32 indexed rootHash, string agentId, address indexed submitter);
 
     error Unauthorized();
     error DisputeNotFound();
     error DisputeAlreadyExists();
     error VerdictAlreadyRecorded();
+    error InvalidState();
+    error DeadlineExpired();
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert Unauthorized();
@@ -67,7 +76,9 @@ contract AegisCourt {
             timestamp: block.timestamp,
             verdict: Verdict.PENDING,
             teeProof: bytes(""),
-            exists: true
+            exists: true,
+            frozenAt: 0,
+            dataDeadline: 0
         });
 
         disputeKeys.push(rootHash);
@@ -87,7 +98,31 @@ contract AegisCourt {
         dispute.verdict = verdict;
         dispute.teeProof = teeProof;
 
+        if (verdict == Verdict.PENDING_DATA) {
+            dispute.frozenAt = block.timestamp;
+            dispute.dataDeadline = block.timestamp + DATA_WINDOW;
+            emit DataAvailabilityChallenge(rootHash, dispute.agentId, dispute.dataDeadline);
+        }
+
         emit VerdictEmitted(rootHash, dispute.agentId, verdict, teeProof);
+    }
+
+    function submitHistoricalData(
+        bytes32 rootHash,
+        bytes calldata attestations
+    ) external {
+        Dispute storage dispute = disputes[rootHash];
+        if (!dispute.exists) revert DisputeNotFound();
+        if (dispute.verdict != Verdict.PENDING_DATA) revert InvalidState();
+        if (block.timestamp > dispute.dataDeadline) revert DeadlineExpired();
+
+        dispute.verdict = Verdict.PENDING;
+        dispute.frozenAt = 0;
+        dispute.dataDeadline = 0;
+
+        emit DataResolved(rootHash, dispute.agentId, msg.sender);
+
+        attestations;
     }
 
     function getDispute(bytes32 rootHash) external view returns (Dispute memory) {

@@ -14,6 +14,14 @@ contract AgentRegistry is ERC721, Ownable {
         uint8 builderPercent;
     }
 
+    struct AgentMandate {
+        string[] allowedActions;
+        address[] allowedPairs;
+        uint256 maxSingleTrade;
+        uint256 maxDailyDrawdown;
+        uint256 acceptableSlippage;
+    }
+
     struct AgentRecord {
         string ensName;
         bytes32 ensNode;
@@ -22,6 +30,7 @@ contract AgentRegistry is ERC721, Ownable {
         AccountabilitySplit split;
         bool active;
         uint256 mintedAt;
+        AgentMandate mandate;
     }
 
     address public nameRegistry;
@@ -39,6 +48,13 @@ contract AgentRegistry is ERC721, Ownable {
         bytes32 ensNode,
         uint8 userPercent,
         uint8 builderPercent
+    );
+
+    event AgentRegistered(
+        uint256 indexed tokenId,
+        address indexed owner,
+        string ensName,
+        bytes32 ensNode
     );
 
     event StorageRootUpdated(uint256 indexed tokenId, string storageRoot);
@@ -61,7 +77,8 @@ contract AgentRegistry is ERC721, Ownable {
         address builderAddress,
         string calldata label,
         uint8 userPercent,
-        uint8 builderPercent
+        uint8 builderPercent,
+        AgentMandate calldata mandate
     ) external onlyOwner returns (uint256 tokenId) {
         if (userPercent + builderPercent != 100) revert InvalidSplit();
         if (_ensNameToTokenId[label] != 0) revert EnsNameTaken();
@@ -80,7 +97,8 @@ contract AgentRegistry is ERC721, Ownable {
             builderAddress: builderAddress,
             split: AccountabilitySplit(userPercent, builderPercent),
             active: true,
-            mintedAt: block.timestamp
+            mintedAt: block.timestamp,
+            mandate: mandate
         });
 
         _ensNameToTokenId[label] = tokenId;
@@ -91,6 +109,7 @@ contract AgentRegistry is ERC721, Ownable {
         }
 
         emit AgentMinted(tokenId, agentOwner, ensName, ensNode, userPercent, builderPercent);
+        emit AgentRegistered(tokenId, agentOwner, ensName, ensNode);
     }
 
     function updateStorageRoot(uint256 tokenId, string calldata storageRoot) external onlyOwner {
@@ -125,6 +144,11 @@ contract AgentRegistry is ERC721, Ownable {
     function getAgent(uint256 tokenId) external view returns (AgentRecord memory) {
         if (!_exists(tokenId)) revert TokenNotFound();
         return _agents[tokenId];
+    }
+
+    function getMandate(uint256 tokenId) external view returns (AgentMandate memory) {
+        if (!_exists(tokenId)) revert TokenNotFound();
+        return _agents[tokenId].mandate;
     }
 
     function getTokenByEnsLabel(string calldata label) external view returns (uint256) {
