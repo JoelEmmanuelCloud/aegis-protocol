@@ -227,7 +227,8 @@ async function assembleDisputePackage(
     if (history) {
       process.stdout.write(`[memory] received history via AXL mesh entries=${history.length}\n`);
     } else {
-      process.stdout.write(`[memory] history unavailable after broadcast timeout\n`);
+      process.stdout.write(`[memory] history unavailable after broadcast timeout, defaulting to empty\n`);
+      history = [];
     }
   }
 
