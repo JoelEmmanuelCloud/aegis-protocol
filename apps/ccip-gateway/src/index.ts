@@ -1,13 +1,5 @@
-import 'dotenv/config';
-import path from 'path';
 import express, { Request, Response } from 'express';
 import { ethers } from 'ethers';
-
-try {
-  (process as NodeJS.Process & { loadEnvFile?: (p: string) => void }).loadEnvFile?.(
-    path.resolve(__dirname, '../../../.env')
-  );
-} catch {}
 
 const PORT = parseInt(process.env.CCIP_GATEWAY_PORT ?? '8080', 10);
 
