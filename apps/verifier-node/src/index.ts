@@ -177,7 +177,7 @@ async function handleVerifyDecision(body: VerifyRequest): Promise<VerifyResponse
     } catch (err) {
       process.stdout.write(`[verifier] download failed: ${err}\n`);
     }
-    verdict = record ? (record.verdict ?? 'PENDING_DATA') : 'PENDING_DATA';
+    verdict = 'PENDING_DATA';
   }
 
   process.stdout.write(`[verifier] verdict=${verdict}, notarizing via 0G Compute\n`);
