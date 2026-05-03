@@ -138,7 +138,7 @@ export class DisputesService {
         .catch(() => {});
     }
 
-    if (verification.verdict === 'FLAGGED' && process.env.KEEPERHUB_WORKFLOW_ID) {
+    if ((verification.verdict === 'FLAGGED' || verification.verdict === 'CLEARED') && process.env.KEEPERHUB_WORKFLOW_ID) {
       await triggerWorkflow(process.env.KEEPERHUB_WORKFLOW_ID, {
         rootHash: dto.rootHash,
         agentId: dto.agentId,
