@@ -12,7 +12,7 @@ Every AI agent framework solves _how agents decide_. None solve _what happens af
 Aegis is the accountability layer that sits beside any AI agent. When a bot acts, Aegis:
 
 1. **Witnesses** the decision — commits it to 0G Storage, returns an unforgeable root hash
-2. **Verifies** it when disputed — replays the decision in a 0G Compute TEE
+2. **Verifies** it when disputed — runs five deterministic mandate rules, then uses 0G Compute to notarize the verdict with a cryptographic teeProof
 3. **Enforces** the verdict — AegisCourt.sol records it on-chain; KeeperHub executes the remedy automatically
 4. **Publishes** the reputation — stored as ENS text records on `*.aegis.eth`, readable by any app via EIP-3668 CCIP-read
 
@@ -34,7 +34,8 @@ await fetch('http://witness:9002/send', {
 | **Dashboard**           | **https://app.aegisprotocol.uk**                                                                   |
 | **Presentation slides** | https://app.aegisprotocol.uk/slides                                                                |
 | **API**                 | https://api.aegisprotocol.uk                                                                       |
-| **AegisCourt contract** | https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction |
+| **CCIP Gateway**        | https://ccip.aegisprotocol.uk/health                                                               |
+| **AegisCourt contract** | https://chainscan-galileo.0g.ai/address/0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479?tab=transaction |
 
 No installation required to browse. The landing page navbar has three quick-access links:
 
@@ -88,6 +89,7 @@ View tx on-chain ↗
 What just happened on-chain:
 
 - ERC-7857 iNFT minted on `AgentRegistry.sol` — your wallet is the owner
+- `AgentMandate` encoded at mint: allowed actions, allowed pairs, single-trade cap, daily drawdown limit, slippage tolerance
 - Subname `alice-bot` registered in `AegisNameRegistry.sol`
 - ENSIP-25 records written: `agent.registry` and `agent.id`
 - Subname is now resolvable from Ethereum via EIP-3668 CCIP-read
@@ -110,7 +112,7 @@ Replace `alice-bot` with the label you registered in Step 2. Both `alice-bot` an
 The script will:
 
 - Verify your agent exists on-chain
-- Submit **Decision A** — a normal swap (will be CLEARED)
+- Submit **Decision A** — a normal momentum sell (will be CLEARED)
 - Submit **Decision B** — a prohibited emergency liquidation (will be FLAGGED)
 - Then **pause and hand control to you**
 
@@ -128,7 +130,7 @@ You will see two new cards — one for each decision the script just submitted.
 
 1. Click the **"File Dispute"** button — it auto-fills the root hash and agent name
 2. Write a reason:
-   - Decision A (swap): `"Challenging the swap to verify the TEE replay matches."`
+   - Decision A (sell): `"Challenging the swap to verify the rule engine clears it."`
    - Decision B (emergency): `"Unauthorised emergency liquidation. Exceeds mandate and 100 OG daily limit."`
 3. Click **File Dispute**
 
@@ -150,10 +152,10 @@ Each step lights up in sequence as the backend processes it. When complete, the 
 
 **Expected results:**
 
-| Decision | Action                        | Expected Verdict | Why                                                        |
-| -------- | ----------------------------- | ---------------- | ---------------------------------------------------------- |
-| A        | sell 0.36 OG/USDC             | **CLEARED**      | Normal swap within mandate and risk limits                 |
-| B        | emergency_liquidation 5000 OG | **FLAGGED**      | Prohibited action type + exceeds 100 OG daily limit by 50× |
+| Decision | Action                        | Expected Verdict | Why                                                              |
+| -------- | ----------------------------- | ---------------- | ---------------------------------------------------------------- |
+| A        | sell 0.36 OG/USDC             | **CLEARED**      | `sell` is in mandate's allowed actions, amount and drawdown within limits |
+| B        | emergency_liquidation 5000 OG | **FLAGGED**      | `emergency_liquidation` not in allowed actions — Rule 2 fires immediately |
 
 After each verdict, a **"Verify on-chain"** link appears on the dispute card. Click it — it goes directly to your `recordVerdict` transaction on `chainscan-galileo.0g.ai`.
 
@@ -177,8 +179,8 @@ Step 4 — KeeperHub automated remedy
   Run a1b2c3d4... — completed (verdict: FLAGGED)
     [OK] aegis.fetch_verdict
     [OK] aegis.notify_agent_owner
-    [OK] aegis.execute_remedy_tx      ← fired automatically on FLAGGED
-    [OK] aegis.update_ens_reputation
+    [OK] aegis.execute_remedy_tx      ← suspendAgent() fired on-chain
+    [OK] aegis.update_ens_reputation  ← setText() on AegisNameRegistry
     [OK] aegis.update_reputation
 
   Run e5f6a7b8... — completed (verdict: CLEARED)
@@ -200,7 +202,7 @@ Step 4 — KeeperHub automated remedy
 | `/app/attestations`           | Both decision cards with action text, reasoning, and root hash. Status shows **Attested** (committed to 0G Storage, not yet disputed) — changes to CLEARED or FLAGGED once a dispute is filed          |
 | `/app/disputes` → History tab | CLEARED card with green badge + on-chain link; FLAGGED card with red badge + on-chain link                                                                                                             |
 | `/app/agents`                 | Your agent appears in **My Agents** at the top — click it to load instantly. The full grid of all registered agents is shown below. Reputation score ring at 91, flaggedCount: 1, lastVerdict: FLAGGED |
-| `/app/audit`                  | KeeperHub run breakdown — `execute_remedy_tx` completed on FLAGGED, skipped on CLEARED                                                                                                                 |
+| `/app/audit`                  | KeeperHub run breakdown — `execute_remedy_tx` completed on FLAGGED, skipped on CLEARED. On-chain remedy tx hash is a clickable link.                                                                   |
 
 **What's public vs wallet-gated:**
 
@@ -224,19 +226,18 @@ Every dispute you filed produced two real transactions on the 0G chain:
 | `recordVerdict` | Records CLEARED or FLAGGED permanently     |
 
 All transactions are visible on the AegisCourt contract:
-**https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction**
+**https://chainscan-galileo.0g.ai/address/0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479?tab=transaction**
 
 ---
 
 ## Sponsor Track Evidence
 
-### 0G — Storage + Compute + KV + Chain
+### 0G — Storage + Compute + Chain
 
 | Feature        | How to verify                                                                                                |
 | -------------- | ------------------------------------------------------------------------------------------------------------ |
 | 0G Storage     | Upload is awaited before `COMMITTED` is returned — rootHash is immediately retrievable. Fetch any decision record: `curl "https://indexer-storage-testnet-turbo.0g.ai/file?root=<rootHash>"` |
-| 0G Compute TEE | Verifier replays decisions via `qwen/qwen-2.5-7b-instruct` at `compute-network-6.integratenetwork.work` with `verify_tee: true`. The `teeProof` field on every verdict is the chatId (UUID) returned in the `ZG-Res-Key` response header — the cryptographic reference to the TEE signature. |
-| 0G KV          | `aegis:{agentId}:reputation` written after each attestation                                                  |
+| 0G Compute TEE | After the deterministic rule engine produces a verdict, the verifier sends it to `qwen/qwen-2.5-7b-instruct` at `compute-network-6.integratenetwork.work` for notarization. The `teeProof` field on every verdict is the `ZG-Res-Key` UUID returned in the response header — the cryptographic reference to the TEE notarization. |
 | 0G Chain       | AegisCourt, AgentRegistry, AegisNameRegistry all deployed on chainId 16602                                   |
 
 ### Gensyn AXL — Four Distinct Nodes
@@ -267,14 +268,26 @@ curl http://164.92.165.231:10032/health   # memory
 
 When you registered your agent in Step 2, ENSIP-25 records were written to `AegisNameRegistry.sol` on the 0G chain:
 
-- `agent.registry = 0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1`
-- `agent.id = 1`
+- `agent.registry = 0x1D32bcfE84ed05237AdFA351686EF60dcdC6dF1f`
+- `agent.id = <your token id>`
 
-Any ENS-aware app can resolve `alice-bot.aegis.eth` from Ethereum via the CCIP gateway and receive the live reputation score — without touching the Aegis backend. The reputation travels with the name.
+After every verdict, KeeperHub updates:
+- `aegis.lastVerdict` — the most recent verdict
+- `aegis.storageIndex` — the root hash of the decision on 0G Storage
+
+Any ENS-aware app can resolve `alice-bot.aegis.eth` from Ethereum Sepolia via the CCIP gateway at `https://ccip.aegisprotocol.uk` and receive the live reputation score — without touching the Aegis backend. The reputation travels with the name.
 
 ### KeeperHub — Automated Remedy Workflow
 
-The `aegis.execute_remedy` workflow triggered automatically after each verdict — no manual trigger. Steps, outcomes, and agent identity are logged in the audit trail at `/app/audit`. Builder feedback documenting our KeeperHub integration experience is in `docs/FEEDBACK.md`.
+The `aegis.execute_remedy` workflow triggered automatically after each verdict — no manual trigger. The workflow runs five steps:
+
+1. `aegis.fetch_verdict` — confirm verdict from payload
+2. `aegis.notify_agent_owner` — mark owner notified
+3. `aegis.execute_remedy_tx` — calls `AgentRegistry.suspendAgent(tokenId)` on-chain (FLAGGED only; skipped for CLEARED)
+4. `aegis.update_ens_reputation` — calls `AegisNameRegistry.setText()` with `aegis.lastVerdict` and `aegis.storageIndex`
+5. `aegis.update_reputation` — marks reputation updated
+
+Steps, outcomes, agent identity, and the on-chain remedy tx hash are logged in the audit trail at `/app/audit`. Builder feedback documenting our KeeperHub integration experience is in `docs/FEEDBACK.md`.
 
 ---
 
@@ -284,9 +297,9 @@ All 0G testnet contracts are source-verified on chainscan-galileo (compiler `v0.
 
 | Contract              | Chain                       | Address                                                     |
 | --------------------- | --------------------------- | ----------------------------------------------------------- |
-| AegisCourt.sol        | 0G testnet (16602)          | `0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6` · **Verified** |
-| AgentRegistry.sol     | 0G testnet (16602)          | `0xC1476f6Dfc8C3f6593B21FDab8DA156e9Be274B1` · **Verified** |
-| AegisNameRegistry.sol | 0G testnet (16602)          | `0xC8e1B8763be717Daee9b41CFD68F723f6bA06aC4` · **Verified** |
+| AegisCourt.sol        | 0G testnet (16602)          | `0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479`                |
+| AgentRegistry.sol     | 0G testnet (16602)          | `0x1D32bcfE84ed05237AdFA351686EF60dcdC6dF1f`                |
+| AegisNameRegistry.sol | 0G testnet (16602)          | `0x7b6a90ABCed25B98A591668B7E97fCc546fE0F17`                |
 | AegisCCIPResolver.sol | Ethereum Sepolia (11155111) | `0xa2B6B632130Ac772c91fb15b0bbAB75b58E976fC`                |
 
 **To verify a contract on chainscan-galileo:**
@@ -316,38 +329,33 @@ This is the most important security property. **A false dispute on a legitimate 
 
 | Scenario                                    | Verdict                          | Effect on bot score | Cost to disputer    |
 | ------------------------------------------- | -------------------------------- | ------------------- | ------------------- |
-| Dispute a legitimate swap                   | **CLEARED** — TEE replay matches | +1 reputation       | Gas wasted          |
-| Dispute a prohibited action                 | **FLAGGED** — guardrail fires    | −10 reputation      | Gas spent correctly |
-| Dispute any normal action with false reason | **CLEARED** — objective replay   | +1 reputation       | Gas wasted          |
+| Dispute a legitimate swap                   | **CLEARED** — mandate rules pass | +1 reputation       | Gas wasted          |
+| Dispute a prohibited action                 | **FLAGGED** — Rule 2 fires       | −10 reputation      | Gas spent correctly |
+| Dispute any normal action with false reason | **CLEARED** — objective rules    | +1 reputation       | Gas wasted          |
 
 Filing a false dispute on a correctly-behaving bot literally improves that bot's score and costs the disputer real OG tokens. The protocol is economically self-correcting for honest bots.
 
-### Guardrails in the verifier
+### The five deterministic mandate rules
 
-Two deterministic checks fire before the TEE replay on every dispute:
+Every registered agent has an `AgentMandate` encoded on-chain at mint time. The verifier evaluates five rules against this mandate on every dispute — in order, stopping at the first failure:
 
-**1. Prohibited action types**
+| Rule | Check | Verdict if fails |
+| ---- | ----- | ---------------- |
+| 1 | History unavailable (0G KV unreachable, no mesh peer has data) | `PENDING_DATA` — agent frozen 24h |
+| 2 | `action.type` is in `mandate.allowedActions` AND `action.pair` is in `mandate.allowedPairs` | `FLAGGED` |
+| 3 | `|claimed_price − oracle_price|` ≤ `mandate.acceptableSlippage` basis points | `FLAGGED` |
+| 4 | `action.amount` ≤ `mandate.maxSingleTrade` | `FLAGGED` |
+| 5 | cumulative 24h `potential_loss` ≤ `mandate.maxDailyDrawdown` | `FLAGGED` |
 
-```
-emergency_liquidation · drain · full_withdrawal
-unauthorized_transfer · rug · self_destruct
-```
+If all five pass → `CLEARED`. The verdict is then sent to 0G Compute for cryptographic notarization (teeProof generation).
 
-Any decision with one of these action types is FLAGGED immediately — no TEE needed. These are actions no legitimate agent mandate would include.
-
-**2. Daily amount limit**
-
-Actions with `amount` exceeding `AGENT_AMOUNT_LIMIT` (default: 100 OG) are FLAGGED. The limit is configurable per deployment via the `.env` file.
-
-**3. 0G Compute TEE replay**
-
-When the decision record is available in 0G Storage, the verifier runs the exact same model (`qwen/qwen-2.5-7b-instruct`) with the exact same inputs inside a Trusted Execution Environment. The TEE cryptographically signs its output. If the replay matches what the agent did → CLEARED. If it diverges → FLAGGED. This verdict is objective — it does not depend on who filed the dispute or what reason they gave.
+The mandate is set by the agent owner at mint time and is immutable. There is no off-chain configuration that can change what constitutes a valid action.
 
 ### On-chain accountability for disputers
 
 Every dispute records the disputer's wallet address permanently in `AegisCourt.sol`. A pattern of frivolous disputes (CLEARED verdicts) is publicly visible on-chain. The `disputedBy` address and all verdicts are queryable at:
 
-**https://chainscan-galileo.0g.ai/address/0xA35Ec64578EF4C85a88fE19A81a4303a784B9dd6?tab=transaction**
+**https://chainscan-galileo.0g.ai/address/0xb271E106E5CF0c8e84FCa69CD9678Ad1D7379479?tab=transaction**
 
 ### Gas cost as spam deterrent
 
@@ -376,8 +384,8 @@ Attestations display three possible states:
 | Status       | Meaning                                                                                                         |
 | ------------ | --------------------------------------------------------------------------------------------------------------- |
 | **Attested** | Decision committed to 0G Storage. Root hash is the receipt. No dispute has been filed — the decision stands.    |
-| **Cleared**  | A dispute was filed. Verifier replayed the decision via 0G Compute TEE. Output matched — agent acted correctly. |
-| **Flagged**  | A dispute was filed. Verifier found the action violated guardrails or the TEE replay diverged. Remedy executed. |
+| **Cleared**  | A dispute was filed. All five mandate rules passed. Agent acted within its registered parameters.                |
+| **Flagged**  | A dispute was filed. At least one mandate rule failed. KeeperHub executed the remedy automatically.             |
 
 Attestations start as **Attested** — this is the normal state for most decisions. Only disputed decisions produce a CLEARED or FLAGGED verdict. This is intentional: not every decision needs to be disputed, only ones a user challenges.
 
@@ -387,7 +395,7 @@ The root hash on each card links the decision permanently to 0G Storage. The ful
 
 ## Reading On-Chain Transaction Data
 
-When you open a `recordVerdict` transaction on chainscan-galileo, the calldata carries three fields: `rootHash`, `verdict` (0 = PENDING, 1 = CLEARED, 2 = FLAGGED), and `teeProof`.
+When you open a `recordVerdict` transaction on chainscan-galileo, the calldata carries three fields: `rootHash`, `verdict` (0 = PENDING, 1 = CLEARED, 2 = FLAGGED, 3 = PENDING_DATA), and `teeProof`.
 
 **Fetch the full decision record from 0G Storage using the rootHash:**
 
@@ -403,7 +411,7 @@ Returns the complete record: `agentId`, `inputs`, `reasoning`, `action`, `verdic
 curl "https://compute-network-6.integratenetwork.work/v1/proxy/signature/<teeProof>?model=qwen/qwen-2.5-7b-instruct"
 ```
 
-Returns `{ text, signature, signing_address, signing_algo, provider_identity, tls_cert_fingerprint }`. The ECDSA `signature` can be verified against `signing_address` — this is the cryptographic proof that the TEE replay ran inside a hardware enclave and produced that specific output.
+Returns `{ text, signature, signing_address, signing_algo, provider_identity, tls_cert_fingerprint }`. The ECDSA `signature` can be verified against `signing_address` — this is the cryptographic proof that the 0G Compute TEE notarized the verdict.
 
 The `agentId` in every record is the ENS name (e.g. `alice-bot.aegis.eth`) — visible in the dispute history on the dashboard.
 
@@ -443,7 +451,7 @@ await fetch('http://witness:9002/send', {
 
 Any marketplace that reads ENS can display Aegis reputation scores alongside other bot metadata — without calling the Aegis backend:
 
-1. Resolve `my-bot.aegis.eth` from Ethereum via EIP-3668 CCIP-read
+1. Resolve `my-bot.aegis.eth` from Ethereum Sepolia via EIP-3668 CCIP-read (`https://ccip.aegisprotocol.uk`)
 2. Read `aegis.reputation`, `aegis.totalDecisions`, `aegis.lastVerdict`, `aegis.flaggedCount` text records
 3. Display the live accountability score
 
@@ -468,24 +476,24 @@ Memory :9032  ──→  0G KV write + AegisNameRegistry text record update
 Judge files dispute via dashboard
   │
   ▼
-Orchestrator :3000  ──→  rule check + calls Verifier
+Orchestrator :3000  ──→  assembles DisputePackage, calls Verifier
   │
   ▼
-Verifier :9012  ──→  0G Compute TEE replay (qwen/qwen-2.5-7b-instruct)
+Verifier :9012  ──→  5-rule mandate engine → 0G Compute TEE notarization
   │  verdict  →  AegisCourt.sol (submitDispute + recordVerdict)
   ▼
 KeeperHub  ──→  aegis.execute_remedy fires automatically
   ├─ fetch_verdict
   ├─ notify_agent_owner
-  ├─ execute_remedy_tx  (only if FLAGGED)
-  ├─ update_ens_reputation
+  ├─ execute_remedy_tx        (AgentRegistry.suspendAgent — FLAGGED only)
+  ├─ update_ens_reputation    (AegisNameRegistry.setText — both verdicts)
   └─ update_reputation
 
 Any ENS-aware app
   │  resolve("alice-bot.aegis.eth")
   ▼
 AegisCCIPResolver (Ethereum Sepolia)  ──→  OffchainLookup
-  │  CCIP gateway :8080
+  │  CCIP gateway: https://ccip.aegisprotocol.uk
   ▼
 AegisNameRegistry (0G testnet)  ──→  live reputation score returned
 ```
